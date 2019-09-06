@@ -1,0 +1,12 @@
+{
+  "requests": [
+    {
+      "id": "id",
+      "method": "post",
+      "url": "http://localhost/path",
+      "body": {
+        "field1": "value1"
+      }
+    }
+  ]
+}

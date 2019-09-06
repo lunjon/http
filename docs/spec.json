@@ -1,0 +1,23 @@
+{
+    "requests": [
+        {
+            "name": "Get request",
+            "url": "https://api.example.com/path",
+            "headers": {
+                "x-token": "abc123"
+            }
+        },
+        {
+            "name": "Post request",
+            "method": "POST",
+            "url": "https://api.example.com/resource/path",
+            "body": {
+                "field": "value",
+                "stuff": [
+                    "item1",
+                    "item2"
+                ]
+            }
+        }
+    ]
+}

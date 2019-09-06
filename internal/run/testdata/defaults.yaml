@@ -1,0 +1,4 @@
+requests:
+  -
+    id: name
+    url: localhost/path

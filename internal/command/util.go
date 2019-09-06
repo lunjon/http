@@ -99,7 +99,7 @@ func checkError(err error, exitStatus int, printUsage bool, cmd *cobra.Command) 
 		return
 	}
 
-	fmt.Println(err)
+	fmt.Printf("error: %v\n", err)
 	if printUsage {
 		cmd.Usage()
 	}

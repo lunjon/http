@@ -1,0 +1,12 @@
+requests:
+  -
+    id: id
+    method: post
+    url: http://localhost/path
+    headers:
+      name: value
+    body:
+      field: value
+      array:
+        - item1
+        - item2

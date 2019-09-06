@@ -1,0 +1,10 @@
+# Two request have the same name
+requests:
+  -
+    id: id
+    method: GET
+    url: http://localhost/path
+  -
+    id: id
+    method: GET
+    url: http://localhost/path

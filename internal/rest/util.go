@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func parseURL(route string) (string, error) {
+func ParseURL(route string) (string, error) {
 	route = strings.TrimRight(route, "/")
 	local := regexp.MustCompile(`^(/[0-9a-zA-Z\-?&_%])+`)
 	if local.MatchString(route) {
@@ -36,5 +36,5 @@ func parseURL(route string) (string, error) {
 		return "https://" + route, nil
 	}
 
-	return "", fmt.Errorf("Invalid route: %s", route)
+	return "", fmt.Errorf("invalid route: %s", route)
 }

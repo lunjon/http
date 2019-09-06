@@ -1,0 +1,6 @@
+# Editor/IDE
+.idea/
+.vscode/
+
+# Build artifacts
+httpreq

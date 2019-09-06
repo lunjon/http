@@ -9,6 +9,7 @@ const (
 	AWSRegionFlagName  = "aws-region"
 	JSONBodyFlagName   = "json"
 	OutputFileFlagName = "output-file"
+	RunTargetFlagName  = "target"
 )
 
 // Build the root command for httpreq.
@@ -16,6 +17,7 @@ func Build() *cobra.Command {
 	get := buildGet()
 	post := buildPost()
 	delete := buildDelete()
+	run := buildRun()
 
 	root := &cobra.Command{
 		Use:   "httpreq",
@@ -31,7 +33,7 @@ Headers are specified as a comma separated list of keypairs: --header name1(:|=)
 or specified multiple times: --header name1(:|=)value1 --header name2(:|=)value2`,
 	}
 
-	root.AddCommand(get, post, delete)
+	root.AddCommand(get, post, delete, run)
 	return root
 }
 
@@ -72,6 +74,25 @@ func buildDelete() *cobra.Command {
 
 	addCommonFlags(delete)
 	return delete
+}
+
+func buildRun() *cobra.Command {
+	run := &cobra.Command{
+		Use:   `run <file>`,
+		Short: "Run requests from a spec file.",
+		Long:  "The spec file must be a valid JSON or YAML file.",
+		Args:  cobra.ExactArgs(1),
+		Run:   handleRun,
+	}
+
+	run.Flags().StringSliceP(
+		RunTargetFlagName,
+		"t",
+		[]string{},
+		`Run the specified target(s) from the file.
+Use a comma separated list for multiple targets, e.g. --target a,b
+or specify the flag multiple times, e.g. --target a --target b`)
+	return run
 }
 
 func addCommonFlags(cmd *cobra.Command) {

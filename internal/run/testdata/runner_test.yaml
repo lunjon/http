@@ -1,0 +1,12 @@
+requests:
+  -
+    id: target1
+    url: http://localhost/path
+    headers:
+      name: value
+  -
+    id: target2
+    method: post
+    url: http://localhost/path
+    body:
+      field: value

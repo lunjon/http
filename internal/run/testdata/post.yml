@@ -1,0 +1,10 @@
+requests:
+  -
+    id: id
+    method: post
+    url: http://localhost/path
+    body:
+      field: value
+      array:
+        - item1
+        - item2
