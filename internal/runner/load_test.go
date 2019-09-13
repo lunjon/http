@@ -1,9 +1,9 @@
-package run_test
+package runner_test
 
 import (
 	"testing"
 
-	"github.com/lunjon/httpreq/internal/run"
+	"github.com/lunjon/httpreq/internal/runner"
 )
 
 func TestLoad(t *testing.T) {
@@ -39,7 +39,7 @@ func TestLoad(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner, err := run.Load(tt.filepath)
+			runner, err := runner.Load(tt.filepath)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)

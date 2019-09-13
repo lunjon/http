@@ -1,4 +1,4 @@
-package run_test
+package runner_test
 
 import (
 	"net/http"
@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/lunjon/httpreq/internal/rest"
-	"github.com/lunjon/httpreq/internal/run"
+	"github.com/lunjon/httpreq/internal/runner"
 	"github.com/stretchr/testify/suite"
 )
 
 type RunnerTestSuite struct {
 	suite.Suite
 	server *httptest.Server
-	runner *run.Runner
+	runner *runner.Runner
 	client *rest.Client
 }
 
@@ -26,7 +26,7 @@ func (suite *RunnerTestSuite) SetupSuite() {
 }
 
 func (suite *RunnerTestSuite) SetupTest() {
-	runner, err := run.Load("testdata/runner_test.yaml")
+	runner, err := runner.Load("testdata/runner_test.yaml")
 	suite.NoError(err)
 
 	// Change each request URL to the test server

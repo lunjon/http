@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/lunjon/httpreq/internal/rest"
-	"github.com/lunjon/httpreq/internal/run"
+	"github.com/lunjon/httpreq/internal/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +29,7 @@ func handleDelete(cmd *cobra.Command, args []string) {
 
 func handleRun(cmd *cobra.Command, args []string) {
 	spec := args[0]
-	runner, err := run.Load(spec)
+	runner, err := runner.Load(spec)
 	checkError(err, 2, false, cmd)
 
 	targetString := cmd.Flag(RunTargetFlagName).Value.String()

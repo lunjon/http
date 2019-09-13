@@ -1,4 +1,4 @@
-package run
+package runner
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ func NewRunner(spec *RunnerSpec) *Runner {
 
 func (runner *Runner) Run(client *rest.Client, targets ...string) ([]*rest.Result, error) {
 	if runner.hasRun {
-		panic("a runner may only run once")
+		panic("a runner may only runner once")
 	}
 
 	var requests []*RequestTarget
