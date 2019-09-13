@@ -2,11 +2,11 @@ headers:
   x-token: secret
 
 requests:
-  - name: get-request
+  - id: get-request
     url: api.example.com/path
     headers:
       x-correlation-id: abc123
-  - name: post-request
+  - id: post-request
     method: post
     url: https://api.example.com/resource/path
     body:

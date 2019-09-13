@@ -78,7 +78,7 @@ func buildDelete() *cobra.Command {
 
 func buildRun() *cobra.Command {
 	run := &cobra.Command{
-		Use:   `runner <file>`,
+		Use:   `run <file>`,
 		Short: "Run requests from a spec file.",
 		Long:  "The spec file must be a valid JSON or YAML file.",
 		Args:  cobra.ExactArgs(1),
