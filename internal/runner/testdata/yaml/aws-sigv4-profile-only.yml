@@ -1,0 +1,8 @@
+requests:
+  -
+    id: id
+    url: http://localhost/path
+    # Setting it to true will use all defaults:
+    # environment credentials and eu-west-1 region
+    aws:
+      profile: default

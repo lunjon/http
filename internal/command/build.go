@@ -105,7 +105,7 @@ Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=val
 	cmd.Flags().String(OutputFileFlagName, "", "Output the response body to the filename.")
 
 	// AWS signature V4 flags
-	cmd.Flags().Bool(AWSSigV4FlagName, false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
-	cmd.Flags().String(AWSRegionFlagName, "", "The AWS region to use in the AWS signature.")
+	cmd.Flags().BoolP(AWSSigV4FlagName, "4",false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
+	cmd.Flags().String(AWSRegionFlagName, "eu-west-1", "The AWS region to use in the AWS signature.")
 	cmd.Flags().String(AWSProfileFlagName, "", "The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 }

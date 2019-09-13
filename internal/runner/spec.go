@@ -7,6 +7,18 @@ import (
 	"strings"
 )
 
+type AWSSign struct {
+	Profile string
+	Region  string
+}
+
+func NewAWSSign(profile, region string) *AWSSign {
+	return &AWSSign{
+		Profile: profile,
+		Region:  region,
+	}
+}
+
 /*
 RequestTarget describe the model in the request files.
 */
@@ -19,10 +31,7 @@ type RequestTarget struct {
 
 	Body map[string]interface{}
 
-	AWS *struct {
-		Profile string
-		Region  string
-	}
+	AWS interface{}
 }
 
 /*
@@ -39,8 +48,13 @@ func (req *RequestTarget) TrySetHeader(key, value string) {
 	}
 }
 
-// Validate that the request is valid
+/*
+Validate that the request is valid.
+Should be called before anything else.
+ */
 func (req *RequestTarget) Validate(ids map[string]bool) error {
+	// ID
+
 	if req.ID == "" {
 		return fmt.Errorf("invalid or missing ID in request")
 	}
@@ -48,6 +62,12 @@ func (req *RequestTarget) Validate(ids map[string]bool) error {
 	if strings.ContainsAny(req.ID, " ") {
 		return fmt.Errorf("IDs cannot contain any whitespace")
 	}
+
+	if _, found := ids[req.ID]; found {
+		return fmt.Errorf("duplicate ID: %s", req.ID)
+	}
+
+	// Method
 
 	method := strings.ToUpper(req.Method)
 	if method == "" {
@@ -67,14 +87,38 @@ func (req *RequestTarget) Validate(ids map[string]bool) error {
 		return fmt.Errorf("missing body in POST request with ID '%s'", req.ID)
 	}
 
-	if _, found := ids[req.ID]; found {
-		return fmt.Errorf("duplicate ID: %s", req.ID)
+	// AWS Signing
+	switch req.AWS.(type) {
+	case nil:
+		req.AWS = nil
+	case bool, string:
+		req.AWS = NewAWSSign("", "eu-west-1")
+	case map[interface{}]interface{}:
+		v := req.AWS.(map[interface{}]interface{})
+		profile := "default"
+		region := "eu-west-1"
+		if p, found := v["profile"]; found {
+			profile = p.(string)
+		}
+
+		if r, found := v["region"]; found {
+			region = r.(string)
+		}
+		
+		req.AWS = NewAWSSign(profile, region)
 	}
 
 	ids[req.ID] = true
 	return nil
 }
 
+func (req *RequestTarget) GetAWSSign() *AWSSign {
+	if req.AWS != nil {
+		return req.AWS.(*AWSSign)
+	}
+
+	return nil
+}
 
 /*
 Spec is the specification of runner files.

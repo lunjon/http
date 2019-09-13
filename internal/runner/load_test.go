@@ -157,3 +157,31 @@ func TestLoadDefaultHeaders(t *testing.T) {
 	assert.Equal(t, r.Headers["name"], "override")
 	assert.Equal(t, r.Headers["token"], "secret")
 }
+
+func TestLoadAWSSigv4Defaults(t *testing.T) {
+	rn, err := runner.Load("testdata/yaml/aws-sigv4-bool.yml")
+	assert.NoError(t, err)
+	assert.NotNil(t, rn)
+
+	r := rn.Spec.Requests[0]
+	assert.NotNil(t, r.AWS)
+	aws := r.GetAWSSign()
+	assert.NotNil(t, aws)
+	assert.Equal(t, "eu-west-1", aws.Region)
+	assert.Empty(t, aws.Profile)
+}
+
+
+func TestLoadAWSSigv4RegionOnly(t *testing.T) {
+	rn, err := runner.Load("testdata/yaml/aws-sigv4-profile-only.yml")
+	assert.NoError(t, err)
+	assert.NotNil(t, rn)
+
+	r := rn.Spec.Requests[0]
+	assert.NotNil(t, r.AWS)
+	aws := r.GetAWSSign()
+	assert.NotNil(t, aws)
+
+	assert.Equal(t, "eu-west-1", aws.Region)
+	assert.Equal(t, "default", aws.Profile)
+}

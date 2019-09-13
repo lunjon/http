@@ -26,11 +26,10 @@ For `httpreq <method> ...`commands there are some common flags:
 
 - **--header**: Specify a key/value pairs (`name=value` or `name:value`) to use as an HTTP header. They can be either a comma separated list of key/value pairs or specified using multiple times.
     * For instance: `--header h1=value1,h2=value2` and `--header h1:value1 --header h2=value2` will yield the same result.
-- **--aws-sigv4**: Sign the request with AWS signature V4.
-    * Requires the `--aws-region` flag.
+- **-4/--aws-sigv4**: Sign the request with AWS signature V4.
     * If the `--aws-profile` flag is given it tries to use the credentials for that profile, else it looks for the environment variables.
 - **--aws-region**: The AWS region to use when signing the request. 
-    * Required if `--aws-sigv4` is set.
+    * Default is `eu-west-1`
 - **--aws-profile**: Use the AWS profile when signing the request.
     * Note that the profile must have credentials defined in the profile for it to work.
 - **--output-file**: If there was any response body, output the content to the given file.

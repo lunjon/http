@@ -82,7 +82,8 @@ func run(req *RequestTarget, client *rest.Client) (res *rest.Result, err error) 
 	}
 
 	if req.AWS != nil {
-		err = client.SignRequest(r, body, req.AWS.Region, req.AWS.Profile)
+		aws := req.GetAWSSign()
+		err = client.SignRequest(r, body, aws.Region, aws.Profile)
 		if err != nil {
 			return
 		}
