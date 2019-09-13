@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "name": "value",
+    "token": "secret"
+  },
+  "requests": [
+    {
+      "id": "id",
+      "method": "GET",
+      "url": "http://localhost/path",
+      "headers": {
+        "name": "override"
+      }
+    }
+  ]
+}

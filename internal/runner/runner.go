@@ -9,11 +9,11 @@ import (
 )
 
 type Runner struct {
-	Spec   *RunnerSpec
+	Spec   *Spec
 	hasRun bool
 }
 
-func NewRunner(spec *RunnerSpec) *Runner {
+func NewRunner(spec *Spec) *Runner {
 	return &Runner{spec, false}
 }
 
@@ -36,7 +36,7 @@ func (runner *Runner) Run(client *rest.Client, targets ...string) ([]*rest.Resul
 		requests = runner.Spec.Requests
 	}
 
-	results := []*rest.Result{}
+	var results []*rest.Result
 	for _, req := range requests {
 		res, err := run(req, client)
 		if err != nil {
@@ -51,14 +51,14 @@ func (runner *Runner) Run(client *rest.Client, targets ...string) ([]*rest.Resul
 	return results, nil
 }
 
-func (runner *Runner) findTarget(target string) (*RequestTarget, error) {
+func (runner *Runner) findTarget(id string) (*RequestTarget, error) {
 	for _, req := range runner.Spec.Requests {
-		if req.ID == target {
+		if req.ID == id {
 			return req, nil
 		}
 	}
 
-	return nil, fmt.Errorf("unknown request ID: %s", target)
+	return nil, fmt.Errorf("unknown request ID: %s", id)
 }
 
 func run(req *RequestTarget, client *rest.Client) (res *rest.Result, err error) {

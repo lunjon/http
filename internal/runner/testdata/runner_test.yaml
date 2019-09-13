@@ -1,9 +1,12 @@
+headers:
+  x-token: secret
+
 requests:
   -
     id: target1
     url: http://localhost/path
     headers:
-      name: value
+      x-token: other-secret
   -
     id: target2
     method: post

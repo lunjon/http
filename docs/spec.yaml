@@ -1,10 +1,13 @@
+headers:
+  x-token: secret
+
 requests:
-  - name: Get request
-    url: https://api.example.com/path
+  - name: get-request
+    url: api.example.com/path
     headers:
-      x-token: abc123
-  - name: Post request
-    method: POST
+      x-correlation-id: abc123
+  - name: post-request
+    method: post
     url: https://api.example.com/resource/path
     body:
       field: value
