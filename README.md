@@ -34,6 +34,7 @@ For `httpreq <method> ...`commands there are some common flags:
     * Note that the profile must have credentials defined in the profile for it to work.
 - **--output-file**: If there was any response body, output the content to the given file.
     * If not set, it outputs the content to stdout.
+- **--sandbox**: Run the request to a local server and echo request information.
 
 Below are some examples with a comment above each command that shows the corresponding request.
 
@@ -74,6 +75,10 @@ requests:
         method: get
         url: https://api.example.com/path
 ```
+
+### sandbox
+
+Start a local server at port 8118 (can be changed using `--port`). It will block the program.
 
 ## TODO
 

@@ -10,6 +10,8 @@ const (
 	JSONBodyFlagName   = "json"
 	OutputFileFlagName = "output-file"
 	RunTargetFlagName  = "target"
+	SandboxFlagName  = "sandbox"
+	SandboxPortFlagName  = "port"
 )
 
 // Build the root command for httpreq.
@@ -18,6 +20,7 @@ func Build() *cobra.Command {
 	post := buildPost()
 	delete := buildDelete()
 	run := buildRun()
+	sandbox := buildSandbox()
 
 	root := &cobra.Command{
 		Use:   "httpreq",
@@ -33,7 +36,7 @@ Headers are specified as a comma separated list of keypairs: --header name1(:|=)
 or specified multiple times: --header name1(:|=)value1 --header name2(:|=)value2`,
 	}
 
-	root.AddCommand(get, post, delete, run)
+	root.AddCommand(get, post, delete, run, sandbox)
 	return root
 }
 
@@ -95,7 +98,23 @@ or specify the flag multiple times, e.g. --target a --target b`)
 	return run
 }
 
+func buildSandbox() *cobra.Command {
+	sandbox := &cobra.Command{
+		Use:   `sandbox`,
+		Short: "Starts a local server. Default to port 8118.",
+		Run:   startSandbox,
+	}
+
+	sandbox.Flags().IntP(
+		SandboxPortFlagName,
+		"p",
+		8118,
+		`The port to use.`)
+	return sandbox
+}
+
 func addCommonFlags(cmd *cobra.Command) {
+	// Headers
 	cmd.Flags().StringSlice(
 		HeaderFlagName,
 		[]string{},
@@ -108,4 +127,7 @@ Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=val
 	cmd.Flags().BoolP(AWSSigV4FlagName, "4",false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
 	cmd.Flags().String(AWSRegionFlagName, "eu-west-1", "The AWS region to use in the AWS signature.")
 	cmd.Flags().String(AWSProfileFlagName, "", "The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
+
+	// Sandbox
+	cmd.Flags().Bool(SandboxFlagName, false, "Run the request to a sandbox server.")
 }

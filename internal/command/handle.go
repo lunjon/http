@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"time"
@@ -69,7 +70,18 @@ func handle(method string, cmd *cobra.Command, args []string) {
 		body = []byte(json)
 	}
 
-	client := createClient()
+	var client *rest.Client
+
+	// Sandbox should send request to a local test server
+	sandbox := getBoolFlagValue(SandboxFlagName, cmd)
+	if sandbox {
+		server := httptest.NewServer(&SandboxHandler{})
+		defer server.Close()
+		client = createClient(server.Client())
+		url = server.URL
+	} else {
+		client = createClient(nil)
+	}
 
 	req, err := client.BuildRequest(method, url, body, header)
 	checkError(err, 2, true, cmd)
@@ -118,10 +130,12 @@ func sendRequest(client *rest.Client, req *http.Request, cmd *cobra.Command) {
 	}
 }
 
-func createClient() *rest.Client {
-	httpClient := &http.Client{
-		Timeout: 10 * time.Second,
+func createClient(c *http.Client) *rest.Client {
+	if c == nil {
+		c = &http.Client{
+			Timeout: 10 * time.Second,
+		}
 	}
 
-	return rest.NewClient(httpClient)
+	return rest.NewClient(c)
 }
