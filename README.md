@@ -32,6 +32,7 @@ For `httpreq <method> ...`commands there are some common flags:
 - **--aws-region**: The AWS region to use when signing the request. 
     * Required if `--aws-sigv4` is set.
 - **--aws-profile**: Use the AWS profile when signing the request.
+    * Note that the profile must have credentials defined in the profile for it to work.
 - **--output-file**: If there was any response body, output the content to the given file.
     * If not set, it outputs the content to stdout.
 
