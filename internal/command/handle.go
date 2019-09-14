@@ -13,6 +13,7 @@ import (
 
 	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/lunjon/httpreq/internal/runner"
+	"github.com/lunjon/httpreq/pkg/parse"
 	"github.com/spf13/cobra"
 )
 
@@ -53,14 +54,14 @@ func handleRun(cmd *cobra.Command, args []string) {
 
 func handle(method string, cmd *cobra.Command, args []string) {
 	url := args[0]
-	headerString := getStringFlagValue(HeaderFlagName, cmd)
+	headerString, _ := cmd.Flags().GetString(HeaderFlagName)
 	header, err := getHeaders(headerString)
 	checkError(err, 2, true, cmd)
 
 	var body []byte
 
 	if method == http.MethodPost {
-		json := getStringFlagValue(JSONBodyFlagName, cmd)
+		json, _ := cmd.Flags().GetString(JSONBodyFlagName)
 		if json == "" {
 			fmt.Println("no or invalid JSON body specified")
 			cmd.Usage()
@@ -73,23 +74,27 @@ func handle(method string, cmd *cobra.Command, args []string) {
 	var client *rest.Client
 
 	// Sandbox should send request to a local test server
-	sandbox := getBoolFlagValue(SandboxFlagName, cmd)
+	sandbox, _ := cmd.Flags().GetBool(SandboxFlagName)
 	if sandbox {
 		server := httptest.NewServer(&SandboxHandler{})
 		defer server.Close()
 		client = createClient(server.Client())
-		url = server.URL
+
+		// Re-write the URL to get correct path
+		u, err := parse.ParseURL(url)
+		checkError(err, 2, false, cmd)
+		url = server.URL + u.Path
 	} else {
 		client = createClient(nil)
 	}
 
 	req, err := client.BuildRequest(method, url, body, header)
-	checkError(err, 2, true, cmd)
+	checkError(err, 2, false, cmd)
 
-	signRequest := getBoolFlagValue(AWSSigV4FlagName, cmd)
+	signRequest, _ := cmd.Flags().GetBool(AWSSigV4FlagName)
 	if signRequest {
-		region := getStringFlagValue(AWSRegionFlagName, cmd)
-		profile := getStringFlagValue(AWSProfileFlagName, cmd)
+		region, _ := cmd.Flags().GetString(AWSRegionFlagName)
+		profile, _ := cmd.Flags().GetString(AWSProfileFlagName)
 		err = client.SignRequest(req, nil, region, profile)
 
 		checkError(err, 2, true, cmd)
@@ -108,7 +113,7 @@ func sendRequest(client *rest.Client, req *http.Request, cmd *cobra.Command) {
 	body, err := res.Body()
 	checkError(err, 1, false, cmd)
 
-	filename := getStringFlagValue(OutputFileFlagName, cmd)
+	filename, _ := cmd.Flags().GetString(OutputFileFlagName)
 	if len(body) == 0 {
 		if filename != "" {
 			fmt.Println("no response body to write to file")

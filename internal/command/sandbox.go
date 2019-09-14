@@ -2,13 +2,12 @@ package command
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"net/http"
-	"strconv"
+
+	"github.com/spf13/cobra"
 )
 
 type SandboxHandler struct {
-
 }
 
 func (h *SandboxHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -19,9 +18,7 @@ func (h *SandboxHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func startSandbox(cmd *cobra.Command, args []string) {
-	portStr := cmd.Flag(SandboxPortFlagName).Value.String()
-
-	port, _ := strconv.Atoi(portStr)
+	port, _ := cmd.Flags().GetInt(SandboxPortFlagName)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), &SandboxHandler{})
 	if err != nil {

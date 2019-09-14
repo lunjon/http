@@ -5,30 +5,10 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
-
-func getStringFlagValue(name string, cmd *cobra.Command) string {
-	flag := cmd.Flag(name)
-	if flag == nil {
-		panic("invalid flag: " + name)
-	}
-
-	return flag.Value.String()
-}
-
-func getBoolFlagValue(name string, cmd *cobra.Command) bool {
-	flag := cmd.Flag(name)
-	if flag == nil {
-		panic("invalid flag: " + name)
-	}
-
-	val, _ := strconv.ParseBool(flag.Value.String())
-	return val
-}
 
 func parseURL(route string) (string, error) {
 	route = strings.TrimRight(route, "/")

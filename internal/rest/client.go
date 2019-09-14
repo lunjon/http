@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/lunjon/httpreq/pkg/parse"
 )
 
 type Client struct {
@@ -25,7 +26,7 @@ func NewClient(httpClient *http.Client) *Client {
 }
 
 func (client *Client) BuildRequest(method, url string, json []byte, header http.Header) (*http.Request, error) {
-	url, err := ParseURL(url)
+	u, err := parse.ParseURL(url)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +36,7 @@ func (client *Client) BuildRequest(method, url string, json []byte, header http.
 		body = bytes.NewReader(json)
 	}
 
-	req, err := http.NewRequest(method, url, body)
+	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
 		return nil, err
 	}

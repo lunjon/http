@@ -1,17 +1,23 @@
 package command
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/lunjon/httpreq/pkg/parse"
+	"github.com/spf13/cobra"
+)
 
 const (
-	HeaderFlagName     = "header"
-	AWSSigV4FlagName   = "aws-sigv4"
-	AWSProfileFlagName = "aws-profile"
-	AWSRegionFlagName  = "aws-region"
-	JSONBodyFlagName   = "json"
-	OutputFileFlagName = "output-file"
-	RunTargetFlagName  = "target"
-	SandboxFlagName  = "sandbox"
-	SandboxPortFlagName  = "port"
+	HeaderFlagName      = "header"
+	AWSSigV4FlagName    = "aws-sigv4"
+	AWSProfileFlagName  = "aws-profile"
+	AWSRegionFlagName   = "aws-region"
+	JSONBodyFlagName    = "json"
+	OutputFileFlagName  = "output-file"
+	RunTargetFlagName   = "target"
+	SandboxFlagName     = "sandbox"
+	SandboxPortFlagName = "port"
+	DetailsFlagName     = "details"
 )
 
 // Build the root command for httpreq.
@@ -21,6 +27,7 @@ func Build() *cobra.Command {
 	delete := buildDelete()
 	run := buildRun()
 	sandbox := buildSandbox()
+	parse := buildParseURL()
 
 	root := &cobra.Command{
 		Use:   "httpreq",
@@ -36,7 +43,7 @@ Headers are specified as a comma separated list of keypairs: --header name1(:|=)
 or specified multiple times: --header name1(:|=)value1 --header name2(:|=)value2`,
 	}
 
-	root.AddCommand(get, post, delete, run, sandbox)
+	root.AddCommand(get, post, delete, run, sandbox, parse)
 	return root
 }
 
@@ -113,6 +120,38 @@ func buildSandbox() *cobra.Command {
 	return sandbox
 }
 
+func buildParseURL() *cobra.Command {
+	parse := &cobra.Command{
+		Use:   `parse-url <url>`,
+		Short: "Parse the URL and print the results.",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			url, err := parse.ParseURL(args[0])
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
+				return
+			}
+
+			detailed, _ := cmd.Flags().GetBool(DetailsFlagName)
+			if detailed {
+				fmt.Println(url.DetailString())
+			} else {
+				fmt.Println(url.String())
+			}
+
+		},
+	}
+
+	parse.Flags().BoolP(
+		DetailsFlagName,
+		"d",
+		false,
+		"Whether to output detailed information.",
+	)
+
+	return parse
+}
+
 func addCommonFlags(cmd *cobra.Command) {
 	// Headers
 	cmd.Flags().StringSlice(
@@ -124,7 +163,7 @@ Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=val
 	cmd.Flags().String(OutputFileFlagName, "", "Output the response body to the filename.")
 
 	// AWS signature V4 flags
-	cmd.Flags().BoolP(AWSSigV4FlagName, "4",false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
+	cmd.Flags().BoolP(AWSSigV4FlagName, "4", false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
 	cmd.Flags().String(AWSRegionFlagName, "eu-west-1", "The AWS region to use in the AWS signature.")
 	cmd.Flags().String(AWSProfileFlagName, "", "The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 

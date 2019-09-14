@@ -4,4 +4,10 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Added
+- `parse-url` command.
+
+### Fixed
+- Running get, post or delete with `--sandbox` now returns correct path.
+
 ## [0.1.0] - 2019-09-14
