@@ -4,6 +4,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.3.0] - 2019-09-15
+
 ### Added
 - `--sandbox` flag to run command.
 
