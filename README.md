@@ -2,6 +2,8 @@
 
 This is a simple command to execute HTTP request using you command line. Why not use curl? curl is awesome, but `httpreq` was only created for convenience and to simplify some requests.
 
+[![Build Status](https://travis-ci.org/lunjon/httpreq.svg?branch=master)](https://travis-ci.org/lunjon/httpreq)
+
 ## Installation
 
 Having Go 1.12+ installed run:
