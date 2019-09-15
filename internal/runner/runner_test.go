@@ -26,7 +26,7 @@ func (suite *RunnerTestSuite) SetupSuite() {
 }
 
 func (suite *RunnerTestSuite) SetupTest() {
-	spec, err := runner.Load("testdata/runner_test.yaml")
+	spec, err := runner.LoadSpec("testdata/runner_test.yaml")
 	suite.NoError(err)
 
 	suite.runner = runner.NewRunner(spec, suite.client)

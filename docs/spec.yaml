@@ -6,6 +6,7 @@ requests:
     url: api.example.com/path
     headers:
       x-correlation-id: abc123
+    aws: true
   - id: post-request
     method: post
     url: https://api.example.com/resource/path

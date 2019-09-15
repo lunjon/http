@@ -1,0 +1,15 @@
+{
+  "env": {
+    "base_url": "api.example.com"
+  },
+  "headers": {
+    "x-token": "${SECRET_TOKEN}"
+  },
+  "requests": [
+    {
+      "id": "id",
+      "method": "get",
+      "url": "${base_url}/path"
+    }
+  ]
+}

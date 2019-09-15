@@ -3,6 +3,8 @@ package runner
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"regexp"
 	"strings"
 
 	"github.com/lunjon/httpreq/internal/constants"
@@ -150,12 +152,19 @@ Spec is the specification of runner files.
 It's only used to load files from the system.
 */
 type Spec struct {
-	Headers  map[string]string
-	Requests []*RequestTarget
+	Headers   map[string]string
+	Env       map[string]string
+	Requests  []*RequestTarget
+	validated bool
 }
 
 // Validate that the specification is valid
 func (spec *Spec) Validate() error {
+	err := spec.prepare()
+	if err != nil {
+		return err
+	}
+
 	if spec.Requests == nil {
 		return fmt.Errorf("missing required field 'requests'")
 	}
@@ -174,14 +183,47 @@ func (spec *Spec) Validate() error {
 		}
 	}
 
+	spec.validated = true
 	return nil
 }
 
-// SetHeaders tries to set the default headers in each request
-func (spec *Spec) SetHeaders() {
+/*
+Prepare the spec for validation and usage:
+- Set default headers
+- Expand environment
+*/
+func (spec *Spec) prepare() error {
+	// 	{{ Environment }}
+
+	// Make sure environment variables set in spec correctly
+	for k, v := range spec.Env {
+		if !regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`).MatchString(k) {
+			return fmt.Errorf("invalid env format: %s", k)
+		}
+		os.Setenv(k, v)
+	}
+
+	// Expand global headers
+	for key, value := range spec.Headers {
+		spec.Headers[key] = os.ExpandEnv(value)
+	}
+
+	// Expand request URLs and headers
+	for _, req := range spec.Requests {
+		req.URL = os.ExpandEnv(req.URL)
+
+		for key, value := range req.Headers {
+			req.Headers[key] = os.ExpandEnv(value)
+		}
+	}
+
+	// 	{{ Global headers }}
+
 	for name, value := range spec.Headers {
 		for _, req := range spec.Requests {
 			req.TrySetHeader(name, value)
 		}
 	}
+
+	return nil
 }

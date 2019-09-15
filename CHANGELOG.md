@@ -4,6 +4,11 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.4.0] - 2019-09-15
+
+### Added
+- `env` section in spec files. Allows user to use define and use environment variables in headers and URLs.
+
 ## [0.3.0] - 2019-09-15
 
 ### Added

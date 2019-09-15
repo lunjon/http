@@ -112,7 +112,9 @@ func sendRequest(client *rest.Client, req *http.Request, cmd *cobra.Command) {
 }
 
 func handleRun(cmd *cobra.Command, args []string) {
-	spec, err := runner.Load(args[0])
+	spec, err := runner.LoadSpec(args[0])
+	checkError(err, 2, false, cmd)
+	err = spec.Validate()
 	checkError(err, 2, false, cmd)
 
 	targets, _ := cmd.Flags().GetStringSlice(constants.RunTargetFlagName)

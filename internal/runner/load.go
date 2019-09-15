@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func Load(filepath string) (spec *Spec, err error) {
+func LoadSpec(filepath string) (spec *Spec, err error) {
 	switch {
 	case strings.HasSuffix(filepath, ".json"):
 		spec, err = loadJSONSpec(filepath)
@@ -25,13 +25,6 @@ func Load(filepath string) (spec *Spec, err error) {
 	if err != nil {
 		return
 	}
-
-	err = spec.Validate()
-	if err != nil {
-		return
-	}
-
-	spec.SetHeaders()
 
 	return
 }
