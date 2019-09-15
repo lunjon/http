@@ -18,27 +18,28 @@ $ go install
 
 ### get, post and delete
 
-`httpreq` is really easy to use. The program use the the following format for commands:
-
+**Format**:
 ```sh
 $ httpreq <method> <route> [options]
 ```
 
-For `httpreq <method> ...`commands there are some common flags:
+**Description**: Used to perform 
 
-- **--header**: Specify a key/value pairs (`name=value` or `name:value`) to use as an HTTP header. They can be either a comma separated list of key/value pairs or specified using multiple times.
+**Flags**:
+
+- `--header` (string): Specify a key/value pairs (`name=value` or `name:value`) to use as an HTTP header. They can be either a comma separated list of key/value pairs or specified using multiple times.
     * For instance: `--header h1=value1,h2=value2` and `--header h1:value1 --header h2=value2` will yield the same result.
-- **-4/--aws-sigv4**: Sign the request with AWS signature V4.
+- `-4/--aws-sigv4` (bool: Sign the request with AWS signature V4.
     * If the `--aws-profile` flag is given it tries to use the credentials for that profile, else it looks for the environment variables.
-- **--aws-region**: The AWS region to use when signing the request. 
+- `--aws-region` (string): The AWS region to use when signing the request. 
     * Default is `eu-west-1`
-- **--aws-profile**: Use the AWS profile when signing the request.
+- `--aws-profile` (string): Use the AWS profile when signing the request.
     * Note that the profile must have credentials defined in the profile for it to work.
-- **--output-file**: If there was any response body, output the content to the given file.
+- `--output-file` (string): If there was any response body, output the content to the given file.
     * If not set, it outputs the content to stdout.
-- **--sandbox**: Run the request to a local server and echo request information.
+- `--sandbox` (bool): Run the request to a local server and echo request information.
 
-Below are some examples with a comment above each command that shows the corresponding request.
+**Examples**:
 
 ```sh
 # GET http://localhost/api/test
@@ -66,10 +67,14 @@ Elapsed  102.97 ms
 
 ### run
 
-`httpreq` provide a command called `run` for running requests from a file. These files, lets call them *spec* files, are written as JSON or YAML files in a special format. The total specification for such files can be found in `docs/spec.json` and `docs/spec.yaml` respectively.
+**Format**:
+```sh
+$ httpreq run <file> [flags]
+```
 
-An example spec file can be:
+**Description**: `httpreq` provide a command called `run` for running requests from a file. These files, lets call them *spec* files, are written as JSON or YAML files in a special format. The total specification for such files can be found in `docs/spec.json` and `docs/spec.yaml` respectively.
 
+**Examples**:
 ```yaml
 requests:
     - 
@@ -80,9 +85,42 @@ requests:
 
 ### sandbox
 
-Start a local server at port 8118 (can be changed using `--port`). It will block the program.
+**Format**:
+```sh
+$ httpreq sandbox 
+```
+
+**Description**: Start a local server at port 8118 (can be changed using `--port`). It will block the program.
+
+**Flags**:
+- `-p/--port` (int): Start the server on this port instead of default (8118).
+
+### parse-url
+
+**Format**:
+```sh
+$ httpreq <url>  [flags]
+```
+
+**Description**: Tries to parse the URL and outputs the full URL.
+
+**Flags**:
+- `-pd/--details` (bool): Output detailed information.
+
+**Examples**:
+```sh
+$ httpreq parse-url host.com/api/id
+https://host.com/api/id
+```
+
+## Important Notes
+
+**URLs**: URLs used in httpreq support the different formats below:
+- `/path` ==> `http://localhost/path`
+- `:port/path`: ==> `http://localhost:port/path`
+- `host.com[:port]/path` ==> `https://host.com[:port]/path`
+- `http[s]://host.com[:port]/path` ==> `http[s]://host.com[:port]/path`
 
 ## TODO
 
 - **Variable support in spec files**: It would be nice to define global variables, e.g. an API url, and use them in the requests
-- **Request reference**: Support referencing requests result.
