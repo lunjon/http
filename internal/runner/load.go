@@ -9,8 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func Load(filepath string) (runner *Runner, err error) {
-	var spec *Spec
+func Load(filepath string) (spec *Spec, err error) {
 	switch {
 	case strings.HasSuffix(filepath, ".json"):
 		spec, err = loadJSONSpec(filepath)
@@ -34,10 +33,8 @@ func Load(filepath string) (runner *Runner, err error) {
 
 	spec.SetHeaders()
 
-	runner = NewRunner(spec)
 	return
 }
-
 
 func loadJSONSpec(filepath string) (*Spec, error) {
 	bytes, err := ioutil.ReadFile(filepath)

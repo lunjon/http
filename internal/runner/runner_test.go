@@ -26,16 +26,10 @@ func (suite *RunnerTestSuite) SetupSuite() {
 }
 
 func (suite *RunnerTestSuite) SetupTest() {
-	runner, err := runner.Load("testdata/runner_test.yaml")
+	spec, err := runner.Load("testdata/runner_test.yaml")
 	suite.NoError(err)
 
-	// Change each request URL to the test server
-	for _, req := range runner.Spec.Requests {
-		req.SetBaseURL(suite.server.URL)
-		// req.URL = suite.server.URL
-	}
-
-	suite.runner = runner
+	suite.runner = runner.NewRunner(spec, suite.client)
 }
 
 func (suite *RunnerTestSuite) TearDownSuite() {
@@ -47,19 +41,19 @@ func TestRunnerTestSuite(t *testing.T) {
 }
 
 func (suite *RunnerTestSuite) TestRunner_Run_all() {
-	results, err := suite.runner.Run(suite.client)
+	results, err := suite.runner.Run()
 	suite.NoError(err)
 	suite.Len(results, 2)
 }
 
 func (suite *RunnerTestSuite) TestRunner_Run_Target1() {
-	results, err := suite.runner.Run(suite.client, "target1")
+	results, err := suite.runner.Run("target1")
 	suite.NoError(err)
 	suite.Len(results, 1)
 }
 
 func (suite *RunnerTestSuite) TestRunner_Run_Target2() {
-	results, err := suite.runner.Run(suite.client, "target2")
+	results, err := suite.runner.Run("target2")
 	suite.NoError(err)
 	suite.Len(results, 1)
 }

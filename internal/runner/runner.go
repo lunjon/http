@@ -10,14 +10,29 @@ import (
 
 type Runner struct {
 	Spec   *Spec
+	client *rest.Client
 	hasRun bool
 }
 
-func NewRunner(spec *Spec) *Runner {
-	return &Runner{spec, false}
+func NewRunner(spec *Spec, client *rest.Client) *Runner {
+	return &Runner{
+		Spec:   spec,
+		client: client,
+		hasRun: false}
 }
 
-func (runner *Runner) Run(client *rest.Client, targets ...string) ([]*rest.Result, error) {
+func (runner *Runner) SetBaseURL(url string) (err error) {
+	for _, req := range runner.Spec.Requests {
+		err = req.SetBaseURL(url)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func (runner *Runner) Run(targets ...string) ([]*rest.Result, error) {
 	if runner.hasRun {
 		panic("a runner may only runner once")
 	}
@@ -38,7 +53,7 @@ func (runner *Runner) Run(client *rest.Client, targets ...string) ([]*rest.Resul
 
 	var results []*rest.Result
 	for _, req := range requests {
-		res, err := run(req, client)
+		res, err := run(req, runner.client)
 		if err != nil {
 			return nil, err
 		}

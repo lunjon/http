@@ -84,6 +84,8 @@ func buildRun() *cobra.Command {
 		Run:   handleRun,
 	}
 
+	addCommonFlags(run)
+
 	run.Flags().StringSliceP(
 		constants.RunTargetFlagName,
 		"t",

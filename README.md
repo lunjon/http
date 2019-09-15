@@ -37,7 +37,7 @@ $ httpreq <method> <route> [options]
     * Note that the profile must have credentials defined in the profile for it to work.
 - `--output-file` (string): If there was any response body, output the content to the given file.
     * If not set, it outputs the content to stdout.
-- `--sandbox` (bool): Run the request to a local server and echo request information.
+- `--sandbox` (bool): Run the request to a local server that only echo request information.
 
 **Examples**:
 
@@ -74,6 +74,9 @@ $ httpreq run <file> [flags]
 
 **Description**: `httpreq` provide a command called `run` for running requests from a file. These files, lets call them *spec* files, are written as JSON or YAML files in a special format. The total specification for such files can be found in `docs/spec.json` and `docs/spec.yaml` respectively.
 
+**Flags**:
+- `--sandbox` (bool): Run the request to a local server that only echo request information.
+
 **Examples**:
 ```yaml
 requests:
@@ -105,7 +108,7 @@ $ httpreq <url>  [flags]
 **Description**: Tries to parse the URL and outputs the full URL.
 
 **Flags**:
-- `-pd/--details` (bool): Output detailed information.
+- `-d/--details` (bool): Output detailed information.
 
 **Examples**:
 ```sh

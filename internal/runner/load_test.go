@@ -21,14 +21,14 @@ func TestLoadGoodJSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner, err := runner.Load(tt.filepath)
+			spec, err := runner.Load(tt.filepath)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			if !tt.wantErr && runner == nil {
+			if !tt.wantErr && spec == nil {
 				t.Errorf("Load() returned nil")
 			}
 		})
@@ -51,14 +51,14 @@ func TestLoadBadJSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner, err := runner.Load(tt.filepath)
+			spec, err := runner.Load(tt.filepath)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			if !tt.wantErr && runner == nil {
+			if !tt.wantErr && spec == nil {
 				t.Errorf("Load() returned nil")
 			}
 		})
@@ -79,14 +79,14 @@ func TestLoadGoodYAML(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner, err := runner.Load(tt.filepath)
+			spec, err := runner.Load(tt.filepath)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			if !tt.wantErr && runner == nil {
+			if !tt.wantErr && spec == nil {
 				t.Errorf("Load() returned nil")
 			}
 		})
@@ -105,14 +105,14 @@ func TestLoadBadYAML(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner, err := runner.Load(tt.filepath)
+			spec, err := runner.Load(tt.filepath)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			if !tt.wantErr && runner == nil {
+			if !tt.wantErr && spec == nil {
 				t.Errorf("Load() returned nil")
 			}
 		})
@@ -146,10 +146,10 @@ func TestLoadMisc(t *testing.T) {
 }
 
 func TestLoadDefaultHeaders(t *testing.T) {
-	rn, err := runner.Load("testdata/json/default_headers.json")
+	spec, err := runner.Load("testdata/json/default_headers.json")
 	assert.NoError(t, err)
-	assert.NotNil(t, rn.Spec.Headers)
-	r := rn.Spec.Requests[0]
+	assert.NotNil(t, spec.Headers)
+	r := spec.Requests[0]
 
 	assert.Contains(t, r.Headers, "name")
 	assert.Contains(t, r.Headers, "token")
@@ -159,11 +159,11 @@ func TestLoadDefaultHeaders(t *testing.T) {
 }
 
 func TestLoadAWSSigv4Defaults(t *testing.T) {
-	rn, err := runner.Load("testdata/yaml/aws-sigv4-bool.yml")
+	spec, err := runner.Load("testdata/yaml/aws-sigv4-bool.yml")
 	assert.NoError(t, err)
-	assert.NotNil(t, rn)
+	assert.NotNil(t, spec)
 
-	r := rn.Spec.Requests[0]
+	r := spec.Requests[0]
 	assert.NotNil(t, r.AWS)
 	aws := r.GetAWSSign()
 	assert.NotNil(t, aws)
@@ -172,11 +172,11 @@ func TestLoadAWSSigv4Defaults(t *testing.T) {
 }
 
 func TestLoadAWSSigv4RegionOnly(t *testing.T) {
-	rn, err := runner.Load("testdata/yaml/aws-sigv4-profile-only.yml")
+	spec, err := runner.Load("testdata/yaml/aws-sigv4-profile-only.yml")
 	assert.NoError(t, err)
-	assert.NotNil(t, rn)
+	assert.NotNil(t, spec)
 
-	r := rn.Spec.Requests[0]
+	r := spec.Requests[0]
 	assert.NotNil(t, r.AWS)
 	aws := r.GetAWSSign()
 	assert.NotNil(t, aws)

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/rest"
@@ -113,21 +112,31 @@ func sendRequest(client *rest.Client, req *http.Request, cmd *cobra.Command) {
 }
 
 func handleRun(cmd *cobra.Command, args []string) {
-	spec := args[0]
-	runner, err := runner.Load(spec)
+	spec, err := runner.Load(args[0])
 	checkError(err, 2, false, cmd)
 
-	targetString, _ := cmd.Flags().GetString(constants.RunTargetFlagName)
-	targetString = targetString[1 : len(targetString)-1]
+	targets, _ := cmd.Flags().GetStringSlice(constants.RunTargetFlagName)
 
-	targets := []string{}
-	if targetString != "" {
-		targets = strings.Split(targetString, ",")
+	var rr *runner.Runner
+	var client *rest.Client
+
+	sandbox, _ := cmd.Flags().GetBool(constants.SandboxFlagName)
+
+	if sandbox {
+		server := httptest.NewServer(&rest.SandboxHandler{})
+		defer server.Close()
+		client = createClient(server.Client())
+
+		rr = runner.NewRunner(spec, client)
+		err := rr.SetBaseURL(server.URL)
+		checkError(err, 2, false, cmd)
+
+	} else {
+		client = createClient(nil)
+		rr = runner.NewRunner(spec, client)
 	}
 
-	client := rest.NewClient(nil)
-
-	results, err := runner.Run(client, targets...)
+	results, err := rr.Run(targets...)
 	checkError(err, 1, false, cmd)
 
 	for _, r := range results {
