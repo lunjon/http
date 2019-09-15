@@ -19,12 +19,26 @@ func TestParseURL(t *testing.T) {
 			Path:   "/api/path",
 		}, "http://localhost/api/path"},
 
+		{"/api/path?query=value", &URL{
+			Scheme: HTTP,
+			Port:   80,
+			Host:   localhost,
+			Path:   "/api/path?query=value",
+		}, "http://localhost/api/path?query=value"},
+
 		{":1234/api", &URL{
 			Scheme: HTTP,
 			Port:   1234,
 			Host:   localhost,
 			Path:   "/api",
 		}, "http://localhost:1234/api"},
+
+		{":1234/api?query=true", &URL{
+			Scheme: HTTP,
+			Port:   1234,
+			Host:   localhost,
+			Path:   "/api?query=true",
+		}, "http://localhost:1234/api?query=true"},
 
 		{"localhost/path", &URL{
 			Scheme: HTTP,
@@ -67,6 +81,13 @@ func TestParseURL(t *testing.T) {
 			Host:   "127.0.0.1",
 			Path:   "/path",
 		}, "http://127.0.0.1:50126/path"},
+
+		{"http://127.0.0.1:50126/path?query=value", &URL{
+			Scheme: HTTP,
+			Port:   50126,
+			Host:   "127.0.0.1",
+			Path:   "/path?query=value",
+		}, "http://127.0.0.1:50126/path?query=value"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.url, func(t *testing.T) {
