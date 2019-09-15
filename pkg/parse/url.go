@@ -34,6 +34,17 @@ func (url *URL) String() string {
 	return builder.String()
 }
 
+func (url *URL) BaseURL() string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("%s://%s", url.Scheme, url.Host))
+
+	if url.Port != 80 && url.Port != 443 {
+		builder.WriteString(fmt.Sprintf(":%d", url.Port))
+	}
+
+	return builder.String()
+}
+
 func (url *URL) DetailString() string {
 	var builder strings.Builder
 	const padding = 3

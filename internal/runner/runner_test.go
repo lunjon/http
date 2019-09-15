@@ -31,7 +31,8 @@ func (suite *RunnerTestSuite) SetupTest() {
 
 	// Change each request URL to the test server
 	for _, req := range runner.Spec.Requests {
-		req.URL = suite.server.URL
+		req.SetBaseURL(suite.server.URL)
+		// req.URL = suite.server.URL
 	}
 
 	suite.runner = runner

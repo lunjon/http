@@ -3,21 +3,10 @@ package command
 import (
 	"fmt"
 
+	"github.com/lunjon/httpreq/internal/constants"
+	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/lunjon/httpreq/pkg/parse"
 	"github.com/spf13/cobra"
-)
-
-const (
-	HeaderFlagName      = "header"
-	AWSSigV4FlagName    = "aws-sigv4"
-	AWSProfileFlagName  = "aws-profile"
-	AWSRegionFlagName   = "aws-region"
-	JSONBodyFlagName    = "json"
-	OutputFileFlagName  = "output-file"
-	RunTargetFlagName   = "target"
-	SandboxFlagName     = "sandbox"
-	SandboxPortFlagName = "port"
-	DetailsFlagName     = "details"
 )
 
 // Build the root command for httpreq.
@@ -96,7 +85,7 @@ func buildRun() *cobra.Command {
 	}
 
 	run.Flags().StringSliceP(
-		RunTargetFlagName,
+		constants.RunTargetFlagName,
 		"t",
 		[]string{},
 		`Run the specified target(s) from the file.
@@ -109,11 +98,11 @@ func buildSandbox() *cobra.Command {
 	sandbox := &cobra.Command{
 		Use:   `sandbox`,
 		Short: "Starts a local server. Default to port 8118.",
-		Run:   startSandbox,
+		Run:   rest.StartSandbox,
 	}
 
 	sandbox.Flags().IntP(
-		SandboxPortFlagName,
+		constants.SandboxPortFlagName,
 		"p",
 		8118,
 		`The port to use.`)
@@ -132,7 +121,7 @@ func buildParseURL() *cobra.Command {
 				return
 			}
 
-			detailed, _ := cmd.Flags().GetBool(DetailsFlagName)
+			detailed, _ := cmd.Flags().GetBool(constants.DetailsFlagName)
 			if detailed {
 				fmt.Println(url.DetailString())
 			} else {
@@ -143,7 +132,7 @@ func buildParseURL() *cobra.Command {
 	}
 
 	parse.Flags().BoolP(
-		DetailsFlagName,
+		constants.DetailsFlagName,
 		"d",
 		false,
 		"Whether to output detailed information.",
@@ -155,18 +144,18 @@ func buildParseURL() *cobra.Command {
 func addCommonFlags(cmd *cobra.Command) {
 	// Headers
 	cmd.Flags().StringSlice(
-		HeaderFlagName,
+		constants.HeaderFlagName,
 		[]string{},
 		`HTTP header to use in the request.
 Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=value.`)
 
-	cmd.Flags().String(OutputFileFlagName, "", "Output the response body to the filename.")
+	cmd.Flags().String(constants.OutputFileFlagName, "", "Output the response body to the filename.")
 
 	// AWS signature V4 flags
-	cmd.Flags().BoolP(AWSSigV4FlagName, "4", false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
-	cmd.Flags().String(AWSRegionFlagName, "eu-west-1", "The AWS region to use in the AWS signature.")
-	cmd.Flags().String(AWSProfileFlagName, "", "The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
+	cmd.Flags().BoolP(constants.AWSSigV4FlagName, "4", false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
+	cmd.Flags().String(constants.AWSRegionFlagName, constants.DefaultAWSRegion, "The AWS region to use in the AWS signature.")
+	cmd.Flags().String(constants.AWSProfileFlagName, "", "The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 
 	// Sandbox
-	cmd.Flags().Bool(SandboxFlagName, false, "Run the request to a sandbox server.")
+	cmd.Flags().Bool(constants.SandboxFlagName, false, "Run the request to a sandbox server.")
 }

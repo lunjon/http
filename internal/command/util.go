@@ -6,49 +6,19 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/spf13/cobra"
 )
 
-func parseURL(route string) (string, error) {
-	route = strings.TrimRight(route, "/")
-	local := regexp.MustCompile(`^(/[0-9a-zA-Z\-?&_%])+`)
-	if local.MatchString(route) {
-		return "http://localhost/" + strings.TrimLeft(route, "/"), nil
-	}
-
-	localPort := regexp.MustCompile(`^:(\d+)(/[0-9a-zA-Z\-?&_%]+)*`)
-	if localPort.MatchString(route) {
-		return "http://localhost" + route, nil
-	}
-
-	localhost := regexp.MustCompile(`(https?)?(localhost|127\.0\.0\.1)(:\d+)?(/[0-9a-zA-Z\-?&_%]+)*`)
-	if localhost.MatchString(route) {
-		if strings.HasPrefix(route, "http") {
-			return route, nil
-		}
-		return "http://" + route, nil
-	}
-
-	proto := regexp.MustCompile(`^https?://([a-z0-9\-]+)(\.[a-z0-9\-]+)+(:\d+)?(/[0-9a-zA-Z\-?&_%]+)*`)
-	if proto.MatchString(route) {
-		return route, nil
-	}
-
-	missingProto := regexp.MustCompile(`^([a-z0-9\-]+)(\.[a-z0-9\-]+)+(:\d+)?(/[0-9a-zA-Z\-?&_%]+)*`)
-	if missingProto.MatchString(route) {
-		return "https://" + route, nil
-	}
-
-	return "", fmt.Errorf("Invalid route: %s", route)
-}
-
-// getHeaders assumes strArray is a string that consist of
-// comma separated keypairs in the format key(:|=)value.
+/* getHeaders assumes strArray is a string that consist of
+comma separated keypairs in the format key(:|=)value,
+wrapped inside [].
+*/
 func getHeaders(strArray string) (http.Header, error) {
 	strArray = strings.TrimLeft(strArray, "[")
 	strArray = strings.TrimRight(strArray, "]")
-	strArray = strings.TrimSpace(strArray)
 
 	if strArray == "" {
 		return nil, nil
@@ -84,4 +54,14 @@ func checkError(err error, exitStatus int, printUsage bool, cmd *cobra.Command) 
 		cmd.Usage()
 	}
 	os.Exit(exitStatus)
+}
+
+func createClient(c *http.Client) *rest.Client {
+	if c == nil {
+		c = &http.Client{
+			Timeout: 10 * time.Second,
+		}
+	}
+
+	return rest.NewClient(c)
 }

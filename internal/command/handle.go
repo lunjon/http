@@ -9,8 +9,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
-	"time"
 
+	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/lunjon/httpreq/internal/runner"
 	"github.com/lunjon/httpreq/pkg/parse"
@@ -18,50 +18,27 @@ import (
 )
 
 func handleGet(cmd *cobra.Command, args []string) {
-	handle(http.MethodGet, cmd, args)
+	handleRequest(http.MethodGet, cmd, args)
 }
 
 func handlePost(cmd *cobra.Command, args []string) {
-	handle(http.MethodPost, cmd, args)
+	handleRequest(http.MethodPost, cmd, args)
 }
 
 func handleDelete(cmd *cobra.Command, args []string) {
-	handle(http.MethodDelete, cmd, args)
+	handleRequest(http.MethodDelete, cmd, args)
 }
 
-func handleRun(cmd *cobra.Command, args []string) {
-	spec := args[0]
-	runner, err := runner.Load(spec)
-	checkError(err, 2, false, cmd)
-
-	targetString := cmd.Flag(RunTargetFlagName).Value.String()
-	targetString = targetString[1 : len(targetString)-1]
-
-	targets := []string{}
-	if targetString != "" {
-		targets = strings.Split(targetString, ",")
-	}
-
-	client := rest.NewClient(nil)
-
-	results, err := runner.Run(client, targets...)
-	checkError(err, 1, false, cmd)
-
-	for _, r := range results {
-		fmt.Println(r)
-	}
-}
-
-func handle(method string, cmd *cobra.Command, args []string) {
+func handleRequest(method string, cmd *cobra.Command, args []string) {
 	url := args[0]
-	headerString, _ := cmd.Flags().GetString(HeaderFlagName)
+	headerString, _ := cmd.Flags().GetString(constants.HeaderFlagName)
 	header, err := getHeaders(headerString)
 	checkError(err, 2, true, cmd)
 
 	var body []byte
 
 	if method == http.MethodPost {
-		json, _ := cmd.Flags().GetString(JSONBodyFlagName)
+		json, _ := cmd.Flags().GetString(constants.JSONBodyFlagName)
 		if json == "" {
 			fmt.Println("no or invalid JSON body specified")
 			cmd.Usage()
@@ -74,9 +51,9 @@ func handle(method string, cmd *cobra.Command, args []string) {
 	var client *rest.Client
 
 	// Sandbox should send request to a local test server
-	sandbox, _ := cmd.Flags().GetBool(SandboxFlagName)
+	sandbox, _ := cmd.Flags().GetBool(constants.SandboxFlagName)
 	if sandbox {
-		server := httptest.NewServer(&SandboxHandler{})
+		server := httptest.NewServer(&rest.SandboxHandler{})
 		defer server.Close()
 		client = createClient(server.Client())
 
@@ -91,10 +68,10 @@ func handle(method string, cmd *cobra.Command, args []string) {
 	req, err := client.BuildRequest(method, url, body, header)
 	checkError(err, 2, false, cmd)
 
-	signRequest, _ := cmd.Flags().GetBool(AWSSigV4FlagName)
+	signRequest, _ := cmd.Flags().GetBool(constants.AWSSigV4FlagName)
 	if signRequest {
-		region, _ := cmd.Flags().GetString(AWSRegionFlagName)
-		profile, _ := cmd.Flags().GetString(AWSProfileFlagName)
+		region, _ := cmd.Flags().GetString(constants.AWSRegionFlagName)
+		profile, _ := cmd.Flags().GetString(constants.AWSProfileFlagName)
 		err = client.SignRequest(req, nil, region, profile)
 
 		checkError(err, 2, true, cmd)
@@ -113,7 +90,7 @@ func sendRequest(client *rest.Client, req *http.Request, cmd *cobra.Command) {
 	body, err := res.Body()
 	checkError(err, 1, false, cmd)
 
-	filename, _ := cmd.Flags().GetString(OutputFileFlagName)
+	filename, _ := cmd.Flags().GetString(constants.OutputFileFlagName)
 	if len(body) == 0 {
 		if filename != "" {
 			fmt.Println("no response body to write to file")
@@ -135,12 +112,25 @@ func sendRequest(client *rest.Client, req *http.Request, cmd *cobra.Command) {
 	}
 }
 
-func createClient(c *http.Client) *rest.Client {
-	if c == nil {
-		c = &http.Client{
-			Timeout: 10 * time.Second,
-		}
+func handleRun(cmd *cobra.Command, args []string) {
+	spec := args[0]
+	runner, err := runner.Load(spec)
+	checkError(err, 2, false, cmd)
+
+	targetString, _ := cmd.Flags().GetString(constants.RunTargetFlagName)
+	targetString = targetString[1 : len(targetString)-1]
+
+	targets := []string{}
+	if targetString != "" {
+		targets = strings.Split(targetString, ",")
 	}
 
-	return rest.NewClient(c)
+	client := rest.NewClient(nil)
+
+	results, err := runner.Run(client, targets...)
+	checkError(err, 1, false, cmd)
+
+	for _, r := range results {
+		fmt.Println(r)
+	}
 }

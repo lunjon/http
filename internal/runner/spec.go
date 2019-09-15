@@ -2,25 +2,32 @@ package runner
 
 import (
 	"fmt"
-	"github.com/lunjon/httpreq/internal/rest"
 	"net/http"
 	"strings"
+
+	"github.com/lunjon/httpreq/internal/constants"
+	"github.com/lunjon/httpreq/internal/rest"
+	"github.com/lunjon/httpreq/pkg/parse"
 )
 
-type AWSSign struct {
+/*
+AWSSignConfig represents the configuration
+for signing requests using AWS signature V4.
+*/
+type AWSSignConfig struct {
 	Profile string
 	Region  string
 }
 
-func NewAWSSign(profile, region string) *AWSSign {
-	return &AWSSign{
+func NewAWSSign(profile, region string) *AWSSignConfig {
+	return &AWSSignConfig{
 		Profile: profile,
 		Region:  region,
 	}
 }
 
 /*
-RequestTarget describe the model in the request files.
+RequestTarget describe the model of the requests in the request file.
 */
 type RequestTarget struct {
 	ID     string
@@ -49,9 +56,27 @@ func (req *RequestTarget) TrySetHeader(key, value string) {
 }
 
 /*
+Set the base URL of the request to the new URL,
+but keep the path of the original request.
+*/
+func (req *RequestTarget) SetBaseURL(url string) error {
+	u, err := parse.ParseURL(url)
+	if err != nil {
+		return err
+	}
+	r, err := parse.ParseURL(req.URL)
+	if err != nil {
+		return err
+	}
+
+	req.URL = u.BaseURL() + r.Path
+	return nil
+}
+
+/*
 Validate that the request is valid.
 Should be called before anything else.
- */
+*/
 func (req *RequestTarget) Validate(ids map[string]bool) error {
 	// ID
 
@@ -92,11 +117,11 @@ func (req *RequestTarget) Validate(ids map[string]bool) error {
 	case nil:
 		req.AWS = nil
 	case bool, string:
-		req.AWS = NewAWSSign("", "eu-west-1")
+		req.AWS = NewAWSSign("", constants.DefaultAWSRegion)
 	case map[interface{}]interface{}:
 		v := req.AWS.(map[interface{}]interface{})
 		profile := "default"
-		region := "eu-west-1"
+		region := constants.DefaultAWSRegion
 		if p, found := v["profile"]; found {
 			profile = p.(string)
 		}
@@ -104,7 +129,7 @@ func (req *RequestTarget) Validate(ids map[string]bool) error {
 		if r, found := v["region"]; found {
 			region = r.(string)
 		}
-		
+
 		req.AWS = NewAWSSign(profile, region)
 	}
 
@@ -112,9 +137,9 @@ func (req *RequestTarget) Validate(ids map[string]bool) error {
 	return nil
 }
 
-func (req *RequestTarget) GetAWSSign() *AWSSign {
+func (req *RequestTarget) GetAWSSign() *AWSSignConfig {
 	if req.AWS != nil {
-		return req.AWS.(*AWSSign)
+		return req.AWS.(*AWSSignConfig)
 	}
 
 	return nil
@@ -125,7 +150,7 @@ Spec is the specification of runner files.
 It's only used to load files from the system.
 */
 type Spec struct {
-	Headers map[string]string
+	Headers  map[string]string
 	Requests []*RequestTarget
 }
 

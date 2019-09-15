@@ -1,9 +1,11 @@
 package runner_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/runner"
 )
 
@@ -46,7 +48,6 @@ func TestLoadBadJSON(t *testing.T) {
 		{"missing ID", "testdata/json/missing_id.json", true},
 		{"missing URL", "testdata/json/missing_url.json", true},
 		{"post, missing body", "testdata/json/post_missing_body.json", true},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -75,7 +76,6 @@ func TestLoadGoodYAML(t *testing.T) {
 		{"headers 1", "testdata/yaml/headers.yaml", false},
 		{"headers 2", "testdata/yaml/headers.yml", false},
 		{"post", "testdata/yaml/post.yml", false},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -167,10 +167,9 @@ func TestLoadAWSSigv4Defaults(t *testing.T) {
 	assert.NotNil(t, r.AWS)
 	aws := r.GetAWSSign()
 	assert.NotNil(t, aws)
-	assert.Equal(t, "eu-west-1", aws.Region)
+	assert.Equal(t, constants.DefaultAWSRegion, aws.Region)
 	assert.Empty(t, aws.Profile)
 }
-
 
 func TestLoadAWSSigv4RegionOnly(t *testing.T) {
 	rn, err := runner.Load("testdata/yaml/aws-sigv4-profile-only.yml")
@@ -182,6 +181,6 @@ func TestLoadAWSSigv4RegionOnly(t *testing.T) {
 	aws := r.GetAWSSign()
 	assert.NotNil(t, aws)
 
-	assert.Equal(t, "eu-west-1", aws.Region)
+	assert.Equal(t, constants.DefaultAWSRegion, aws.Region)
 	assert.Equal(t, "default", aws.Profile)
 }
