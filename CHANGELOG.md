@@ -4,6 +4,11 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.5.0] - 2019-10-07
+
+### Fixed
+- `--header` arguments did not end up in the requests
+
 ## [0.4.0] - 2019-09-15
 
 ### Added

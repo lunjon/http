@@ -30,7 +30,7 @@ func handleDelete(cmd *cobra.Command, args []string) {
 
 func handleRequest(method string, cmd *cobra.Command, args []string) {
 	url := args[0]
-	headerString, _ := cmd.Flags().GetString(constants.HeaderFlagName)
+	headerString, _ := cmd.Flags().GetStringSlice(constants.HeaderFlagName)
 	header, err := getHeaders(headerString)
 	checkError(err, 2, true, cmd)
 

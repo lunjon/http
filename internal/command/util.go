@@ -5,29 +5,21 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/spf13/cobra"
 )
 
-/* getHeaders assumes strArray is a string that consist of
-comma separated keypairs in the format key(:|=)value,
-wrapped inside [].
-*/
-func getHeaders(strArray string) (http.Header, error) {
-	strArray = strings.TrimLeft(strArray, "[")
-	strArray = strings.TrimRight(strArray, "]")
-
-	if strArray == "" {
+func getHeaders(arr []string) (http.Header, error) {
+	if len(arr) == 0 {
 		return nil, nil
 	}
 
 	headers := http.Header{}
 	re := regexp.MustCompile(`([a-zA-Z0-9\-_]+)[:=](.*)`)
 
-	for _, h := range strings.Split(strArray, ",") {
+	for _, h := range arr {
 		matches := re.FindAllStringSubmatch(h, -1)
 		if matches == nil {
 			return nil, fmt.Errorf("invalid header format: %s", h)
