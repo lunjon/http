@@ -4,6 +4,12 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.6.0] - 2019-12-17
+
+### Added
+- `--timeout (short version: -T)` flag
+- `-H` as short version for `--header`
+
 ## [0.5.0] - 2019-10-07
 
 ### Fixed

@@ -58,7 +58,7 @@ This command requires the --json flag, which should be a string conforming to va
 		Run:  handlePost,
 	}
 
-	post.Flags().String("json", "", "JSON body to use")
+	post.Flags().String("json", "{}", "JSON body to use")
 	addCommonFlags(post)
 	return post
 }
@@ -145,8 +145,9 @@ func buildParseURL() *cobra.Command {
 
 func addCommonFlags(cmd *cobra.Command) {
 	// Headers
-	cmd.Flags().StringSlice(
+	cmd.Flags().StringSliceP(
 		constants.HeaderFlagName,
+		"H",
 		[]string{},
 		`HTTP header to use in the request.
 Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=value.`)
@@ -160,4 +161,7 @@ Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=val
 
 	// Sandbox
 	cmd.Flags().Bool(constants.SandboxFlagName, false, "Run the request to a sandbox server.")
+
+	// Timeout
+	cmd.Flags().IntP(constants.TimeoutFlagName, "T", 20, "Request timeout in seconds. Default value is 20.")
 }

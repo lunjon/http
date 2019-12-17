@@ -69,7 +69,7 @@ ParseURL tries to parse the url and match it to a format according to:
 */
 func ParseURL(url string) (*URL, error) {
 	url = strings.TrimRight(url, "/")
-	local := regexp.MustCompile(`^(/[0-9a-zA-Z\-?&_%=])+`)
+	local := regexp.MustCompile(`^(/[0-9a-zA-Z\-?&_%=\.])+`)
 	if local.MatchString(url) {
 		return &URL{
 			Scheme: HTTP,
@@ -79,7 +79,7 @@ func ParseURL(url string) (*URL, error) {
 		}, nil
 	}
 
-	localPort := regexp.MustCompile(`^:(\d+)(/[0-9a-zA-Z\-?&_%=]+)*`)
+	localPort := regexp.MustCompile(`^:(\d+)(/[0-9a-zA-Z\-?&_%=\.]+)*`)
 	matches := localPort.FindAllStringSubmatch(url, -1)
 	if matches != nil {
 		portStr := matches[0][1]
@@ -96,7 +96,7 @@ func ParseURL(url string) (*URL, error) {
 	s := "((https?)(://))?"
 	h := `(([a-z0-9\-]+)(\.[a-z0-9\-]+)*)`
 	p := `(:(\d+))?`
-	r := `((/[0-9a-zA-Z\-?&_%=]+)*)`
+	r := `((/[0-9a-zA-Z\-?&_%=\.]+)*)`
 
 	def := regexp.MustCompile(s + h + p + r)
 	matches = def.FindAllStringSubmatch(url, -1)

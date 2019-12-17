@@ -34,6 +34,8 @@ func handleRequest(method string, cmd *cobra.Command, args []string) {
 	header, err := getHeaders(headerString)
 	checkError(err, 2, true, cmd)
 
+	timeout, _ := cmd.Flags().GetInt(constants.TimeoutFlagName)
+
 	var body []byte
 
 	if method == http.MethodPost {
@@ -54,14 +56,14 @@ func handleRequest(method string, cmd *cobra.Command, args []string) {
 	if sandbox {
 		server := httptest.NewServer(&rest.SandboxHandler{})
 		defer server.Close()
-		client = createClient(server.Client())
+		client = createClient(server.Client(), timeout)
 
 		// Re-write the URL to get correct path
 		u, err := parse.ParseURL(url)
 		checkError(err, 2, false, cmd)
 		url = server.URL + u.Path
 	} else {
-		client = createClient(nil)
+		client = createClient(nil, timeout)
 	}
 
 	req, err := client.BuildRequest(method, url, body, header)
@@ -118,6 +120,7 @@ func handleRun(cmd *cobra.Command, args []string) {
 	checkError(err, 2, false, cmd)
 
 	targets, _ := cmd.Flags().GetStringSlice(constants.RunTargetFlagName)
+	timeout, _ := cmd.Flags().GetInt(constants.TimeoutFlagName)
 
 	var rr *runner.Runner
 	var client *rest.Client
@@ -127,14 +130,14 @@ func handleRun(cmd *cobra.Command, args []string) {
 	if sandbox {
 		server := httptest.NewServer(&rest.SandboxHandler{})
 		defer server.Close()
-		client = createClient(server.Client())
+		client = createClient(server.Client(), timeout)
 
 		rr = runner.NewRunner(spec, client)
 		err := rr.SetBaseURL(server.URL)
 		checkError(err, 2, false, cmd)
 
 	} else {
-		client = createClient(nil)
+		client = createClient(nil, timeout)
 		rr = runner.NewRunner(spec, client)
 	}
 

@@ -20,7 +20,7 @@ type RunnerTestSuite struct {
 func (suite *RunnerTestSuite) SetupSuite() {
 	h := HTTPTestHandler{}
 	server := httptest.NewServer(h)
-	client := rest.NewClient(server.Client())
+	client := rest.NewClient(server.Client(), 5)
 	suite.server = server
 	suite.client = client
 }

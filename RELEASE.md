@@ -16,7 +16,8 @@ Run the commands below to commit, tag, and push
 
 ```shell
 $ version=<version>
-$ git commit -am "Release $version"
+$ git add .
+$ git commit -m "Release $version"
 $ git tag -a $version
 $ git push --follow-tags
 ```

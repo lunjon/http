@@ -11,4 +11,5 @@ const (
 	SandboxFlagName     = "sandbox"
 	SandboxPortFlagName = "port"
 	DetailsFlagName     = "details"
+	TimeoutFlagName     = "timeout"
 )

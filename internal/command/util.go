@@ -48,12 +48,12 @@ func checkError(err error, exitStatus int, printUsage bool, cmd *cobra.Command) 
 	os.Exit(exitStatus)
 }
 
-func createClient(c *http.Client) *rest.Client {
+func createClient(c *http.Client, timeout int) *rest.Client {
 	if c == nil {
 		c = &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: time.Duration(timeout) * time.Second,
 		}
 	}
 
-	return rest.NewClient(c)
+	return rest.NewClient(c, timeout)
 }
