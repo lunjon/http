@@ -35,7 +35,7 @@ $ httpreq <method> <route> [options]
     * Default is `eu-west-1`
 - `--aws-profile` (string): Use the AWS profile when signing the request.
     * Note that the profile must have credentials defined in the profile for it to work.
-- `--output-file` (string): If there was any response body, output the content to the given file.
+- `--output` (string): Write the output to a file.
     * If not set, it outputs the content to stdout.
 - `--sandbox` (bool): Run the request to a local server that only echo request information.
 

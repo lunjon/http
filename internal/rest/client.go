@@ -16,12 +16,7 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func NewClient(httpClient *http.Client, timeout int) *Client {
-	if httpClient == nil {
-		httpClient = &http.Client{
-			Timeout: time.Duration(timeout) * time.Second,
-		}
-	}
+func NewClient(httpClient *http.Client) *Client {
 	return &Client{httpClient: httpClient}
 }
 

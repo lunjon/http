@@ -1,8 +1,11 @@
 package rest
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -46,7 +49,36 @@ func (res *Result) Body() ([]byte, error) {
 	return b, nil
 }
 
+func (res *Result) BodyFormatString() (string, error) {
+	if res.body != nil {
+		return "", nil
+	}
+
+	b, err := ioutil.ReadAll(res.response.Body)
+	defer res.response.Body.Close()
+	if err != nil {
+		return "nil", err
+	}
+
+	dst := &bytes.Buffer{}
+	err = json.Indent(dst, b, "", "  ")
+	if err != nil {
+		log.Printf("Failed to indent JSON: %v", err)
+		return "", err
+	}
+
+	return dst.String(), nil
+}
+
 func (res *Result) String() string {
+	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintln(res.response.Request.Method, "\t", res.response.Request.URL.String()))
+	builder.WriteString(fmt.Sprintln("Status", "\t", res.response.Status))
+	builder.WriteString(fmt.Sprintf("Elapsed  %.02f ms", res.ElapsedMilliseconds()))
+	return builder.String()
+}
+
+func (res *Result) Info() string {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintln(res.response.Request.Method, "\t", res.response.Request.URL.String()))
 	builder.WriteString(fmt.Sprintln("Status", "\t", res.response.Status))

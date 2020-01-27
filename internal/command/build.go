@@ -2,6 +2,8 @@ package command
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/rest"
@@ -19,19 +21,24 @@ func Build() *cobra.Command {
 	parse := buildParseURL()
 
 	root := &cobra.Command{
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			verbose, _ := cmd.Flags().GetBool(constants.VerboseFlagName)
+			if !verbose {
+				log.SetOutput(ioutil.Discard)
+			}
+		},
 		Use:   "httpreq",
 		Short: "httpreq <method> <route> [options]",
 		Long: `Execute an HTTP request. Supported HTTP methods are GET, POST and DELETE.
 
 Routes can have any of the following formats:
-  * http[s]://host[:port]/path 	(use as is)
-  * :port/path 			(assume http://localhost:port/path)
-  * /path			(assume http://localhost:80/path
-
-Headers are specified as a comma separated list of keypairs: --header name1(:|=)value1,name2(:|=)value2 ...
-or specified multiple times: --header name1(:|=)value1 --header name2(:|=)value2`,
+  * http[s]://host[:port]/path 		(use as is)
+  * host.domain.example[:port]/path	(add https:// as protocol)
+  * :port/path 				(assume http://localhost:port/path)
+  * /path				(assume http://localhost:80/path`,
 	}
 
+	root.PersistentFlags().BoolP(constants.VerboseFlagName, "v", false, "Shows debug logs.")
 	root.AddCommand(get, post, delete, run, sandbox, parse)
 	return root
 }
@@ -50,15 +57,15 @@ func buildGet() *cobra.Command {
 
 func buildPost() *cobra.Command {
 	post := &cobra.Command{
-		Use:   `post <url> --json <body>`,
+		Use:   `post <url> --body <body>`,
 		Short: "HTTP POST request with a JSON body.",
 		Long: `Make an HTTP POST request to the URL with a JSON body.
-This command requires the --json flag, which should be a string conforming to valid JSON.`,
+This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
 		Run:  handlePost,
 	}
 
-	post.Flags().String("json", "{}", "JSON body to use")
+	post.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
 	addCommonFlags(post)
 	return post
 }
@@ -152,16 +159,38 @@ func addCommonFlags(cmd *cobra.Command) {
 		`HTTP header to use in the request.
 Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=value.`)
 
-	cmd.Flags().String(constants.OutputFileFlagName, "", "Output the response body to the filename.")
+	cmd.Flags().StringP(constants.OutputFileFlagName, "o", "", "Output the response body to the filename.")
+
+	cmd.Flags().BoolP(
+		constants.ResponseBodyOnlyFlagName,
+		"R",
+		false,
+		"Output only the response body")
 
 	// AWS signature V4 flags
-	cmd.Flags().BoolP(constants.AWSSigV4FlagName, "4", false, "Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
-	cmd.Flags().String(constants.AWSRegionFlagName, constants.DefaultAWSRegion, "The AWS region to use in the AWS signature.")
-	cmd.Flags().String(constants.AWSProfileFlagName, "", "The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
+	cmd.Flags().BoolP(
+		constants.AWSSigV4FlagName,
+		"4",
+		false,
+		"Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
+
+	cmd.Flags().String(
+		constants.AWSRegionFlagName,
+		constants.DefaultAWSRegion,
+		"The AWS region to use in the AWS signature.")
+
+	cmd.Flags().String(
+		constants.AWSProfileFlagName,
+		"",
+		"The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 
 	// Sandbox
 	cmd.Flags().Bool(constants.SandboxFlagName, false, "Run the request to a sandbox server.")
 
 	// Timeout
-	cmd.Flags().IntP(constants.TimeoutFlagName, "T", 20, "Request timeout in seconds. Default value is 20.")
+	cmd.Flags().IntP(
+		constants.TimeoutFlagName,
+		"T",
+		20,
+		"Request timeout in seconds.")
 }
