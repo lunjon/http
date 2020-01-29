@@ -35,8 +35,7 @@ func handlePost(cmd *cobra.Command, args []string) {
 
 	// We first try to read as a file
 	body, err := ioutil.ReadFile(bodyFlag)
-
-	if os.IsNotExist(err) {
+	if err != nil && !os.IsNotExist(err) {
 		log.Print("Failed to open input file: ", err)
 		checkError(err, 1, false, cmd)
 	}
