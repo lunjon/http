@@ -60,7 +60,7 @@ func handleRequest(method string, body []byte, cmd *cobra.Command, args []string
 	checkError(err, 2, true, cmd)
 
 	timeout, _ := cmd.Flags().GetInt(constants.TimeoutFlagName)
-	log.Printf("Using timeout of %d seconds\n", timeout)
+	log.Printf("Using timeout of %d seconds", timeout)
 
 	var client *rest.Client
 
@@ -132,7 +132,7 @@ func handleRun(cmd *cobra.Command, args []string) {
 }
 
 func outputResults(cmd *cobra.Command, results ...*rest.Result) {
-	log.Printf("Output %d results", len(results))
+	log.Printf("%d result(s) to output", len(results))
 
 	printResponseBodyOnly, _ := cmd.Flags().GetBool(constants.ResponseBodyOnlyFlagName)
 	filename, _ := cmd.Flags().GetString(constants.OutputFileFlagName)
@@ -142,7 +142,7 @@ func outputResults(cmd *cobra.Command, results ...*rest.Result) {
 	output = Output
 
 	if filename != "" {
-		log.Print("Writing results to file")
+		log.Printf("Writing results to file: %s", filename)
 		writeToFile = true
 		f, err := os.Create(filename)
 		checkError(err, 1, false, cmd)
@@ -152,7 +152,6 @@ func outputResults(cmd *cobra.Command, results ...*rest.Result) {
 	var body string
 	for _, r := range results {
 		if !printResponseBodyOnly {
-			log.Print("Printing response info")
 			fmt.Fprintln(output, r.Info())
 		}
 

@@ -26,6 +26,8 @@ func Build() *cobra.Command {
 			if !verbose {
 				log.SetOutput(ioutil.Discard)
 			}
+
+			log.SetFlags(log.Lmicroseconds|log.Ltime)
 		},
 		Use:   "httpreq",
 		Short: "httpreq <method> <route> [options]",
