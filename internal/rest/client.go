@@ -9,16 +9,34 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/lunjon/httpreq/pkg/parse"
+	"net/http/httptrace"
 )
+
+// transport is an http.RoundTripper that tracks in-flight events.
+type transport struct {
+	current *http.Request
+}
+
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	log.Print("Setting new current request")
+	t.current = req
+	return http.DefaultTransport.RoundTrip(req)
+}
+
+func (t *transport) GotConn(info httptrace.GotConnInfo) {
+	log.Printf("Connection reused for %v: %v", t.current.URL, info.Reused)
+}
 
 type Client struct {
 	httpClient *http.Client
 }
 
 func NewClient(httpClient *http.Client) *Client {
-	return &Client{httpClient: httpClient}
+	return &Client{
+		httpClient: httpClient,
+	}
 }
 
 func (client *Client) BuildRequest(method, url string, json []byte, header http.Header) (*http.Request, error) {
@@ -76,7 +94,15 @@ func (client *Client) SignRequest(req *http.Request, body []byte, region, profil
 }
 
 func (client *Client) SendRequest(req *http.Request) *Result {
-	log.Print("Sending request")
+	t := &transport{}
+	trace := &httptrace.ClientTrace{
+		GotConn: t.GotConn,
+	}
+
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+	client.httpClient.Transport = t
+
+	log.Printf("Sending request: %s %s", req.Method, req.URL.String())
 	start := time.Now()
 	res, err := client.httpClient.Do(req)
 	elapsed := time.Since(start)
