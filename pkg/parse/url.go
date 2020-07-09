@@ -19,6 +19,7 @@ type URL struct {
 	Port   int
 	Host   string
 	Path   string
+	Query  string
 }
 
 func (url *URL) String() string {
@@ -30,6 +31,10 @@ func (url *URL) String() string {
 	}
 
 	builder.WriteString(url.Path)
+	if url.Query != "" {
+		builder.WriteString("?")
+		builder.WriteString(url.Query)
+	}
 
 	return builder.String()
 }
@@ -93,41 +98,54 @@ func ParseURL(url string) (*URL, error) {
 		}, nil
 	}
 
+	// Scheme
 	s := "((https?)(://))?"
+	// Host
 	h := `(([a-z0-9\-]+)(\.[a-z0-9\-]+)*)`
+	// Port
 	p := `(:(\d+))?`
-	r := `((/[0-9a-zA-Z\-?&_%=\.]+)*)`
+	// Path
+	r := `((/[0-9a-zA-Z\-&_%=\.]+)*)`
+	// Query
+	q := `(\?([0-9a-zA-Z\-&_%=\.]+))?`
 
-	def := regexp.MustCompile(s + h + p + r)
+	def := regexp.MustCompile(s + h + p + r + q)
 	matches = def.FindAllStringSubmatch(url, -1)
-	if matches != nil {
-		scheme := matches[0][2]
-		host := matches[0][4]
-		port := 443
-
-		switch {
-		case scheme == "" && regexp.MustCompile(`(localhost|127\.0\.0\.1)`).MatchString(host):
-			scheme = HTTP
-			port = 80
-		case scheme == "":
-			scheme = HTTPS
-		case scheme == HTTP:
-			port = 80
-		}
-
-		portStr := matches[0][8]
-		if portStr != "" {
-			port, _ = strconv.Atoi(portStr)
-		}
-
-		path := matches[0][9]
-		return &URL{
-			Scheme: scheme,
-			Host:   host,
-			Port:   port,
-			Path:   path,
-		}, nil
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("invalid url: %s", url)
 	}
 
-	return nil, fmt.Errorf("invalid url: %s", url)
+	scheme := matches[0][2]
+	host := matches[0][4]
+	port := 443
+
+	switch {
+	case scheme == "" && regexp.MustCompile(`(localhost|127\.0\.0\.1)`).MatchString(host):
+		scheme = HTTP
+		port = 80
+	case scheme == "":
+		scheme = HTTPS
+	case scheme == HTTP:
+		port = 80
+	}
+
+	if scheme == host {
+		return nil, fmt.Errorf("invalid url: %s", url)
+	}
+
+	portStr := matches[0][8]
+	if portStr != "" {
+		port, _ = strconv.Atoi(portStr)
+	}
+
+	path := matches[0][9]
+	query := matches[0][12]
+
+	return &URL{
+		Scheme: scheme,
+		Host:   host,
+		Port:   port,
+		Path:   path,
+		Query:  query,
+	}, nil
 }

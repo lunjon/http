@@ -53,11 +53,13 @@ func (client *Client) BuildRequest(method, url string, json []byte, header http.
 
     var body io.Reader
     if json != nil {
+		log.Printf("Using request body: %s", string(json))
         body = bytes.NewReader(json)
     }
 
     req, err := http.NewRequest(method, u.String(), body)
     if err != nil {
+		log.Printf("Failed to build request: %v", err)
         return nil, err
     }
 
@@ -104,6 +106,13 @@ func (client *Client) SendRequest(req *http.Request) *Result {
     client.httpClient.Transport = t
 
     log.Printf("Sending request: %s %s", req.Method, req.URL.String())
+    var b strings.Builder
+    fmt.Fprintln(&b, "Request headers:")
+    for name, value := range req.Header {
+        fmt.Fprintf(&b, "\t%s: %s\n", name, value)
+    }
+    log.Print(b.String())
+
     start := time.Now()
     res, err := client.httpClient.Do(req)
     elapsed := time.Since(start)

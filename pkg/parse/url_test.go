@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseURL(t *testing.T) {
+func TestParseURL_Valid(t *testing.T) {
 	tests := []struct {
 		url       string
 		exptected *URL
@@ -86,9 +86,19 @@ func TestParseURL(t *testing.T) {
 			Scheme: HTTP,
 			Port:   50126,
 			Host:   "127.0.0.1",
-			Path:   "/path?query=value",
+			Path:   "/path",
+			Query:  "query=value",
 		}, "http://127.0.0.1:50126/path?query=value"},
+
+		{"http://api.host:5000?query=value", &URL{
+			Scheme: HTTP,
+			Port:   5000,
+			Host:   "api.host",
+			Path:   "",
+			Query:  "query=value",
+		}, "http://api.host:5000?query=value"},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.url, func(t *testing.T) {
 			url, err := ParseURL(tt.url)
@@ -97,7 +107,24 @@ func TestParseURL(t *testing.T) {
 			assert.Equal(t, tt.exptected.Port, url.Port)
 			assert.Equal(t, tt.exptected.Host, url.Host)
 			assert.Equal(t, tt.exptected.Path, url.Path)
+			assert.Equal(t, tt.exptected.Query, url.Query)
 			assert.Equal(t, tt.str, url.String())
+
+		})
+	}
+}
+
+func TestParseURL_Invalid(t *testing.T) {
+	tests := []string {
+		"",
+		"https://",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt, func(t *testing.T) {
+			url, err := ParseURL(tt)
+			assert.Error(t, err)
+			assert.Nil(t, url)
 
 		})
 	}

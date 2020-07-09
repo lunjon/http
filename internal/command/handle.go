@@ -46,7 +46,7 @@ func handlePost(cmd *cobra.Command, args []string) {
 		body = []byte(bodyFlag)
 	}
 
-	handleRequest(http.MethodPost, body,  cmd, args)
+	handleRequest(http.MethodPost, body, cmd, args)
 }
 
 func handleDelete(cmd *cobra.Command, args []string) {
