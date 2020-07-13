@@ -13,9 +13,12 @@ import (
 
 // Build the root command for httpreq.
 func Build() *cobra.Command {
+	// HTTP
 	get := buildGet()
 	post := buildPost()
 	delete := buildDelete()
+
+	// Other
 	run := buildRun()
 	sandbox := buildSandbox()
 	parse := buildParseURL()

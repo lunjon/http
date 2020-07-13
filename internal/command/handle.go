@@ -85,7 +85,6 @@ func handleRequest(method string, body []byte, cmd *cobra.Command, args []string
 
 	signRequest, _ := cmd.Flags().GetBool(constants.AWSSigV4FlagName)
 	if signRequest {
-		log.Println("Adding AWS Sig V4 to the request")
 		region, _ := cmd.Flags().GetString(constants.AWSRegionFlagName)
 		profile, _ := cmd.Flags().GetString(constants.AWSProfileFlagName)
 		err = client.SignRequest(req, nil, region, profile)
