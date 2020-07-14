@@ -15,15 +15,18 @@ import (
 // Handler ...
 type Handler struct {
 	logger *log.Logger
-	// Output is where the handler will write the results.
+	// output is where the handler will write the results.
 	// It is initialized to os.Stdout as default
-	Output io.Writer
+	output io.Writer
+	// The custom header flag
+	header *Header
 }
 
-func NewHandler() *Handler {
+func NewHandler(logger *log.Logger, h *Header) *Handler {
 	return &Handler{
-		logger: log.New(os.Stdout, "", 0),
-		Output: os.Stdout,
+		logger: logger,
+		output: os.Stdout,
+		header: h,
 	}
 }
 
@@ -75,19 +78,16 @@ func (handler *Handler) Delete(cmd *cobra.Command, args []string) {
 
 func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Command, args []string) {
 	url := args[0]
-	headerString, _ := cmd.Flags().GetStringSlice(constants.HeaderFlagName)
-	header, err := getHeaders(headerString)
-	checkError(err, 2, true, cmd)
 
 	timeout, _ := cmd.Flags().GetDuration(constants.TimeoutFlagName)
-	log.Printf("Using timeout: %v", timeout)
+	handler.logger.Printf("Request timeout: %v", timeout)
 
 	httpClient := &http.Client{
 		Timeout: timeout,
 	}
 	client := rest.NewClient(httpClient, handler.logger)
 
-	req, err := client.BuildRequest(method, url, body, header)
+	req, err := client.BuildRequest(method, url, body, handler.header.values)
 	checkError(err, 2, false, cmd)
 
 	signRequest, _ := cmd.Flags().GetBool(constants.AWSSigV4FlagName)
@@ -109,7 +109,7 @@ func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
 	filename, _ := cmd.Flags().GetString(constants.OutputFileFlagName)
 
 	var writeToFile bool
-	output := handler.Output
+	output := handler.output
 
 	if filename != "" {
 		log.Printf("Writing results to file: %s", filename)

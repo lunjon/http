@@ -2,7 +2,9 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"time"
+	"os"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/parse"
@@ -11,7 +13,9 @@ import (
 
 // Build the root command for httpreq.
 func Build() *cobra.Command {
-	handler := NewHandler()
+	logger := log.New(os.Stdout, "", 0)
+	h := NewHeader()
+	handler := NewHandler(logger, h)
 
 	// HTTP
 	get := buildGet(handler)
@@ -49,7 +53,7 @@ func buildGet(handler *Handler) *cobra.Command {
 		Run:   handler.Get,
 	}
 
-	addCommonFlags(get)
+	addCommonFlags(get, handler)
 	return get
 }
 
@@ -64,7 +68,7 @@ This command requires the --body flag, which can be a string content or a file.`
 	}
 
 	post.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
-	addCommonFlags(post)
+	addCommonFlags(post, handler)
 	return post
 }
 
@@ -76,7 +80,7 @@ func buildDelete(handler *Handler) *cobra.Command {
 		Run:   handler.Delete,
 	}
 
-	addCommonFlags(delete)
+	addCommonFlags(delete, handler)
 	return delete
 }
 
@@ -112,14 +116,9 @@ func buildParseURL() *cobra.Command {
 	return parse
 }
 
-func addCommonFlags(cmd *cobra.Command) {
+func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 	// Headers
-	cmd.Flags().StringSliceP(
-		constants.HeaderFlagName,
-		"H",
-		[]string{},
-		`HTTP header to use in the request.
-Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=value.`)
+	cmd.Flags().VarP(handler.header, constants.HeaderFlagName, "H", "")
 
 	cmd.Flags().StringP(constants.OutputFileFlagName, "o", "", "Output the response body to the filename.")
 

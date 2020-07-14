@@ -15,72 +15,29 @@ import (
 	"strings"
 )
 
-type tracer struct {
-	currentRequest *http.Request
-	logger         *log.Logger
-}
-
-func newTracer(logger *log.Logger) *tracer {
-	return &tracer{
-		logger: logger,
-	}
-}
-
-func (t *tracer) RoundTrip(req *http.Request) (*http.Response, error) {
-	t.currentRequest = req
-	return http.DefaultTransport.RoundTrip(req)
-}
-
-func (t *tracer) GotConn(info httptrace.GotConnInfo) {
-	if info.Reused {
-		t.logger.Printf("Connection reused for %s", t.currentRequest.URL.String())
-	}
-}
-
-func (t *tracer) DNSStart(info httptrace.DNSStartInfo) {
-	t.logger.Printf("Resolving DNS for host %s", info.Host)
-}
-
-func (t *tracer) DNSDone(info httptrace.DNSDoneInfo) {
-	if info.Err != nil {
-		t.logger.Printf("Failed to during DNS lookup: %v", info.Err)
-	} else {
-		t.logger.Printf("DNS lookup returned address: %s (coalesced = %v)", info.Addrs, info.Coalesced)
-	}
-}
-
-func (t *tracer) ConnectStart(network, addr string) {
-	t.logger.Printf("Attempting to connect on %s to %s", network, addr)
-}
-
-func (t *tracer) ConnectDone(network, addr string, err error) {
-	if err != nil {
-		t.logger.Printf("Failed to connect on %s to %s: %v", network, addr, err)
-	} else {
-		t.logger.Printf("Connected done on %s to %s", network, addr)
-	}
-}
-
 type Client struct {
-	httpClient *http.Client
-	trace      *httptrace.ClientTrace
-	logger     *log.Logger
+	httpClient  *http.Client
+	tracer      *Tracer
+	clientTrace *httptrace.ClientTrace
+	logger      *log.Logger
 }
 
 func NewClient(httpClient *http.Client, logger *log.Logger) *Client {
 	t := newTracer(logger)
 	trace := &httptrace.ClientTrace{
-		GotConn:      t.GotConn,
-		ConnectStart: t.ConnectStart,
-		ConnectDone:  t.ConnectDone,
-		DNSStart:     t.DNSStart,
-		DNSDone:      t.DNSDone,
+		TLSHandshakeStart: t.TLSHandshakeStart,
+		TLSHandshakeDone:  t.TLSHandshakeDone,
+		ConnectStart:      t.ConnectStart,
+		ConnectDone:       t.ConnectDone,
+		DNSStart:          t.DNSStart,
+		DNSDone:           t.DNSDone,
 	}
 
 	return &Client{
-		httpClient: httpClient,
-		trace:      trace,
-		logger:     logger,
+		httpClient:  httpClient,
+		tracer:      t,
+		clientTrace: trace,
+		logger:      logger,
 	}
 }
 
@@ -140,8 +97,7 @@ func (client *Client) SignRequest(req *http.Request, body []byte, region, profil
 }
 
 func (client *Client) SendRequest(req *http.Request) *Result {
-
-	req = req.WithContext(httptrace.WithClientTrace(req.Context(), client.trace))
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), client.clientTrace))
 
 	client.logger.Printf("Sending request: %s %s", req.Method, req.URL.String())
 	if len(req.Header) > 0 {
@@ -157,7 +113,7 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 	res, err := client.httpClient.Do(req)
 	elapsed := time.Since(start)
 
-	client.logger.Printf("Request duration: %v", elapsed)
+	client.tracer.Report(elapsed)
 
 	if err == nil && res != nil {
 		var b strings.Builder

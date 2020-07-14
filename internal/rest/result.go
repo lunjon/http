@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -63,7 +62,6 @@ func (res *Result) BodyFormatString() (string, error) {
 	dst := &bytes.Buffer{}
 	err = json.Indent(dst, b, "", "  ")
 	if err != nil {
-		log.Printf("Failed to indent JSON: %v", err)
 		return "", err
 	}
 
