@@ -2,35 +2,27 @@ package command
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 
 	"github.com/lunjon/httpreq/internal/constants"
-	"github.com/lunjon/httpreq/internal/rest"
-	"github.com/lunjon/httpreq/pkg/parse"
+	"github.com/lunjon/httpreq/internal/parse"
 	"github.com/spf13/cobra"
 )
 
 // Build the root command for httpreq.
 func Build() *cobra.Command {
-	// HTTP
-	get := buildGet()
-	post := buildPost()
-	delete := buildDelete()
+	handler := NewHandler()
 
-	// Other
-	run := buildRun()
-	sandbox := buildSandbox()
+	// HTTP
+	get := buildGet(handler)
+	post := buildPost(handler)
+	delete := buildDelete(handler)
+
 	parse := buildParseURL()
 
 	root := &cobra.Command{
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			verbose, _ := cmd.Flags().GetBool(constants.VerboseFlagName)
-			if !verbose {
-				log.SetOutput(ioutil.Discard)
-			}
-
-			log.SetFlags(log.Lmicroseconds|log.Ltime)
+			handler.Verbose(verbose)
 		},
 		Use:   "httpreq",
 		Short: "httpreq <method> <route> [options]",
@@ -44,30 +36,30 @@ Routes can have any of the following formats:
 	}
 
 	root.PersistentFlags().BoolP(constants.VerboseFlagName, "v", false, "Shows debug logs.")
-	root.AddCommand(get, post, delete, run, sandbox, parse)
+	root.AddCommand(get, post, delete, parse)
 	return root
 }
 
-func buildGet() *cobra.Command {
+func buildGet(handler *Handler) *cobra.Command {
 	get := &cobra.Command{
 		Use:   "get <url>",
 		Short: "HTTP GET request.",
 		Args:  cobra.ExactArgs(1),
-		Run:   handleGet,
+		Run:   handler.Get,
 	}
 
 	addCommonFlags(get)
 	return get
 }
 
-func buildPost() *cobra.Command {
+func buildPost(handler *Handler) *cobra.Command {
 	post := &cobra.Command{
 		Use:   `post <url> --body <body>`,
 		Short: "HTTP POST request with a JSON body.",
 		Long: `Make an HTTP POST request to the URL with a JSON body.
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
-		Run:  handlePost,
+		Run:  handler.Post,
 	}
 
 	post.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
@@ -75,52 +67,16 @@ This command requires the --body flag, which can be a string content or a file.`
 	return post
 }
 
-func buildDelete() *cobra.Command {
+func buildDelete(handler *Handler) *cobra.Command {
 	delete := &cobra.Command{
 		Use:   `delete <url>`,
 		Short: "HTTP DELETE request.",
 		Args:  cobra.ExactArgs(1),
-		Run:   handleDelete,
+		Run:   handler.Delete,
 	}
 
 	addCommonFlags(delete)
 	return delete
-}
-
-func buildRun() *cobra.Command {
-	run := &cobra.Command{
-		Use:   `run <file>`,
-		Short: "Run requests from a spec file.",
-		Long:  "The spec file must be a valid JSON or YAML file.",
-		Args:  cobra.ExactArgs(1),
-		Run:   handleRun,
-	}
-
-	addCommonFlags(run)
-
-	run.Flags().StringSliceP(
-		constants.RunTargetFlagName,
-		"t",
-		[]string{},
-		`Run the specified target(s) from the file.
-Use a comma separated list for multiple targets, e.g. --target a,b
-or specify the flag multiple times, e.g. --target a --target b`)
-	return run
-}
-
-func buildSandbox() *cobra.Command {
-	sandbox := &cobra.Command{
-		Use:   `sandbox`,
-		Short: "Starts a local server. Default to port 8118.",
-		Run:   rest.StartSandbox,
-	}
-
-	sandbox.Flags().IntP(
-		constants.SandboxPortFlagName,
-		"p",
-		8118,
-		`The port to use.`)
-	return sandbox
 }
 
 func buildParseURL() *cobra.Command {
@@ -131,7 +87,7 @@ func buildParseURL() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			url, err := parse.ParseURL(args[0])
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				fmt.Printf("Error: %v\n", err)
 				return
 			}
 
@@ -193,9 +149,9 @@ Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=val
 	cmd.Flags().Bool(constants.SandboxFlagName, false, "Run the request to a sandbox server.")
 
 	// Timeout
-	cmd.Flags().IntP(
+	cmd.Flags().DurationP(
 		constants.TimeoutFlagName,
 		"T",
-		20,
+		10,
 		"Request timeout in seconds.")
 }

@@ -1,8 +1,0 @@
-{
-  "requests": [
-    {
-      "method": "GET",
-      "url": ":123/path"
-    }
-  ]
-}

@@ -1,6 +1,0 @@
-env:
-  "hej!": haha
-requests:
-  -
-    id: name
-    url: localhost/path

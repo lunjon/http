@@ -13,6 +13,10 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
   accept a filename instead of just a string of content.
 - Name of `--output-file` to `--output` only.
 
+### Removed
+- Unused features:
+    * `httpreq run`
+
 ## [0.6.0] - 2019-12-17
 
 ### Added

@@ -65,32 +65,6 @@ Status   403 Forbidden
 Elapsed  102.97 ms
 ```
 
-### run
-
-**Format**:
-```sh
-$ httpreq run <file> [flags]
-```
-
-**Description**: `httpreq` provide a command called `run` for running requests from a file. These files, lets call them *request* files, are written as JSON or YAML files in a special format. The total specification for such files can be found in `docs/spec.json` and `docs/spec.yaml` respectively.
-
-**Flags**:
-- `--sandbox` (bool): Run the request to a local server that only echo request information.
-
-**Examples**:
-```sh
-$ cat req.yaml
-requests:
-    - 
-        name: example request
-        method: get
-        url: https://api.example.com/path
-$ httpreq run req.yaml
-GET     https://api.example.com/path
-Status  200 OK
-Elapsed 89.11 ms
-```
-
 ### sandbox
 
 **Format**:
@@ -128,7 +102,3 @@ https://host.com/api/id
 - `:port/path`: ==> `http://localhost:port/path`
 - `host.com[:port]/path` ==> `https://host.com[:port]/path`
 - `http[s]://host.com[:port]/path` ==> `http[s]://host.com[:port]/path`
-
-## TODO
-
-- **Variable support in spec files**: It would be nice to define global variables, e.g. an API url, and use them in the requests

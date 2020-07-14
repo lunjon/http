@@ -1,9 +1,0 @@
-{
-  "requests": [
-    {
-      "id": "my id",
-      "method": "GET",
-      "url": "http://localhost/path"
-    }
-  ]
-}

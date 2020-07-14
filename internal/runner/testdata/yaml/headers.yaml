@@ -1,7 +1,0 @@
-requests:
-  -
-    id: id
-    method: GET
-    url: http://localhost/path
-    headers:
-      key: value

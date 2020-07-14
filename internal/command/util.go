@@ -5,9 +5,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"time"
 
-	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/spf13/cobra"
 )
 
@@ -41,22 +39,9 @@ func checkError(err error, exitStatus int, printUsage bool, cmd *cobra.Command) 
 		return
 	}
 
-	fmt.Printf("error: %v\n", err)
+	fmt.Printf("Error: %v\n", err)
 	if printUsage {
 		cmd.Usage()
 	}
 	os.Exit(exitStatus)
-}
-
-func createClient(c *http.Client, timeout int) *rest.Client {
-	t := time.Duration(timeout) * time.Second
-	if c == nil {
-		c = &http.Client{
-			Timeout: t,
-		}
-	} else {
-		c.Timeout = t
-	}
-
-	return rest.NewClient(c)
 }

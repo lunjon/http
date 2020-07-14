@@ -1,8 +1,0 @@
-{
-  "requests": [
-    {
-      "id": "id",
-      "method": "GET"
-    }
-  ]
-}

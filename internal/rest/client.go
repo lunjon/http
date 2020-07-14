@@ -10,57 +10,100 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/lunjon/httpreq/pkg/parse"
+	"github.com/lunjon/httpreq/internal/parse"
 	"net/http/httptrace"
 	"strings"
 )
 
-// transport is an http.RoundTripper that tracks in-flight events.
-type transport struct {
-	current *http.Request
+type tracer struct {
+	currentRequest *http.Request
+	logger         *log.Logger
 }
 
-func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	t.current = req
+func newTracer(logger *log.Logger) *tracer {
+	return &tracer{
+		logger: logger,
+	}
+}
+
+func (t *tracer) RoundTrip(req *http.Request) (*http.Response, error) {
+	t.currentRequest = req
 	return http.DefaultTransport.RoundTrip(req)
 }
 
-func (t *transport) GotConn(info httptrace.GotConnInfo) {
+func (t *tracer) GotConn(info httptrace.GotConnInfo) {
 	if info.Reused {
-		log.Printf("Connection reused for %s", t.current.URL.String())
+		t.logger.Printf("Connection reused for %s", t.currentRequest.URL.String())
+	}
+}
+
+func (t *tracer) DNSStart(info httptrace.DNSStartInfo) {
+	t.logger.Printf("Resolving DNS for host %s", info.Host)
+}
+
+func (t *tracer) DNSDone(info httptrace.DNSDoneInfo) {
+	if info.Err != nil {
+		t.logger.Printf("Failed to during DNS lookup: %v", info.Err)
+	} else {
+		t.logger.Printf("DNS lookup returned address: %s (coalesced = %v)", info.Addrs, info.Coalesced)
+	}
+}
+
+func (t *tracer) ConnectStart(network, addr string) {
+	t.logger.Printf("Attempting to connect on %s to %s", network, addr)
+}
+
+func (t *tracer) ConnectDone(network, addr string, err error) {
+	if err != nil {
+		t.logger.Printf("Failed to connect on %s to %s: %v", network, addr, err)
+	} else {
+		t.logger.Printf("Connected done on %s to %s", network, addr)
 	}
 }
 
 type Client struct {
 	httpClient *http.Client
+	trace      *httptrace.ClientTrace
+	logger     *log.Logger
 }
 
-func NewClient(httpClient *http.Client) *Client {
+func NewClient(httpClient *http.Client, logger *log.Logger) *Client {
+	t := newTracer(logger)
+	trace := &httptrace.ClientTrace{
+		GotConn:      t.GotConn,
+		ConnectStart: t.ConnectStart,
+		ConnectDone:  t.ConnectDone,
+		DNSStart:     t.DNSStart,
+		DNSDone:      t.DNSDone,
+	}
+
 	return &Client{
 		httpClient: httpClient,
+		trace:      trace,
+		logger:     logger,
 	}
 }
 
 func (client *Client) BuildRequest(method, url string, json []byte, header http.Header) (*http.Request, error) {
-	log.Printf("Building request: %s %s", method, url)
+	client.logger.Printf("Building request: %s %s", method, url)
 
 	u, err := parse.ParseURL(url)
 	if err != nil {
-		log.Printf("Failed to parse url: %v", err)
+		client.logger.Printf("Failed to parse url: %v", err)
 		return nil, err
 	}
 
-	log.Printf("Parsed URL: %v", u.String())
+	client.logger.Printf("Parsed URL: %v", u.String())
 
 	var body io.Reader
 	if json != nil {
-		log.Printf("Using request body: %s", string(json))
+		client.logger.Printf("Using request body: %s", string(json))
 		body = bytes.NewReader(json)
 	}
 
 	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
-		log.Printf("Failed to build request: %v", err)
+		client.logger.Printf("Failed to build request: %v", err)
 		return nil, err
 	}
 
@@ -76,17 +119,17 @@ func (client *Client) SignRequest(req *http.Request, body []byte, region, profil
 		return fmt.Errorf("must specify an AWS region")
 	}
 
-	log.Print("Signing request using Sig V4")
+	client.logger.Print("Signing request using Sig V4")
 
 	var credProvider credentials.Provider
 	if profile != "" {
-		log.Print("No AWS profile specified, trying default")
+		client.logger.Print("No AWS profile specified, trying default")
 		credProvider = &credentials.SharedCredentialsProvider{
 			Filename: "", // Use default, i.e. the configuration in use home directory
 			Profile:  profile,
 		}
 	} else {
-		log.Print("Using AWS credentials from environment")
+		client.logger.Print("Using AWS credentials from environment")
 		credProvider = &credentials.EnvProvider{}
 	}
 
@@ -97,27 +140,24 @@ func (client *Client) SignRequest(req *http.Request, body []byte, region, profil
 }
 
 func (client *Client) SendRequest(req *http.Request) *Result {
-	t := &transport{}
-	trace := &httptrace.ClientTrace{
-		GotConn: t.GotConn,
-	}
 
-	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
-	client.httpClient.Transport = t
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), client.trace))
 
-	log.Printf("Sending request: %s %s", req.Method, req.URL.String())
-	var b strings.Builder
-	fmt.Fprintln(&b, "Request headers:")
-	for name, value := range req.Header {
-		fmt.Fprintf(&b, "\t%s: %s\n", name, value)
+	client.logger.Printf("Sending request: %s %s", req.Method, req.URL.String())
+	if len(req.Header) > 0 {
+		var b strings.Builder
+		fmt.Fprintln(&b, "Request headers:")
+		for name, value := range req.Header {
+			fmt.Fprintf(&b, "\t%s: %s\n", name, value)
+		}
+		client.logger.Print(b.String())
 	}
-	log.Print(b.String())
 
 	start := time.Now()
 	res, err := client.httpClient.Do(req)
 	elapsed := time.Since(start)
 
-	log.Printf("Request duration: %v", elapsed)
+	client.logger.Printf("Request duration: %v", elapsed)
 
 	if err == nil && res != nil {
 		var b strings.Builder
@@ -125,7 +165,7 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 		for name, value := range res.Header {
 			fmt.Fprintf(&b, "\t%s: %s\n", name, value)
 		}
-		log.Print(b.String())
+		client.logger.Print(b.String())
 	}
 
 	return &Result{
