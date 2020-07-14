@@ -37,7 +37,7 @@ func (h *Header) String() string {
 
 // Parse string s into a header name and value.
 func parseHeader(h string) (string, string, error) {
-	re := regexp.MustCompile(`^([a-zA-Z0-9\-_]+)\s*[:=]\s*(.*)$`)
+	re := regexp.MustCompile(`^([a-zA-Z0-9\-_]+)\s*[:=]\s*(\S+)$`)
 
 	match := re.FindAllStringSubmatch(h, -1)
 	if match == nil {

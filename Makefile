@@ -1,7 +1,7 @@
 all: build test
 
 test:
-	go test -v ./...
+	go test ./...
 
 build:
 	go build ./cmd/httpreq/
