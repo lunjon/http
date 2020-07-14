@@ -59,6 +59,9 @@ func (url *URL) DetailString() string {
 	fmt.Fprintf(w, "Port:\t%d\n", url.Port)
 	fmt.Fprintf(w, "Host:\t%s\n", url.Host)
 	fmt.Fprintf(w, "Path:\t%s", url.Path)
+	if url.Query != "" {
+		fmt.Fprintf(w, "\nQuery:\t%s", url.Query)
+	}
 	w.Flush()
 
 	return builder.String()
