@@ -3,8 +3,8 @@ package command
 import (
 	"fmt"
 	"log"
-	"time"
 	"os"
+	"time"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/parse"
@@ -47,10 +47,11 @@ Routes can have any of the following formats:
 
 func buildGet(handler *Handler) *cobra.Command {
 	get := &cobra.Command{
-		Use:   "get <url>",
-		Short: "HTTP GET request.",
-		Args:  cobra.ExactArgs(1),
-		Run:   handler.Get,
+		Use:     "get <url>",
+		Aliases: []string{"g"},
+		Short:   "HTTP GET request.",
+		Args:    cobra.ExactArgs(1),
+		Run:     handler.Get,
 	}
 
 	addCommonFlags(get, handler)
@@ -59,8 +60,9 @@ func buildGet(handler *Handler) *cobra.Command {
 
 func buildPost(handler *Handler) *cobra.Command {
 	post := &cobra.Command{
-		Use:   `post <url> --body <body>`,
-		Short: "HTTP POST request with a JSON body.",
+		Use:     `post <url> --body <body>`,
+		Aliases: []string{"p"},
+		Short:   "HTTP POST request with a JSON body.",
 		Long: `Make an HTTP POST request to the URL with a JSON body.
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
@@ -74,10 +76,11 @@ This command requires the --body flag, which can be a string content or a file.`
 
 func buildDelete(handler *Handler) *cobra.Command {
 	delete := &cobra.Command{
-		Use:   `delete <url>`,
-		Short: "HTTP DELETE request.",
-		Args:  cobra.ExactArgs(1),
-		Run:   handler.Delete,
+		Use:     `delete <url>`,
+		Aliases: []string{"d"},
+		Short:   "HTTP DELETE request.",
+		Args:    cobra.ExactArgs(1),
+		Run:     handler.Delete,
 	}
 
 	addCommonFlags(delete, handler)
@@ -86,9 +89,10 @@ func buildDelete(handler *Handler) *cobra.Command {
 
 func buildParseURL() *cobra.Command {
 	parse := &cobra.Command{
-		Use:   `parse-url <url>`,
-		Short: "Parse the URL and print the results.",
-		Args:  cobra.ExactArgs(1),
+		Use:     `parse-url <url>`,
+		Aliases: []string{"url"},
+		Short:   "Parse the URL and print the results.",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			url, err := parse.ParseURL(args[0])
 			if err != nil {
@@ -152,6 +156,6 @@ func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 	cmd.Flags().DurationP(
 		constants.TimeoutFlagName,
 		"T",
-		10 * time.Second,
+		10*time.Second,
 		"Request timeout in seconds.")
 }
