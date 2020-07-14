@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/parse"
@@ -152,6 +153,6 @@ Value should be a keypair separated by equal sign (=) or colon (:), e.q. key=val
 	cmd.Flags().DurationP(
 		constants.TimeoutFlagName,
 		"T",
-		10,
+		10 * time.Second,
 		"Request timeout in seconds.")
 }
