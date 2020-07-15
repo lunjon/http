@@ -3,19 +3,25 @@ package command
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/parse"
+	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/spf13/cobra"
 )
 
 // Build the root command for httpreq.
 func Build() *cobra.Command {
+	// Create handler and it's dependencies
 	logger := log.New(os.Stdout, "", 0)
 	h := NewHeader()
-	handler := NewHandler(logger, h)
+	defaultTimeout := time.Second * 10
+	httpClient := &http.Client{}
+	restClient := rest.NewClient(httpClient, logger)
+	handler := NewHandler(restClient, logger, h)
 
 	// HTTP
 	get := buildGet(handler)
@@ -26,8 +32,13 @@ func Build() *cobra.Command {
 
 	root := &cobra.Command{
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			// Verbose flag
 			verbose, _ := cmd.Flags().GetBool(constants.VerboseFlagName)
 			handler.Verbose(verbose)
+
+			// Timeout flag
+			timeout, _ := cmd.Flags().GetDuration(constants.TimeoutFlagName)
+			httpClient.Timeout = timeout
 		},
 		Use:   "httpreq",
 		Short: "httpreq <method> <route> [options]",
@@ -40,7 +51,13 @@ Routes can have any of the following formats:
   * /path				(assume http://localhost:80/path`,
 	}
 
+	// Persistant flags
 	root.PersistentFlags().BoolP(constants.VerboseFlagName, "v", false, "Shows debug logs.")
+	root.PersistentFlags().DurationP(
+		constants.TimeoutFlagName,
+		"T",
+		defaultTimeout,
+		"Request timeout in seconds.")
 	root.AddCommand(get, post, delete, parse)
 	return root
 }
@@ -151,11 +168,4 @@ func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 
 	// Sandbox
 	cmd.Flags().Bool(constants.SandboxFlagName, false, "Run the request to a sandbox server.")
-
-	// Timeout
-	cmd.Flags().DurationP(
-		constants.TimeoutFlagName,
-		"T",
-		10*time.Second,
-		"Request timeout in seconds.")
 }

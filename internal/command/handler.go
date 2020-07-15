@@ -2,14 +2,16 @@ package command
 
 import (
 	"fmt"
-	"github.com/lunjon/httpreq/internal/constants"
-	"github.com/lunjon/httpreq/internal/rest"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/lunjon/httpreq/internal/constants"
+	"github.com/lunjon/httpreq/internal/rest"
+	"github.com/spf13/cobra"
 )
 
 // Handler ...
@@ -18,14 +20,17 @@ type Handler struct {
 	// output is where the handler will write the results.
 	// It is initialized to os.Stdout as default
 	output io.Writer
-	// The custom header flag
+	client *rest.Client
+	// A pointer to the header flag instance, i.e. headers
+	// provided as a flag will be inserted here (or into it's values)
 	header *Header
 }
 
-func NewHandler(logger *log.Logger, h *Header) *Handler {
+func NewHandler(client *rest.Client, logger *log.Logger, h *Header) *Handler {
 	return &Handler{
 		logger: logger,
 		output: os.Stdout,
+		client: client,
 		header: h,
 	}
 }
@@ -59,8 +64,8 @@ func (handler *Handler) Post(cmd *cobra.Command, args []string) {
 	// We first try to read as a file
 	body, err := ioutil.ReadFile(bodyFlag)
 	if err != nil && !os.IsNotExist(err) {
-		log.Print("Failed to open input file: ", err)
-		checkError(err, 1, false, cmd)
+		handler.logger.Printf("Failed to open input file: %v", err)
+		handler.checkUserError(err, cmd)
 	}
 
 	if body == nil {
@@ -79,28 +84,23 @@ func (handler *Handler) Delete(cmd *cobra.Command, args []string) {
 func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Command, args []string) {
 	url := args[0]
 
-	timeout, _ := cmd.Flags().GetDuration(constants.TimeoutFlagName)
-	handler.logger.Printf("Request timeout: %v", timeout)
+	headers, err := handler.getHeaders()
+	handler.checkUserError(err, cmd)
 
-	httpClient := &http.Client{
-		Timeout: timeout,
-	}
-	client := rest.NewClient(httpClient, handler.logger)
-
-	req, err := client.BuildRequest(method, url, body, handler.header.values)
-	checkError(err, 2, false, cmd)
+	req, err := handler.client.BuildRequest(method, url, body, headers)
+	handler.checkUserError(err, cmd)
 
 	signRequest, _ := cmd.Flags().GetBool(constants.AWSSigV4FlagName)
 	if signRequest {
 		region, _ := cmd.Flags().GetString(constants.AWSRegionFlagName)
 		profile, _ := cmd.Flags().GetString(constants.AWSProfileFlagName)
 
-		err = client.SignRequest(req, nil, region, profile)
-		checkError(err, 2, true, cmd)
+		err = handler.client.SignRequest(req, nil, region, profile)
+		handler.checkExecutionError(err)
 	}
 
-	res := client.SendRequest(req)
-	checkError(res.Error(), 1, false, cmd)
+	res := handler.client.SendRequest(req)
+	handler.checkExecutionError(err)
 	handler.outputResults(cmd, res)
 }
 
@@ -115,7 +115,7 @@ func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
 		log.Printf("Writing results to file: %s", filename)
 		writeToFile = true
 		f, err := os.Create(filename)
-		checkError(err, 1, false, cmd)
+		handler.checkExecutionError(err)
 		output = f
 	}
 
@@ -126,12 +126,51 @@ func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
 
 	if writeToFile {
 		b, err := r.Body()
-		checkError(err, 1, false, cmd)
+		handler.checkExecutionError(err)
 		body = string(b)
 	} else {
 		body, _ = r.BodyFormatString()
 	}
 
 	_, err := fmt.Fprintln(output, body)
-	checkError(err, 1, false, cmd)
+	handler.checkExecutionError(err)
+}
+
+// Get the request headers from the handler header field as well as
+// the environment variable for default headers.
+func (handler *Handler) getHeaders() (http.Header, error) {
+	headers := handler.header.values
+	val, set := os.LookupEnv("DEFAULT_HEADERS")
+	if !set {
+		return headers, nil
+	}
+
+	// val is a string containing headers separated by a vertical pipe: |
+	for _, h := range strings.Split(val, "|") {
+		key, value, err := parseHeader(strings.TrimSpace(h))
+		if err != nil {
+			return headers, fmt.Errorf("invalid header format in DEFAULT_HEADERS: %w", err)
+		}
+
+		headers.Add(key, value)
+	}
+
+	return headers, nil
+}
+
+func (handler *Handler) checkExecutionError(err error) {
+	if err == nil {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	os.Exit(1)
+}
+
+func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
+	if err == nil {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	cmd.Usage()
+	os.Exit(1)
 }

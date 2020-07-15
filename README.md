@@ -37,7 +37,6 @@ $ httpreq <method> <route> [options]
     * Note that the profile must have credentials defined in the profile for it to work.
 - `--output` (string): Write the output to a file.
     * If not set, it outputs the content to stdout.
-- `--sandbox` (bool): Run the request to a local server that only echo request information.
 
 **Examples**:
 
@@ -65,18 +64,6 @@ Status   403 Forbidden
 Elapsed  102.97 ms
 ```
 
-### sandbox
-
-**Format**:
-```sh
-$ httpreq sandbox 
-```
-
-**Description**: Start a local server at port 8118 (can be changed using `--port`). It will block the program.
-
-**Flags**:
-- `-p/--port` (int): Start the server on this port instead of default (8118).
-
 ### parse-url
 
 **Format**:
@@ -94,6 +81,12 @@ $ httpreq <url>  [flags]
 $ httpreq parse-url host.com/api/id
 https://host.com/api/id
 ```
+
+### Default headers
+
+Default headers can be set by using an environment variable: `DEFAULT_HEADERS`.
+The string should contain headers in the same format specified using the
+`--header` flag, and multiple headers should be separated by a `|`.
 
 ## Important Notes
 
