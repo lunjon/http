@@ -46,40 +46,27 @@ func (handler *Handler) Timeout(timeout time.Duration) {
 	handler.client.Timeout(timeout)
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	h.logger.Printf("Handling request: %s %s", r.Method, r.URL)
-
-	body := fmt.Sprintf(`{"url": "%s", "method": "%s"}`, r.URL, r.Method)
-	_, _ = w.Write([]byte(body))
-}
-
 func (handler *Handler) Get(cmd *cobra.Command, args []string) {
 	handler.handleRequest(http.MethodGet, nil, cmd, args)
 }
 
+func (handler *Handler) Head(cmd *cobra.Command, args []string) {
+	handler.handleRequest(http.MethodHead, nil, cmd, args)
+}
+
 func (handler *Handler) Post(cmd *cobra.Command, args []string) {
-	bodyFlag, _ := cmd.Flags().GetString(constants.BodyFlagName)
-	if bodyFlag == "" {
-		fmt.Println("No or invalid JSON body specified")
-		cmd.Usage()
-		os.Exit(2)
-	}
-
-	// We first try to read as a file
-	body, err := ioutil.ReadFile(bodyFlag)
-	if err != nil && !os.IsNotExist(err) {
-		handler.logger.Printf("Failed to open input file: %v", err)
-		handler.checkUserError(err, cmd)
-	}
-
-	if body == nil {
-		// Assume that the content was given as string
-		log.Print("Assuming body was given as content string")
-		body = []byte(bodyFlag)
-	}
-
+	body := handler.expectBody(cmd)
 	handler.handleRequest(http.MethodPost, body, cmd, args)
+}
+
+func (handler *Handler) Patch(cmd *cobra.Command, args []string) {
+	body := handler.expectBody(cmd)
+	handler.handleRequest(http.MethodPatch, body, cmd, args)
+}
+
+func (handler *Handler) Put(cmd *cobra.Command, args []string) {
+	body := handler.expectBody(cmd)
+	handler.handleRequest(http.MethodPut, body, cmd, args)
 }
 
 func (handler *Handler) Delete(cmd *cobra.Command, args []string) {
@@ -110,34 +97,14 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 }
 
 func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
-	printResponseBodyOnly, _ := cmd.Flags().GetBool(constants.ResponseBodyOnlyFlagName)
-	filename, _ := cmd.Flags().GetString(constants.OutputFileFlagName)
-
-	var writeToFile bool
-	output := handler.output
-
-	if filename != "" {
-		log.Printf("Writing results to file: %s", filename)
-		writeToFile = true
-		f, err := os.Create(filename)
-		handler.checkExecutionError(err)
-		output = f
+	silent, _ := cmd.Flags().GetBool(constants.SilentFlagName)
+	if silent {
+		return
 	}
 
-	var body string
-	if !printResponseBodyOnly {
-		fmt.Fprintln(output, r.Info())
-	}
-
-	if writeToFile {
-		b, err := r.Body()
-		handler.checkExecutionError(err)
-		body = string(b)
-	} else {
-		body, _ = r.BodyFormatString()
-	}
-
-	_, err := fmt.Fprintln(output, body)
+	body, err := r.Body()
+	handler.checkExecutionError(err)
+	_, err = handler.output.Write(body)
 	handler.checkExecutionError(err)
 }
 
@@ -178,4 +145,26 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	cmd.Usage()
 	os.Exit(1)
+}
+
+func (handler *Handler) expectBody(cmd *cobra.Command) []byte {
+	bodyFlag, _ := cmd.Flags().GetString(constants.BodyFlagName)
+	if bodyFlag == "" {
+		handler.checkUserError(fmt.Errorf("No or invalid JSON body specified"), cmd)
+	}
+
+	// We first try to read as a file
+	body, err := ioutil.ReadFile(bodyFlag)
+	if err != nil && !os.IsNotExist(err) {
+		handler.logger.Printf("Failed to open input file: %v", err)
+		handler.checkUserError(err, cmd)
+	}
+
+	if body == nil {
+		// Assume that the content was given as string
+		handler.logger.Print("Assuming body was given as content string")
+		body = []byte(bodyFlag)
+	}
+
+	return body
 }

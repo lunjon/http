@@ -39,17 +39,21 @@ func TestBuildRequest(t *testing.T) {
 		{"POST", "api.example.com:1234", "[]", false},
 		{"post", "api.example.com:1234/path?query=something", `{"name": "lol"}`, false},
 		{"DELETE", "https://api.example.com:1234/path?query=something", "", false},
+		{"HEAD", "localhost/path", `{}`, false},
+		{"Put", "localhost/path", `{"name": "lol"}`, false},
+		{"Patch", "localhost/path", `{"name": "lol"}`, false},
 		// Invalid
 		{"", "", "", true},
-		{"HEAD", "localhost/path", "", true},  // Unsupported
-		{"Put", "localhost/path", "", true},   // Unsupported
-		{"Patch", "localhost/path", "", true}, // Unsupported
 		{"WHAT", "localhost/path", "", true},
 	}
 
+	var body []byte
 	for _, test := range tests {
+		if test.body != "" {
+			body = []byte(test.body)
+		}
 		t.Run(test.method+" "+test.url, func(t *testing.T) {
-			_, err := client.BuildRequest(test.method, test.url, nil, nil)
+			_, err := client.BuildRequest(test.method, test.url, body, nil)
 			if (err != nil) != test.wantErr {
 				t.Errorf("BuildRequest() error = %v, wantErr = %v", err, test.wantErr)
 				return

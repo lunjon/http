@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const(
+const (
 	defaultTimeout = time.Second * 10
 )
 
@@ -32,7 +32,10 @@ func Build() *cobra.Command {
 
 	// HTTP
 	get := buildGet(handler)
+	head := buildHead(handler)
 	post := buildPost(handler)
+	put := buildPut(handler)
+	patch := buildPatch(handler)
 	delete := buildDelete(handler)
 
 	parse := buildParseURL()
@@ -65,7 +68,7 @@ Routes can have any of the following formats:
 		"T",
 		defaultTimeout,
 		"Request timeout in seconds.")
-	root.AddCommand(get, post, delete, parse)
+	root.AddCommand(get, head, post, put, patch, delete, parse)
 	return root
 }
 
@@ -80,6 +83,18 @@ func buildGet(handler *Handler) *cobra.Command {
 
 	addCommonFlags(get, handler)
 	return get
+}
+
+func buildHead(handler *Handler) *cobra.Command {
+	head := &cobra.Command{
+		Use:   "head <url>",
+		Short: "HTTP HEAD request.",
+		Args:  cobra.ExactArgs(1),
+		Run:   handler.Head,
+	}
+
+	addCommonFlags(head, handler)
+	return head
 }
 
 func buildPost(handler *Handler) *cobra.Command {
@@ -98,10 +113,40 @@ This command requires the --body flag, which can be a string content or a file.`
 	return post
 }
 
+func buildPatch(handler *Handler) *cobra.Command {
+	patch := &cobra.Command{
+		Use:   `patch <url> --body <body>`,
+		Short: "HTTP PATCH request with a JSON body.",
+		Long: `Make an HTTP PATCH request to the URL with a JSON body.
+This command requires the --body flag, which can be a string content or a file.`,
+		Args: cobra.ExactArgs(1),
+		Run:  handler.Patch,
+	}
+
+	patch.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
+	addCommonFlags(patch, handler)
+	return patch
+}
+
+func buildPut(handler *Handler) *cobra.Command {
+	put := &cobra.Command{
+		Use:   `put <url> --body <body>`,
+		Short: "HTTP PUT request with a JSON body.",
+		Long: `Make an HTTP PUT request to the URL with a JSON body.
+This command requires the --body flag, which can be a string content or a file.`,
+		Args: cobra.ExactArgs(1),
+		Run:  handler.Put,
+	}
+
+	put.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
+	addCommonFlags(put, handler)
+	return put
+}
+
 func buildDelete(handler *Handler) *cobra.Command {
 	delete := &cobra.Command{
 		Use:     `delete <url>`,
-		Aliases: []string{"d"},
+		Aliases: []string{"d", "del"},
 		Short:   "HTTP DELETE request.",
 		Args:    cobra.ExactArgs(1),
 		Run:     handler.Delete,
@@ -148,14 +193,6 @@ func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 	// Headers
 	cmd.Flags().VarP(handler.header, constants.HeaderFlagName, "H", "")
 
-	cmd.Flags().StringP(constants.OutputFileFlagName, "o", "", "Output the response body to the filename.")
-
-	cmd.Flags().BoolP(
-		constants.ResponseBodyOnlyFlagName,
-		"R",
-		false,
-		"Output only the response body")
-
 	// AWS signature V4 flags
 	cmd.Flags().BoolP(
 		constants.AWSSigV4FlagName,
@@ -173,6 +210,6 @@ func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 		"",
 		"The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 
-	// Sandbox
-	cmd.Flags().Bool(constants.SandboxFlagName, false, "Run the request to a sandbox server.")
+	// Silent mode
+	cmd.Flags().BoolP(constants.SilentFlagName, "s", false, "Suppress all output")
 }

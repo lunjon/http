@@ -16,18 +16,19 @@ $ go install
 
 ## Usage
 
-### get, post and delete
+### Sending requests
 
 **Format**:
 ```sh
 $ httpreq <method> <route> [options]
 ```
 
-**Description**: Used to perform basic HTTP GET, POST and DELETE requests.
+**Description**: Used to perform basic HTTP requests.
+Supported verbs: GET, HEAD, POST, PUT, PATCH, DELETE
 
 **Flags**:
 
-- `--header` (string): Specify a key/value pairs (`name=value` or `name:value`) to use as an HTTP header. They can be either a comma separated list of key/value pairs or specified using multiple times.
+- `-H, --header` (string): Specify a key/value pairs (`name=value` or `name:value`) to use as an HTTP header. They can be either a comma separated list of key/value pairs or specified using multiple times.
     * For instance: `--header h1=value1,h2=value2` and `--header h1:value1 --header h2=value2` will yield the same result.
 - `-4/--aws-sigv4` (bool: Sign the request with AWS signature V4.
     * If the `--aws-profile` flag is given it tries to use the credentials for that profile, else it looks for the environment variables.
@@ -35,8 +36,10 @@ $ httpreq <method> <route> [options]
     * Default is `eu-west-1`
 - `--aws-profile` (string): Use the AWS profile when signing the request.
     * Note that the profile must have credentials defined in the profile for it to work.
-- `--output` (string): Write the output to a file.
-    * If not set, it outputs the content to stdout.
+- `-T, --timeout` (duration): Specify request timeout.
+    * Default is 10 seconds.
+- `-s, --silent` (string): Suppress response output.
+- `-v, --verbose` (string): Output debug logs.
 
 **Examples**:
 

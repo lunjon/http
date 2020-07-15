@@ -3,10 +3,8 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -67,20 +65,3 @@ func (res *Result) BodyFormatString() (string, error) {
 
 	return dst.String(), nil
 }
-
-func (res *Result) String() string {
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintln(res.response.Request.Method, "\t", res.response.Request.URL.String()))
-	builder.WriteString(fmt.Sprintln("Status", "\t", res.response.Status))
-	builder.WriteString(fmt.Sprintf("Elapsed  %.02f ms", res.ElapsedMilliseconds()))
-	return builder.String()
-}
-
-func (res *Result) Info() string {
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintln(res.response.Request.Method, "\t", res.response.Request.URL.String()))
-	builder.WriteString(fmt.Sprintln("Status", "\t", res.response.Status))
-	builder.WriteString(fmt.Sprintf("Elapsed  %.02f ms", res.ElapsedMilliseconds()))
-	return builder.String()
-}
-

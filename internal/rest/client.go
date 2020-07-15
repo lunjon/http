@@ -18,7 +18,10 @@ import (
 var (
 	supportedMethods = map[string]bool{
 		http.MethodGet:    true,
+		http.MethodHead:   true,
 		http.MethodPost:   true,
+		http.MethodPatch:  true,
+		http.MethodPut:    true,
 		http.MethodDelete: true,
 	}
 )
@@ -130,8 +133,9 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 	res, err := client.httpClient.Do(req)
 	elapsed := time.Since(start)
 
-	client.tracer.Report(elapsed)
+	client.logger.Printf("Response status: %s", res.Status)
 
+	client.tracer.Report(elapsed)
 	if err == nil && res != nil {
 		var b strings.Builder
 		fmt.Fprintln(&b, "Response headers:")
