@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/rest"
@@ -39,6 +40,10 @@ func (handler *Handler) Verbose(v bool) {
 	if !v {
 		handler.logger.SetOutput(ioutil.Discard)
 	}
+}
+
+func (handler *Handler) Timeout(timeout time.Duration) {
+	handler.client.Timeout(timeout)
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +105,7 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 	}
 
 	res := handler.client.SendRequest(req)
-	handler.checkExecutionError(err)
+	handler.checkExecutionError(res.Error())
 	handler.outputResults(cmd, res)
 }
 

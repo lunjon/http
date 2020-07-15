@@ -2,26 +2,33 @@ package command
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/lunjon/httpreq/internal/constants"
+	"github.com/lunjon/httpreq/internal/logging"
 	"github.com/lunjon/httpreq/internal/parse"
 	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/spf13/cobra"
 )
 
-// Build the root command for httpreq.
-func Build() *cobra.Command {
+const(
+	defaultTimeout = time.Second * 10
+)
+
+func createHandler() *Handler {
 	// Create handler and it's dependencies
-	logger := log.New(os.Stdout, "", 0)
+	logger := logging.NewLogger()
 	h := NewHeader()
-	defaultTimeout := time.Second * 10
 	httpClient := &http.Client{}
 	restClient := rest.NewClient(httpClient, logger)
 	handler := NewHandler(restClient, logger, h)
+	return handler
+}
+
+// Build the root command for httpreq.
+func Build() *cobra.Command {
+	handler := createHandler()
 
 	// HTTP
 	get := buildGet(handler)
@@ -38,7 +45,7 @@ func Build() *cobra.Command {
 
 			// Timeout flag
 			timeout, _ := cmd.Flags().GetDuration(constants.TimeoutFlagName)
-			httpClient.Timeout = timeout
+			handler.Timeout(timeout)
 		},
 		Use:   "httpreq",
 		Short: "httpreq <method> <route> [options]",

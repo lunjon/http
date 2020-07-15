@@ -15,6 +15,14 @@ import (
 	"strings"
 )
 
+var (
+	supportedMethods = map[string]bool{
+		http.MethodGet:    true,
+		http.MethodPost:   true,
+		http.MethodDelete: true,
+	}
+)
+
 type Client struct {
 	httpClient  *http.Client
 	tracer      *Tracer
@@ -41,9 +49,18 @@ func NewClient(httpClient *http.Client, logger *log.Logger) *Client {
 	}
 }
 
-func (client *Client) BuildRequest(method, url string, json []byte, header http.Header) (*http.Request, error) {
-	client.logger.Printf("Building request: %s %s", method, url)
+func (handler *Client) Timeout(timeout time.Duration) {
+	handler.httpClient.Timeout = timeout
+}
 
+func (client *Client) BuildRequest(method, url string, json []byte, header http.Header) (*http.Request, error) {
+	method = strings.ToUpper(strings.TrimSpace(method))
+	supported, found := supportedMethods[method]
+	if !(supported && found) {
+		return nil, fmt.Errorf("invalid or unsupported method: %s", method)
+	}
+
+	client.logger.Printf("Building request: %s %s", method, url)
 	u, err := parse.ParseURL(url)
 	if err != nil {
 		client.logger.Printf("Failed to parse url: %v", err)
