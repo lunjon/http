@@ -104,7 +104,7 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 		var b strings.Builder
 		fmt.Fprintln(&b, "Request headers:")
 		for name, value := range req.Header {
-			fmt.Fprintf(&b, "\t%s: %s\n", name, value)
+			fmt.Fprintf(&b, "  %s: %s\n", name, value)
 		}
 		client.logger.Print(b.String())
 	}
@@ -119,7 +119,7 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 		var b strings.Builder
 		fmt.Fprintln(&b, "Response headers:")
 		for name, value := range res.Header {
-			fmt.Fprintf(&b, "\t%s: %s\n", name, value)
+			fmt.Fprintf(&b, "  %s: %s\n", name, value)
 		}
 		client.logger.Print(b.String())
 	}

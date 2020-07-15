@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"net/http/httptrace"
@@ -30,10 +31,10 @@ func newTracer(logger *log.Logger) *Tracer {
 
 func (t *Tracer) Report(total time.Duration) {
 	t.logger.Print("Request duration:")
-	t.logger.Printf("\tTotal: %v", total)
-	t.logger.Printf("\tDNS lookup: %v", t.dnsDuration)
-	t.logger.Printf("\tTLS handshake: %v", t.tlsDuration)
-	t.logger.Printf("\tConnection: %v", t.connectDuration)
+	t.logger.Printf("  Total: %v", total)
+	t.logger.Printf("  DNS lookup: %v", t.dnsDuration)
+	t.logger.Printf("  TLS handshake: %v", t.tlsDuration)
+	t.logger.Printf("  Connection: %v", t.connectDuration)
 }
 
 func (t *Tracer) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -48,11 +49,31 @@ func (t *Tracer) TLSHandshakeStart() {
 
 func (t *Tracer) TLSHandshakeDone(state tls.ConnectionState, err error) {
 	t.tlsDuration += time.Since(t.tlsStart)
-	msg := fmt.Sprintf("TLS handshake done after %v", t.tlsDuration)
 	if err != nil {
-		msg += fmt.Sprintf("with error: %v", err)
+		t.logger.Printf("TLS handshake done after %v with error: %v", t.tlsDuration, err)
+		return
 	}
-	t.logger.Print(msg)
+	t.logger.Printf("TLS handshake done after %v:", t.tlsDuration)
+	t.logger.Printf("  Version: %d", state.Version)
+	t.logger.Printf("  Negotiated protocol: %s", state.NegotiatedProtocol)
+	if state.ServerName != "" {
+		t.logger.Printf("  Server name: %s", state.ServerName)
+	}
+
+	if len(state.PeerCertificates) > 0 {
+		t.logger.Printf("  Peer certificates")
+		lines := []string{}
+		builder := strings.Builder{}
+		for _, cert := range state.PeerCertificates {
+			fmt.Fprintf(&builder, "    Issuer: %v\n", cert.Issuer)
+			fmt.Fprintf(&builder, "    Subject: %v\n", cert.Subject)
+			fmt.Fprintf(&builder, "    Signature algorithm: %v\n", cert.SignatureAlgorithm.String())
+			fmt.Fprintf(&builder, "    Validity bounds: not before %v and not after %v\n", cert.NotBefore, cert.NotAfter)
+			lines = append(lines, builder.String())
+			builder.Reset()
+		}
+		t.logger.Print(strings.Join(lines, "    ----\n"))
+	}
 }
 
 func (t *Tracer) DNSStart(info httptrace.DNSStartInfo) {
