@@ -133,6 +133,15 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 	res, err := client.httpClient.Do(req)
 	elapsed := time.Since(start)
 
+	if err != nil {
+		client.logger.Printf("Request failed: %v", err)
+		return &Result{
+			response: nil,
+			elapsed:  elapsed,
+			err:      err,
+		}
+	}
+
 	client.logger.Printf("Response status: %s", res.Status)
 
 	client.tracer.Report(elapsed)

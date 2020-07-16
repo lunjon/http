@@ -1,8 +1,6 @@
 package rest
 
 import (
-	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -20,7 +18,7 @@ func (res *Result) Successful() bool {
 }
 
 func (res *Result) HasError() bool {
-	return res.err != nil
+	return res.response != nil && res.err != nil
 }
 
 func (res *Result) Error() error {
@@ -32,6 +30,10 @@ func (res *Result) ElapsedMilliseconds() float64 {
 }
 
 func (res *Result) Body() ([]byte, error) {
+	if res.response == nil {
+		return nil, res.err
+	}
+
 	if res.body != nil {
 		return res.body, nil
 	}
@@ -44,24 +46,4 @@ func (res *Result) Body() ([]byte, error) {
 
 	res.body = b
 	return b, nil
-}
-
-func (res *Result) BodyFormatString() (string, error) {
-	if res.body != nil {
-		return "", nil
-	}
-
-	b, err := ioutil.ReadAll(res.response.Body)
-	defer res.response.Body.Close()
-	if err != nil {
-		return "nil", err
-	}
-
-	dst := &bytes.Buffer{}
-	err = json.Indent(dst, b, "", "  ")
-	if err != nil {
-		return "", err
-	}
-
-	return dst.String(), nil
 }
