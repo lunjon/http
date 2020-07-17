@@ -12,76 +12,18 @@ func TestParseURL_Valid(t *testing.T) {
 		exptected *URL
 		str       string
 	}{
-		{"/api/path", &URL{
+		{"http://localhost/path", &URL{
 			Scheme: HTTP,
 			Port:   80,
-			Host:   localhost,
-			Path:   "/api/path",
-		}, "http://localhost/api/path"},
-
-		{"/api/path?query=value", &URL{
-			Scheme: HTTP,
-			Port:   80,
-			Host:   localhost,
-			Path:   "/api/path?query=value",
-		}, "http://localhost/api/path?query=value"},
-
-		{":1234/api", &URL{
-			Scheme: HTTP,
-			Port:   1234,
-			Host:   localhost,
-			Path:   "/api",
-		}, "http://localhost:1234/api"},
-
-		{":1234/api?query=true", &URL{
-			Scheme: HTTP,
-			Port:   1234,
-			Host:   localhost,
-			Path:   "/api?query=true",
-		}, "http://localhost:1234/api?query=true"},
-
-		{"localhost/path", &URL{
-			Scheme: HTTP,
-			Port:   80,
-			Host:   localhost,
+			Host:   "localhost",
 			Path:   "/path",
 		}, "http://localhost/path"},
-
-		{"localhost:1234/api/path", &URL{
-			Scheme: HTTP,
-			Port:   1234,
-			Host:   localhost,
-			Path:   "/api/path",
-		}, "http://localhost:1234/api/path"},
-
-		{"http://host.com/path/id", &URL{
-			Scheme: HTTP,
-			Port:   80,
-			Host:   "host.com",
-			Path:   "/path/id",
-		}, "http://host.com/path/id"},
-
-		{"host.com:1234/path/id", &URL{
-			Scheme: HTTPS,
-			Port:   1234,
-			Host:   "host.com",
-			Path:   "/path/id",
-		}, "https://host.com:1234/path/id"},
-
-		{"host.com/api/path", &URL{
-			Scheme: HTTPS,
-			Port:   443,
-			Host:   "host.com",
-			Path:   "/api/path",
-		}, "https://host.com/api/path"},
-
 		{"http://127.0.0.1:50126/path", &URL{
 			Scheme: HTTP,
 			Port:   50126,
 			Host:   "127.0.0.1",
 			Path:   "/path",
 		}, "http://127.0.0.1:50126/path"},
-
 		{"http://127.0.0.1:50126/path?query=value", &URL{
 			Scheme: HTTP,
 			Port:   50126,
@@ -89,7 +31,6 @@ func TestParseURL_Valid(t *testing.T) {
 			Path:   "/path",
 			Query:  "query=value",
 		}, "http://127.0.0.1:50126/path?query=value"},
-
 		{"http://api.host:5000?query=value", &URL{
 			Scheme: HTTP,
 			Port:   5000,
@@ -97,6 +38,13 @@ func TestParseURL_Valid(t *testing.T) {
 			Path:   "",
 			Query:  "query=value",
 		}, "http://api.host:5000?query=value"},
+		{"https://api.com:5000/external/route", &URL{
+			Scheme: HTTPS,
+			Port:   5000,
+			Host:   "api.com",
+			Path:   "/external/route",
+			Query:  "",
+		}, "https://api.com:5000/external/route"},
 	}
 
 	for _, tt := range tests {
@@ -117,7 +65,11 @@ func TestParseURL_Valid(t *testing.T) {
 func TestParseURL_Invalid(t *testing.T) {
 	tests := []string {
 		"",
+		"http://",
 		"https://",
+		"localhost",
+		"/path",
+		"api.com:8000/path",
 	}
 
 	for _, tt := range tests {

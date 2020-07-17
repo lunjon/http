@@ -1,13 +1,11 @@
 package command
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/lunjon/httpreq/internal/constants"
 	"github.com/lunjon/httpreq/internal/logging"
-	"github.com/lunjon/httpreq/internal/parse"
 	"github.com/lunjon/httpreq/internal/rest"
 	"github.com/spf13/cobra"
 )
@@ -38,8 +36,6 @@ func Build() *cobra.Command {
 	patch := buildPatch(handler)
 	delete := buildDelete(handler)
 
-	parse := buildParseURL()
-
 	root := &cobra.Command{
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// Verbose flag
@@ -51,14 +47,10 @@ func Build() *cobra.Command {
 			handler.Timeout(timeout)
 		},
 		Use:   "httpreq",
-		Short: "httpreq <method> <route> [options]",
-		Long: `Execute an HTTP request. Supported HTTP methods are GET, POST and DELETE.
+		Short: "httpreq <method> <url> [options]",
+		Long: `Execute an HTTP request. Supported HTTP methods are GET, HEAD, PUT, POST, PATCH and DELETE.
 
-Routes can have any of the following formats:
-  * http[s]://host[:port]/path 		(use as is)
-  * host.domain.example[:port]/path	(add https:// as protocol)
-  * :port/path 				(assume http://localhost:port/path)
-  * /path				(assume http://localhost:80/path`,
+URL parameter must be a valid HTTP URL; i.e. it must match something like "https?://host[:port][/path][?query]"`,
 	}
 
 	// Persistant flags
@@ -68,7 +60,7 @@ Routes can have any of the following formats:
 		"T",
 		defaultTimeout,
 		"Request timeout in seconds.")
-	root.AddCommand(get, head, post, put, patch, delete, parse)
+	root.AddCommand(get, head, post, put, patch, delete)
 	return root
 }
 
@@ -154,39 +146,6 @@ func buildDelete(handler *Handler) *cobra.Command {
 
 	addCommonFlags(delete, handler)
 	return delete
-}
-
-func buildParseURL() *cobra.Command {
-	parse := &cobra.Command{
-		Use:     `parse-url <url>`,
-		Aliases: []string{"url"},
-		Short:   "Parse the URL and print the results.",
-		Args:    cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			url, err := parse.ParseURL(args[0])
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-				return
-			}
-
-			detailed, _ := cmd.Flags().GetBool(constants.DetailsFlagName)
-			if detailed {
-				fmt.Println(url.DetailString())
-			} else {
-				fmt.Println(url.String())
-			}
-
-		},
-	}
-
-	parse.Flags().BoolP(
-		constants.DetailsFlagName,
-		"d",
-		false,
-		"Whether to output detailed information.",
-	)
-
-	return parse
 }
 
 func addCommonFlags(cmd *cobra.Command, handler *Handler) {

@@ -36,12 +36,12 @@ func TestBuildRequest(t *testing.T) {
 	}{
 		// Valid
 		{"GET", "http://localhost", "", false},
-		{"POST", "api.example.com:1234", "[]", false},
-		{"post", "api.example.com:1234/path?query=something", `{"name": "lol"}`, false},
+		{"POST", "https://api.example.com:1234", "[]", false},
+		{"post", "https://api.example.com:1234/path?query=something", `{"name": "lol"}`, false},
 		{"DELETE", "https://api.example.com:1234/path?query=something", "", false},
-		{"HEAD", "localhost/path", `{}`, false},
-		{"Put", "localhost/path", `{"name": "lol"}`, false},
-		{"Patch", "localhost/path", `{"name": "lol"}`, false},
+		{"HEAD", "http://localhost/path", `{}`, false},
+		{"Put", "http://localhost/path", `{"name": "lol"}`, false},
+		{"Patch", "http://localhost/path", `{"name": "lol"}`, false},
 		// Invalid
 		{"", "", "", true},
 		{"WHAT", "localhost/path", "", true},

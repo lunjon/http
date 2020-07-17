@@ -7,6 +7,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Added
 - Flag named `--verbose` to output debug logs.
 - Flag named `--response-body-only` to only output the response body.
+- HTTP verbs: HEAD, PUT, PATCH
 
 ### Changed
 - Name of `--json` to `--body` in `httpreq post` command. It also changed the behavior to also
@@ -16,6 +17,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Removed
 - Unused features:
     * `httpreq run`
+    * `httpreq parse-url`
 
 ## [0.6.0] - 2019-12-17
 

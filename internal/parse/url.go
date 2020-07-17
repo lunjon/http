@@ -67,42 +67,16 @@ func (url *URL) DetailString() string {
 	return builder.String()
 }
 
-/*
-ParseURL tries to parse the url and match it to a format according to:
-	- /path -> http://localhost/path
-	- :port/path -> http://localhost:port/path
-	- [https?://]localhost[:port]/path -> https?://localhost[:port]/path
-	- [https?://]host.domain[:port]/path -> [https?://]host.domain[:port]/path
-	- [https?://]ip[:port]/path -> [https?://]ip[:port]/path
-*/
+// Parse URL parses the given URL
 func ParseURL(url string) (*URL, error) {
+	url = strings.TrimSpace(url)
+	if url == "" {
+		return nil, fmt.Errorf("empty URL")
+	}
+
 	url = strings.TrimRight(url, "/")
-	local := regexp.MustCompile(`^(/[0-9a-zA-Z\-?&_%=\.])+`)
-	if local.MatchString(url) {
-		return &URL{
-			Scheme: HTTP,
-			Port:   80,
-			Host:   localhost,
-			Path:   url,
-		}, nil
-	}
-
-	localPort := regexp.MustCompile(`^:(\d+)(/[0-9a-zA-Z\-?&_%=\.]+)*`)
-	matches := localPort.FindAllStringSubmatch(url, -1)
-	if matches != nil {
-		portStr := matches[0][1]
-		port, _ := strconv.Atoi(portStr)
-		path := matches[0][2]
-		return &URL{
-			Scheme: HTTP,
-			Port:   port,
-			Host:   localhost,
-			Path:   path,
-		}, nil
-	}
-
 	// Scheme
-	s := "((https?)(://))?"
+	s := "^(https?)(://)"
 	// Host
 	h := `(([a-z0-9\-]+)(\.[a-z0-9\-]+)*)`
 	// Port
@@ -113,36 +87,31 @@ func ParseURL(url string) (*URL, error) {
 	q := `(\?([0-9a-zA-Z\-&_%=\.]+))?`
 
 	def := regexp.MustCompile(s + h + p + r + q)
-	matches = def.FindAllStringSubmatch(url, -1)
+	matches := def.FindAllStringSubmatch(url, -1)
 	if len(matches) == 0 {
 		return nil, fmt.Errorf("invalid url: %s", url)
 	}
 
-	scheme := matches[0][2]
-	host := matches[0][4]
-	port := 443
+	scheme := matches[0][1]
+	host := matches[0][3]
+	var port int
 
 	switch {
-	case scheme == "" && regexp.MustCompile(`(localhost|127\.0\.0\.1)`).MatchString(host):
-		scheme = HTTP
-		port = 80
-	case scheme == "":
-		scheme = HTTPS
 	case scheme == HTTP:
 		port = 80
+	case scheme == HTTPS:
+		port = 443
+	default:
+		return nil, fmt.Errorf("invalid scheme: %s", scheme)
 	}
 
-	if scheme == host {
-		return nil, fmt.Errorf("invalid url: %s", url)
-	}
-
-	portStr := matches[0][8]
+	portStr := matches[0][7]
 	if portStr != "" {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	path := matches[0][9]
-	query := matches[0][12]
+	path := matches[0][8]
+	query := matches[0][11]
 
 	return &URL{
 		Scheme: scheme,
