@@ -49,7 +49,6 @@ func Build() *cobra.Command {
 		Use:   "httpreq",
 		Short: "httpreq <method> <url> [options]",
 		Long: `Execute an HTTP request. Supported HTTP methods are GET, HEAD, PUT, POST, PATCH and DELETE.
-
 URL parameter must be a valid HTTP URL; i.e. it must match something like "https?://host[:port][/path][?query]"`,
 	}
 
@@ -80,6 +79,7 @@ func buildGet(handler *Handler) *cobra.Command {
 func buildHead(handler *Handler) *cobra.Command {
 	head := &cobra.Command{
 		Use:   "head <url>",
+		Aliases: []string{"h", "hd"},
 		Short: "HTTP HEAD request.",
 		Args:  cobra.ExactArgs(1),
 		Run:   handler.Head,
@@ -92,9 +92,9 @@ func buildHead(handler *Handler) *cobra.Command {
 func buildPost(handler *Handler) *cobra.Command {
 	post := &cobra.Command{
 		Use:     `post <url> --body <body>`,
-		Aliases: []string{"p"},
-		Short:   "HTTP POST request with a JSON body.",
-		Long: `Make an HTTP POST request to the URL with a JSON body.
+		Aliases: []string{"po"},
+		Short:   "HTTP POST request with a body.",
+		Long: `Make an HTTP POST request to the URL with a body.
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
 		Run:  handler.Post,
@@ -108,8 +108,9 @@ This command requires the --body flag, which can be a string content or a file.`
 func buildPatch(handler *Handler) *cobra.Command {
 	patch := &cobra.Command{
 		Use:   `patch <url> --body <body>`,
-		Short: "HTTP PATCH request with a JSON body.",
-		Long: `Make an HTTP PATCH request to the URL with a JSON body.
+		Aliases: []string{"pa"},
+		Short: "HTTP PATCH request with a body.",
+		Long: `Make an HTTP PATCH request to the URL with a body.
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
 		Run:  handler.Patch,
@@ -123,8 +124,9 @@ This command requires the --body flag, which can be a string content or a file.`
 func buildPut(handler *Handler) *cobra.Command {
 	put := &cobra.Command{
 		Use:   `put <url> --body <body>`,
-		Short: "HTTP PUT request with a JSON body.",
-		Long: `Make an HTTP PUT request to the URL with a JSON body.
+		Aliases: []string{"pu"},
+		Short: "HTTP PUT request with a body.",
+		Long: `Make an HTTP PUT request to the URL with a body.
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
 		Run:  handler.Put,
@@ -138,7 +140,7 @@ This command requires the --body flag, which can be a string content or a file.`
 func buildDelete(handler *Handler) *cobra.Command {
 	delete := &cobra.Command{
 		Use:     `delete <url>`,
-		Aliases: []string{"d", "del"},
+		Aliases: []string{"d", "de", "del"},
 		Short:   "HTTP DELETE request.",
 		Args:    cobra.ExactArgs(1),
 		Run:     handler.Delete,
@@ -170,5 +172,5 @@ func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 		"The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 
 	// Silent mode
-	cmd.Flags().BoolP(constants.SilentFlagName, "s", false, "Suppress all output")
+	cmd.Flags().BoolP(constants.SilentFlagName, "s", false, "Suppress output of response body.")
 }
