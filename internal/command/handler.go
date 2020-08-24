@@ -149,8 +149,11 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 
 func (handler *Handler) expectBody(cmd *cobra.Command) []byte {
 	bodyFlag, _ := cmd.Flags().GetString(constants.BodyFlagName)
+    bodyFlag = strings.TrimSpace(bodyFlag)
+
 	if bodyFlag == "" {
-		handler.checkUserError(fmt.Errorf("No or invalid JSON body specified"), cmd)
+		handler.logger.Printf("Empty body")
+        return nil
 	}
 
 	// We first try to read as a file
