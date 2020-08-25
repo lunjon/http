@@ -87,7 +87,7 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 		region, _ := cmd.Flags().GetString(constants.AWSRegionFlagName)
 		profile, _ := cmd.Flags().GetString(constants.AWSProfileFlagName)
 
-		err = handler.client.SignRequest(req, nil, region, profile)
+		err = handler.client.SignRequest(req, body, region, profile)
 		handler.checkExecutionError(err)
 	}
 
