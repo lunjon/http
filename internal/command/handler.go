@@ -24,10 +24,10 @@ type Handler struct {
 	client *rest.Client
 	// A pointer to the header flag instance, i.e. headers
 	// provided as a flag will be inserted here (or into it's values)
-	header *Header
+	header *HeaderOption
 }
 
-func NewHandler(client *rest.Client, logger *log.Logger, h *Header) *Handler {
+func NewHandler(client *rest.Client, logger *log.Logger, h *HeaderOption) *Handler {
 	return &Handler{
 		logger: logger,
 		output: os.Stdout,

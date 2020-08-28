@@ -17,7 +17,7 @@ const (
 func createHandler() *Handler {
 	// Create handler and it's dependencies
 	logger := logging.NewLogger()
-	h := NewHeader()
+	h := NewHeaderOption()
 	httpClient := &http.Client{}
 	restClient := rest.NewClient(httpClient, logger)
 	handler := NewHandler(restClient, logger, h)

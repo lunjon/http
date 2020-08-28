@@ -13,6 +13,7 @@ func TestHeaderOption(t *testing.T) {
 		{"Name: value", false},
 		{"Name = value", false},
 		{"Name : 12-122?!=!92", false},
+		{"Name : Bearer 1234-abcd", false},
 
 		// Invalid
 		{"", true},
@@ -22,7 +23,7 @@ func TestHeaderOption(t *testing.T) {
 		{": value", true},
 	}
 
-	header := NewHeader()
+	header := NewHeaderOption()
 	for _, tt := range tests {
 		t.Run("Parse header: "+tt.value, func(t *testing.T) {
 			err := header.Set(tt.value)

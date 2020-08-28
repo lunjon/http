@@ -7,18 +7,18 @@ import (
 	"strings"
 )
 
-type Header struct {
+type HeaderOption struct {
 	values http.Header
 }
 
-func NewHeader() *Header {
-	return &Header{
+func NewHeaderOption() *HeaderOption {
+	return &HeaderOption{
 		values: make(http.Header),
 	}
 }
 
 // Append adds the provided value as a header if it is valid
-func (h *Header) Set(s string) error {
+func (h *HeaderOption) Set(s string) error {
 	key, value, err := parseHeader(s)
 	if err != nil {
 		return err
@@ -27,11 +27,11 @@ func (h *Header) Set(s string) error {
 	return nil
 }
 
-func (h *Header) Type() string {
+func (h *HeaderOption) Type() string {
 	return "Header"
 }
 
-func (h *Header) String() string {
+func (h *HeaderOption) String() string {
 	return "{}"
 }
 
@@ -42,7 +42,7 @@ func parseHeader(h string) (string, string, error) {
 		return "", "", fmt.Errorf("empty")
 	}
 
-	re := regexp.MustCompile(`^([a-zA-Z0-9\-_]+)\s*[:=]\s*(\S+)$`)
+	re := regexp.MustCompile(`^([a-zA-Z0-9\-_]+)\s*[:=]\s*(\S[\s\S]*)+$`)
 
 	match := re.FindAllStringSubmatch(h, -1)
 	if match == nil {
