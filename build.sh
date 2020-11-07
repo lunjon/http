@@ -22,9 +22,7 @@ do
     env \
         GOOS=$GOOS \
         GOARCH=$GOARCH \
-        go build \
-        -o $output \
-        ./cmd/httpreq/
+        go build -o $output
 
     if [ $? -ne 0 ]; then
         echo 'Error...'
