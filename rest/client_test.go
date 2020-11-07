@@ -6,14 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/lunjon/httpreq/internal/logging"
+	"github.com/lunjon/httpreq/logging"
 )
 
 type TestServer struct{}
 
 func (ts *TestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
 
-func setupClient(t *testing.T) (*Client, string) {
+func setupClient(t *testing.T) (*Client, *URL) {
 	logger := logging.NewLogger()
 	router := &TestServer{}
 	server := httptest.NewServer(router)
@@ -23,7 +23,8 @@ func setupClient(t *testing.T) (*Client, string) {
 		server.Close()
 	})
 
-	return client, server.URL
+	url, _ := ParseURL(server.URL)
+	return client, url
 }
 
 func TestBuildRequest(t *testing.T) {
@@ -53,7 +54,8 @@ func TestBuildRequest(t *testing.T) {
 			body = []byte(test.body)
 		}
 		t.Run(test.method+" "+test.url, func(t *testing.T) {
-			_, err := client.BuildRequest(test.method, test.url, body, nil)
+			url, _ := ParseURL(test.url)
+			_, err := client.BuildRequest(test.method, url, body, nil)
 			if (err != nil) != test.wantErr {
 				t.Errorf("BuildRequest() error = %v, wantErr = %v", err, test.wantErr)
 				return

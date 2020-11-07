@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lunjon/httpreq/internal/command"
+	"github.com/lunjon/httpreq/command"
 )
 
 func main() {

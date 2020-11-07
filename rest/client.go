@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/lunjon/httpreq/internal/parse"
 	"net/http/httptrace"
 	"strings"
 )
@@ -56,7 +55,7 @@ func (handler *Client) Timeout(timeout time.Duration) {
 	handler.httpClient.Timeout = timeout
 }
 
-func (client *Client) BuildRequest(method, url string, json []byte, header http.Header) (*http.Request, error) {
+func (client *Client) BuildRequest(method string, url *URL, json []byte, header http.Header) (*http.Request, error) {
 	method = strings.ToUpper(strings.TrimSpace(method))
 	supported, found := supportedMethods[method]
 	if !(supported && found) {
@@ -64,13 +63,8 @@ func (client *Client) BuildRequest(method, url string, json []byte, header http.
 	}
 
 	client.logger.Printf("Building request: %s %s", method, url)
-	u, err := parse.ParseURL(url)
-	if err != nil {
-		client.logger.Printf("Failed to parse url: %v", err)
-		return nil, err
-	}
 
-	client.logger.Printf("Parsed URL: %v", u.String())
+	client.logger.Printf("Parsed URL: %v", url.String())
 
 	var body io.Reader
 	if json != nil {
@@ -78,7 +72,7 @@ func (client *Client) BuildRequest(method, url string, json []byte, header http.
 		body = bytes.NewReader(json)
 	}
 
-	req, err := http.NewRequest(method, u.String(), body)
+	req, err := http.NewRequest(method, url.String(), body)
 	if err != nil {
 		client.logger.Printf("Failed to build request: %v", err)
 		return nil, err

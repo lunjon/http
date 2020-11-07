@@ -10,17 +10,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lunjon/httpreq/internal/constants"
-	"github.com/lunjon/httpreq/internal/rest"
+	"github.com/lunjon/httpreq/constants"
+	"github.com/lunjon/httpreq/rest"
 	"github.com/spf13/cobra"
 )
 
 // Handler ...
 type Handler struct {
 	logger *log.Logger
-	// output is where the handler will write the results.
+	// infos is where the handler will write the results.
 	// It is initialized to os.Stdout as default
-	output io.Writer
+	infos  io.Writer
+	errors io.Writer
 	client *rest.Client
 	// A pointer to the header flag instance, i.e. headers
 	// provided as a flag will be inserted here (or into it's values)
@@ -30,7 +31,8 @@ type Handler struct {
 func NewHandler(client *rest.Client, logger *log.Logger, h *HeaderOption) *Handler {
 	return &Handler{
 		logger: logger,
-		output: os.Stdout,
+		infos:  os.Stdout,
+		errors: os.Stderr,
 		client: client,
 		header: h,
 	}
@@ -74,7 +76,8 @@ func (handler *Handler) Delete(cmd *cobra.Command, args []string) {
 }
 
 func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Command, args []string) {
-	url := args[0]
+	url, err := rest.ParseURL(args[0])
+	handler.checkUserError(err, cmd)
 
 	headers, err := handler.getHeaders()
 	handler.checkUserError(err, cmd)
@@ -104,7 +107,7 @@ func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
 
 	body, err := r.Body()
 	handler.checkExecutionError(err)
-	_, err = handler.output.Write(body)
+	_, err = handler.infos.Write(body)
 	handler.checkExecutionError(err)
 }
 
@@ -134,7 +137,7 @@ func (handler *Handler) checkExecutionError(err error) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	fmt.Fprintf(handler.errors, "Error: %v\n", err)
 	os.Exit(1)
 }
 
@@ -142,18 +145,18 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	fmt.Fprintf(handler.errors, "Error: %v\n", err)
 	cmd.Usage()
 	os.Exit(1)
 }
 
 func (handler *Handler) expectBody(cmd *cobra.Command) []byte {
 	bodyFlag, _ := cmd.Flags().GetString(constants.BodyFlagName)
-    bodyFlag = strings.TrimSpace(bodyFlag)
+	bodyFlag = strings.TrimSpace(bodyFlag)
 
 	if bodyFlag == "" {
 		handler.logger.Printf("Empty body")
-        return nil
+		return nil
 	}
 
 	// We first try to read as a file

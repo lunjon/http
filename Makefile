@@ -4,7 +4,7 @@ test:
 	go test ./...
 
 build:
-	go build ./cmd/httpreq/
+	go build ./...
 
 install:
-	go install ./cmd/httpreq
+	go install

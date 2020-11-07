@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lunjon/httpreq/internal/constants"
-	"github.com/lunjon/httpreq/internal/logging"
-	"github.com/lunjon/httpreq/internal/rest"
+	"github.com/lunjon/httpreq/constants"
+	"github.com/lunjon/httpreq/logging"
+	"github.com/lunjon/httpreq/rest"
 	"github.com/spf13/cobra"
 )
 

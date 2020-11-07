@@ -1,7 +1,7 @@
 package command_test
 
 import (
-	"github.com/lunjon/httpreq/internal/command"
+	"github.com/lunjon/httpreq/command"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
