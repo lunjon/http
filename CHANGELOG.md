@@ -4,6 +4,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.7.0] - 2020-11-08
+
 ### Added
 - Flag named `--verbose` to output debug logs.
 - Flag named `--response-body-only` to only output the response body.
@@ -13,6 +15,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Name of `--json` to `--body` in `httpreq post` command. It also changed the behavior to also
   accept a filename instead of just a string of content.
 - Name of `--output-file` to `--output` only.
+- Output errors on stderr file descriptor
 
 ### Removed
 - Unused features:
