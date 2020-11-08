@@ -12,6 +12,16 @@ import (
 
 const (
 	defaultTimeout = time.Second * 10
+	description    = `Executes an HTTP request. Supported HTTP methods are GET, HEAD, PUT, POST, PATCH and DELETE.
+URL parameter is always required and must match something like "[https?://]host[:port][/path][?query]"
+
+Protocol and host of the URL can be implicit if given like [host]:port/path...
+Examples:
+ * localhost/path	->	http://localhost/path
+ * :1234/index		->	http://localhost:1234/index
+
+ Headers are specified on the format: Name(:|=)value. Example: "Content-Type: application/json".
+`
 )
 
 func createHandler() *Handler {
@@ -48,8 +58,7 @@ func Build() *cobra.Command {
 		},
 		Use:   "httpreq",
 		Short: "httpreq <method> <url> [options]",
-		Long: `Execute an HTTP request. Supported HTTP methods are GET, HEAD, PUT, POST, PATCH and DELETE.
-URL parameter must be a valid HTTP URL; i.e. it must match something like "https?://host[:port][/path][?query]"`,
+		Long:  description,
 	}
 
 	// Persistant flags
@@ -78,11 +87,11 @@ func buildGet(handler *Handler) *cobra.Command {
 
 func buildHead(handler *Handler) *cobra.Command {
 	head := &cobra.Command{
-		Use:   "head <url>",
+		Use:     "head <url>",
 		Aliases: []string{"h", "hd"},
-		Short: "HTTP HEAD request.",
-		Args:  cobra.ExactArgs(1),
-		Run:   handler.Head,
+		Short:   "HTTP HEAD request.",
+		Args:    cobra.ExactArgs(1),
+		Run:     handler.Head,
 	}
 
 	addCommonFlags(head, handler)
@@ -107,9 +116,9 @@ This command requires the --body flag, which can be a string content or a file.`
 
 func buildPatch(handler *Handler) *cobra.Command {
 	patch := &cobra.Command{
-		Use:   `patch <url> --body <body>`,
+		Use:     `patch <url> --body <body>`,
 		Aliases: []string{"pa"},
-		Short: "HTTP PATCH request with a body.",
+		Short:   "HTTP PATCH request with a body.",
 		Long: `Make an HTTP PATCH request to the URL with a body.
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
@@ -123,9 +132,9 @@ This command requires the --body flag, which can be a string content or a file.`
 
 func buildPut(handler *Handler) *cobra.Command {
 	put := &cobra.Command{
-		Use:   `put <url> --body <body>`,
+		Use:     `put <url> --body <body>`,
 		Aliases: []string{"pu"},
-		Short: "HTTP PUT request with a body.",
+		Short:   "HTTP PUT request with a body.",
 		Long: `Make an HTTP PUT request to the URL with a body.
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),

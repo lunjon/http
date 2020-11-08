@@ -14,6 +14,13 @@ const (
 	localhost = "localhost"
 )
 
+var (
+	portPattern      = regexp.MustCompile(`^:\d+`)
+	protoPattern     = regexp.MustCompile(`^https?://`)
+	localhostPattern = regexp.MustCompile(`^(localhost|127\.0\.0\.1)`)
+	hostPattern      = regexp.MustCompile(`^[a-z](\.[a-z]+)*`)
+)
+
 type URL struct {
 	Scheme string
 	Port   int
@@ -67,8 +74,37 @@ func (url *URL) DetailString() string {
 	return builder.String()
 }
 
-// Parse URL parses the given URL
+// ParseURL parses the given URL
 func ParseURL(url string) (*URL, error) {
+	url = strings.TrimSpace(url)
+	if url == "" {
+		return nil, fmt.Errorf("empty URL")
+	}
+
+	// :port/path
+	if portPattern.MatchString(url) {
+		return parseURL("http://localhost" + url)
+	}
+
+	// localhost
+	if localhostPattern.MatchString(url) {
+		return parseURL("http://" + url)
+	}
+
+	// https?://...
+	if protoPattern.MatchString(url) {
+		return parseURL(url)
+	}
+
+	// api.com...
+	if hostPattern.MatchString(url) {
+		return parseURL("https://" + url)
+	}
+
+	return nil, fmt.Errorf("invalid URL format: %s", url)
+}
+
+func parseURL(url string) (*URL, error) {
 	url = strings.TrimSpace(url)
 	if url == "" {
 		return nil, fmt.Errorf("empty URL")
