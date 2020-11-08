@@ -7,6 +7,6 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	httpreq := command.Build()
+	httpreq := command.Build("test")
 	assert.NotNil(t, httpreq)
 }

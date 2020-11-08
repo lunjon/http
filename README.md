@@ -1,6 +1,9 @@
 # HTTPReq
 
-This is a simple command to execute HTTP request using you command line. Why not use curl? curl is awesome, but `httpreq` was only created for convenience and to simplify some requests.
+A CLI program for sending basic HTTP requests. Features:
+ - Simplified URL parsing, e.g. `:1234/path` becomes `http://localhost:1234/path`
+ - AWS signature v4 support
+ - Reading request body either a string or file, it can detect the difference
 
 ## Installation
 
@@ -18,22 +21,18 @@ $ go install
 
 **Format**:
 ```sh
-$ httpreq <method> <route> [options]
+$ httpreq <method> <url> [options]
 ```
-
-**Description**: Used to perform basic HTTP requests.
-
-Supported verbs: GET, HEAD, POST, PUT, PATCH, DELETE
 
 **Flags**:
 
-- `-H, --header` (string): Specify a key/value pairs (`name=value` or `name:value`) to use as an HTTP header. They can be either a comma separated list of key/value pairs or specified using multiple times.
+- `-H, --header` (string): Specify a key/value pairs (`name=value` or `name:value`) to use as an HTTP header.
+  They can be either a comma separated list of key/value pairs or specified using multiple times.
     * For instance: `--header h1=value1,h2=value2` and `--header h1:value1 --header h2=value2` will yield the same result.
 - `-4/--aws-sigv4` (bool: Sign the request with AWS signature V4.
     * If the `--aws-profile` flag is given it tries to use the credentials for that profile, else it looks for the environment variables.
 - `--aws-region` (string): The AWS region to use when signing the request. 
     * Default is `eu-west-1`
-- `--aws-profile` (string): Use the AWS profile when signing the request.
     * Note that the profile must have credentials defined in the profile for it to work.
 - `-T, --timeout` (duration): Specify request timeout.
     * Default is 10 seconds.
@@ -43,14 +42,6 @@ Supported verbs: GET, HEAD, POST, PUT, PATCH, DELETE
 **Examples**:
 
 ```sh
-# GET http://localhost/api/test
-$ httpreq get /api/test
-GET      http://localhost/api/test
-Status   200 OK
-Elapsed  31.72 ms
-{
-    ...
-}
 # POST http://localhost:1234/api/test 
 $ httpreq post :1234/api/test --json '{"field":"value"}'
 GET      http://localhost:1234/api/test
@@ -59,6 +50,7 @@ Elapsed  15.11 ms
 {
     ...
 }
+
 # GET https://api.example/resources/abbccc-122333, using header X-User with value donald
 $ httpreq get https://api.example/resources/abbccc-122333 --header x-user=donald
 GET      https://api.example/resources/abbccc-122333
