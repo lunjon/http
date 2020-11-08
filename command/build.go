@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lunjon/httpreq/constants"
 	"github.com/lunjon/httpreq/logging"
 	"github.com/lunjon/httpreq/rest"
 	"github.com/spf13/cobra"
@@ -22,6 +21,8 @@ Examples:
 
  Headers are specified on the format: Name(:|=)value. Example: "Content-Type: application/json".
 `
+	DefaultAWSRegion  = "eu-west-1"
+	DefaultHeadersEnv = "DEFAULT_HEADERS"
 )
 
 func createHandler() *Handler {
@@ -34,8 +35,8 @@ func createHandler() *Handler {
 	return handler
 }
 
-// Build the root command for httpreq.
-func Build() *cobra.Command {
+// Build the root command for httpreq and set version.
+func Build(version string) *cobra.Command {
 	handler := createHandler()
 
 	// HTTP
@@ -47,13 +48,14 @@ func Build() *cobra.Command {
 	delete := buildDelete(handler)
 
 	root := &cobra.Command{
+		Version: version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// Verbose flag
-			verbose, _ := cmd.Flags().GetBool(constants.VerboseFlagName)
+			verbose, _ := cmd.Flags().GetBool(VerboseFlagName)
 			handler.Verbose(verbose)
 
 			// Timeout flag
-			timeout, _ := cmd.Flags().GetDuration(constants.TimeoutFlagName)
+			timeout, _ := cmd.Flags().GetDuration(TimeoutFlagName)
 			handler.Timeout(timeout)
 		},
 		Use:   "httpreq",
@@ -62,9 +64,9 @@ func Build() *cobra.Command {
 	}
 
 	// Persistant flags
-	root.PersistentFlags().BoolP(constants.VerboseFlagName, "v", false, "Shows debug logs.")
+	root.PersistentFlags().BoolP(VerboseFlagName, "V", false, "Shows debug logs.")
 	root.PersistentFlags().DurationP(
-		constants.TimeoutFlagName,
+		TimeoutFlagName,
 		"T",
 		defaultTimeout,
 		"Request timeout in seconds.")
@@ -161,25 +163,25 @@ func buildDelete(handler *Handler) *cobra.Command {
 
 func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 	// Headers
-	cmd.Flags().VarP(handler.header, constants.HeaderFlagName, "H", "")
+	cmd.Flags().VarP(handler.header, HeaderFlagName, "H", "")
 
 	// AWS signature V4 flags
 	cmd.Flags().BoolP(
-		constants.AWSSigV4FlagName,
+		AWSSigV4FlagName,
 		"4",
 		false,
 		"Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
 
 	cmd.Flags().String(
-		constants.AWSRegionFlagName,
-		constants.DefaultAWSRegion,
+		AWSRegionFlagName,
+		DefaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 
 	cmd.Flags().String(
-		constants.AWSProfileFlagName,
+		AWSProfileFlagName,
 		"",
 		"The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 
 	// Silent mode
-	cmd.Flags().BoolP(constants.SilentFlagName, "s", false, "Suppress output of response body.")
+	cmd.Flags().BoolP(SilentFlagName, "s", false, "Suppress output of response body.")
 }

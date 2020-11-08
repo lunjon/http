@@ -4,6 +4,11 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.7.1] - 2020-11-08
+
+### Added
+- `version` command to print version of `httpreq`.
+
 ## [0.7.0] - 2020-11-08
 
 ### Added

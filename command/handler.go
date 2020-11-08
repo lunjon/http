@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lunjon/httpreq/constants"
 	"github.com/lunjon/httpreq/rest"
 	"github.com/spf13/cobra"
 )
@@ -85,10 +84,10 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 	req, err := handler.client.BuildRequest(method, url, body, headers)
 	handler.checkUserError(err, cmd)
 
-	signRequest, _ := cmd.Flags().GetBool(constants.AWSSigV4FlagName)
+	signRequest, _ := cmd.Flags().GetBool(AWSSigV4FlagName)
 	if signRequest {
-		region, _ := cmd.Flags().GetString(constants.AWSRegionFlagName)
-		profile, _ := cmd.Flags().GetString(constants.AWSProfileFlagName)
+		region, _ := cmd.Flags().GetString(AWSRegionFlagName)
+		profile, _ := cmd.Flags().GetString(AWSProfileFlagName)
 
 		err = handler.client.SignRequest(req, body, region, profile)
 		handler.checkExecutionError(err)
@@ -100,7 +99,7 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 }
 
 func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
-	silent, _ := cmd.Flags().GetBool(constants.SilentFlagName)
+	silent, _ := cmd.Flags().GetBool(SilentFlagName)
 	if silent {
 		return
 	}
@@ -151,7 +150,7 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 }
 
 func (handler *Handler) expectBody(cmd *cobra.Command) []byte {
-	bodyFlag, _ := cmd.Flags().GetString(constants.BodyFlagName)
+	bodyFlag, _ := cmd.Flags().GetString(BodyFlagName)
 	bodyFlag = strings.TrimSpace(bodyFlag)
 
 	if bodyFlag == "" {

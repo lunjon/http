@@ -1,4 +1,4 @@
-package constants
+package command
 
 const (
 	HeaderFlagName     = "header"
