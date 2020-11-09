@@ -32,7 +32,7 @@ func (h *HeaderOption) Type() string {
 }
 
 func (h *HeaderOption) String() string {
-	return "{}"
+	return ""
 }
 
 // Parse string s into a header name and value.

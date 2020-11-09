@@ -7,11 +7,13 @@ A CLI program for sending basic HTTP requests. Features:
 
 ## Installation
 
-Having Go 1.12+ installed run:
+Having Go 1.13+ installed run:
 
 ```sh
-$ go get ./...
-$ cd cmd/httpreq
+# Without cloning repository
+$ go get github.com/lunjon/httpreq
+
+# Install from project root
 $ go install
 ```
 
