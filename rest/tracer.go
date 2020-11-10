@@ -44,11 +44,10 @@ func (t *Tracer) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func (t *Tracer) TLSHandshakeStart() {
 	t.tlsStart = time.Now()
-	t.logger.Print("Starting TLS handshake")
 }
 
 func (t *Tracer) TLSHandshakeDone(state tls.ConnectionState, err error) {
-	t.tlsDuration += time.Since(t.tlsStart)
+	t.tlsDuration = time.Since(t.tlsStart)
 	if err != nil {
 		t.logger.Printf("TLS handshake done after %v with error: %v", t.tlsDuration, err)
 		return
@@ -82,7 +81,7 @@ func (t *Tracer) DNSStart(info httptrace.DNSStartInfo) {
 }
 
 func (t *Tracer) DNSDone(info httptrace.DNSDoneInfo) {
-	t.dnsDuration += time.Since(t.dnsStart)
+	t.dnsDuration = time.Since(t.dnsStart)
 	if info.Err != nil {
 		t.logger.Printf("Failed to during DNS lookup: %v", info.Err)
 	} else {
@@ -100,7 +99,7 @@ func (t *Tracer) ConnectStart(network, addr string) {
 }
 
 func (t *Tracer) ConnectDone(network, addr string, err error) {
-	t.connectDuration += time.Since(t.connectStart)
+	t.connectDuration = time.Since(t.connectStart)
 	if err != nil {
 		t.logger.Printf("Failed to connect on %s to %s: %v", network, addr, err)
 	} else {
