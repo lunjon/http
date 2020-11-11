@@ -1,7 +1,9 @@
 package command
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/lunjon/httpreq/logging"
@@ -39,14 +41,6 @@ func createHandler() *Handler {
 func Build(version string) *cobra.Command {
 	handler := createHandler()
 
-	// HTTP
-	get := buildGet(handler)
-	head := buildHead(handler)
-	post := buildPost(handler)
-	put := buildPut(handler)
-	patch := buildPatch(handler)
-	delete := buildDelete(handler)
-
 	root := &cobra.Command{
 		Version: version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -63,6 +57,19 @@ func Build(version string) *cobra.Command {
 		Long:  description,
 	}
 
+	// HTTP
+	get := buildGet(handler)
+	head := buildHead(handler)
+	post := buildPost(handler)
+	put := buildPut(handler)
+	patch := buildPatch(handler)
+	delete := buildDelete(handler)
+	root.AddCommand(get, head, post, put, patch, delete)
+
+	// Command for generating completion
+	gen := buildGen(root)
+	root.AddCommand(gen)
+
 	// Persistant flags
 	root.PersistentFlags().BoolP(VerboseFlagName, "V", false, "Shows debug logs.")
 	root.PersistentFlags().DurationP(
@@ -70,8 +77,46 @@ func Build(version string) *cobra.Command {
 		"T",
 		defaultTimeout,
 		"Request timeout in seconds.")
-	root.AddCommand(get, head, post, put, patch, delete)
+
 	return root
+}
+
+func buildGen(root *cobra.Command) *cobra.Command {
+	filenameDefault := ""
+	gen := &cobra.Command{
+		Use:     "gen <type>",
+		Aliases: []string{"g"},
+		Short:   "Generate completion for shell <type>: bash, zsh, fish",
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			shell := args[0]
+			filename, _ := cmd.Flags().GetString("filename")
+			if filename == filenameDefault {
+				filename = shell
+			}
+
+			var err error
+			switch shell {
+			case "bash":
+				err = root.GenBashCompletionFile(filename)
+			case "zsh":
+				err = root.GenZshCompletionFile(filename)
+			case "fish":
+				err = root.GenFishCompletionFile(filename, false)
+			default:
+				fmt.Fprintf(os.Stderr, "invalid shell type: %s", shell)
+				os.Exit(1)
+			}
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to generate %s completion file: %v", shell, err)
+				os.Exit(1)
+			}
+		},
+	}
+
+	gen.Flags().StringP("filename", "f", filenameDefault, "Output file name.")
+	return gen
 }
 
 func buildGet(handler *Handler) *cobra.Command {

@@ -4,10 +4,13 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Added
+- `gen` command to generate shell completion files.
+
 ## [0.7.1] - 2020-11-08
 
 ### Added
-- `version` command to print version of `httpreq`.
+- `version` option to print version of `httpreq`.
 
 ## [0.7.0] - 2020-11-08
 
