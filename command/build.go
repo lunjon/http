@@ -20,15 +20,12 @@ Protocol and host of the URL can be implicit if given like [host]:port/path...
 Examples:
  * localhost/path	->	http://localhost/path
  * :1234/index		->	http://localhost:1234/index
-
- Headers are specified on the format: Name(:|=)value. Example: "Content-Type: application/json".
 `
 	DefaultAWSRegion  = "eu-west-1"
 	DefaultHeadersEnv = "DEFAULT_HEADERS"
 )
 
 func createHandler() *Handler {
-	// Create handler and it's dependencies
 	logger := logging.NewLogger()
 	h := NewHeaderOption()
 	httpClient := &http.Client{}
@@ -208,7 +205,11 @@ func buildDelete(handler *Handler) *cobra.Command {
 
 func addCommonFlags(cmd *cobra.Command, handler *Handler) {
 	// Headers
-	cmd.Flags().VarP(handler.header, HeaderFlagName, "H", "")
+	cmd.Flags().VarP(handler.header, HeaderFlagName, "H", `HTTP header, may be specified multiple times.
+The value must conform to the format "name: value". "name" and "value" can
+be separated by either a colon ":" or an equal sign "=", and the space
+between is optional. Can be set in the same format using the env. variable
+DEFAULT_HEADERS, where multiple headers must be separated by an |.`)
 
 	// AWS signature V4 flags
 	cmd.Flags().BoolP(
