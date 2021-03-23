@@ -23,7 +23,7 @@ func setupClient(t *testing.T) (*Client, *URL) {
 		server.Close()
 	})
 
-	url, _ := ParseURL(server.URL)
+	url, _ := ParseURL(server.URL, nil)
 	return client, url
 }
 
@@ -54,7 +54,7 @@ func TestBuildRequest(t *testing.T) {
 			body = []byte(test.body)
 		}
 		t.Run(test.method+" "+test.url, func(t *testing.T) {
-			url, _ := ParseURL(test.url)
+			url, _ := ParseURL(test.url, nil)
 			_, err := client.BuildRequest(test.method, url, body, nil)
 			if (err != nil) != test.wantErr {
 				t.Errorf("BuildRequest() error = %v, wantErr = %v", err, test.wantErr)

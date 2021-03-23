@@ -19,6 +19,7 @@ var (
 	protoPattern     = regexp.MustCompile(`^https?://`)
 	localhostPattern = regexp.MustCompile(`^(localhost|127\.0\.0\.1)`)
 	hostPattern      = regexp.MustCompile(`^[a-z](\.[a-z]+)*`)
+	aliasPattern     = regexp.MustCompile(`\{[a-z]+\}`)
 )
 
 type URL struct {
@@ -75,10 +76,18 @@ func (url *URL) DetailString() string {
 }
 
 // ParseURL parses the given URL
-func ParseURL(url string) (*URL, error) {
+func ParseURL(url string, aliases map[string]string) (*URL, error) {
 	url = strings.TrimSpace(url)
 	if url == "" {
 		return nil, fmt.Errorf("empty URL")
+	}
+
+	if aliasPattern.MatchString(url) {
+		var err error
+		url, err = substitute(url, aliases)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// :port/path
@@ -156,4 +165,22 @@ func parseURL(url string) (*URL, error) {
 		Path:   path,
 		Query:  query,
 	}, nil
+}
+
+func substitute(url string, aliases map[string]string) (string, error) {
+	matches := aliasPattern.FindAllStringSubmatch(url, -1)
+	if len(matches) == 0 {
+		return "", fmt.Errorf("expected aliases but found none")
+	}
+
+	for _, match := range matches[0] {
+		s := strings.TrimPrefix(match, "{")
+		s = strings.TrimSuffix(s, "}")
+		sub, found := aliases[s]
+		if !found {
+			return "", fmt.Errorf("unknown alias: %s", s)
+		}
+		url = strings.ReplaceAll(url, match, sub)
+	}
+	return url, nil
 }

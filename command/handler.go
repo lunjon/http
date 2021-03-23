@@ -25,15 +25,22 @@ type Handler struct {
 	// A pointer to the header flag instance, i.e. headers
 	// provided as a flag will be inserted here (or into it's values)
 	header *HeaderOption
+	// URL aliases
+	alias map[string]string
 }
 
-func NewHandler(client *rest.Client, logger *log.Logger, h *HeaderOption) *Handler {
+func NewHandler(
+	client *rest.Client,
+	logger *log.Logger,
+	h *HeaderOption,
+	alias map[string]string) *Handler {
 	return &Handler{
 		logger: logger,
 		infos:  os.Stdout,
 		errors: os.Stderr,
 		client: client,
 		header: h,
+		alias:  alias,
 	}
 }
 
@@ -75,7 +82,7 @@ func (handler *Handler) Delete(cmd *cobra.Command, args []string) {
 }
 
 func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Command, args []string) {
-	url, err := rest.ParseURL(args[0])
+	url, err := rest.ParseURL(args[0], handler.alias)
 	handler.checkUserError(err, cmd)
 
 	headers, err := handler.getHeaders()

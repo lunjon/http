@@ -96,10 +96,11 @@ func TestParseURL_Valid(t *testing.T) {
 		}, "https://api.com:5000/external/route"},
 	}
 
+	aliases := make(map[string]string)
 	for i, tt := range tests {
 		name := fmt.Sprintf("%d) ParseURL(%s)", i, tt.url)
 		t.Run(name, func(t *testing.T) {
-			url, err := rest.ParseURL(tt.url)
+			url, err := rest.ParseURL(tt.url, aliases)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.exptected.Scheme, url.Scheme, "invalid scheme")
 			assert.Equal(t, tt.exptected.Port, url.Port, "invalid port")
@@ -123,10 +124,29 @@ func TestParseURL_Invalid(t *testing.T) {
 	for i, tt := range tests {
 		name := fmt.Sprintf("%d) ParseURL(%s)", i, tt)
 		t.Run(name, func(t *testing.T) {
-			url, err := rest.ParseURL(tt)
+			url, err := rest.ParseURL(tt, nil)
 			assert.Error(t, err)
 			assert.Nil(t, url)
 
+		})
+	}
+}
+
+func TestParseURL_Alias(t *testing.T) {
+	tests := []struct {
+		url      string
+		expected string
+		aliases  map[string]string
+	}{
+		{"{test}/api", "http://localhost/api", map[string]string{"test": "http://localhost"}},
+		{"https://{a}/api", "https://localhost/api", map[string]string{"a": "localhost"}},
+	}
+	for i, tt := range tests {
+		name := fmt.Sprintf("%d) ParseURL(%s)", i, tt)
+		t.Run(name, func(t *testing.T) {
+			url, err := rest.ParseURL(tt.url, tt.aliases)
+			assert.NoError(t, err)
+			assert.Equal(t, url.String(), tt.expected)
 		})
 	}
 }
