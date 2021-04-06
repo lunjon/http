@@ -45,7 +45,9 @@ func NewHandler(
 }
 
 func (handler *Handler) Verbose(v bool) {
-	if !v {
+	if v {
+		handler.logger.SetOutput(os.Stderr)
+	} else {
 		handler.logger.SetOutput(ioutil.Discard)
 	}
 }
