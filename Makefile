@@ -1,13 +1,13 @@
 all: format build test
 
 format:
-	go fmt github.com/lunjon/httpreq/...
+	go fmt ./...
 
-test:
-	go test ./...
-
-build:
+build: format
 	go build ./...
+
+test: build
+	go test ./...
 
 install:
 	go install

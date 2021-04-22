@@ -2,11 +2,8 @@ package command
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
-	"path"
-	"strings"
 	"time"
 
 	"github.com/lunjon/httpreq/logging"
@@ -33,9 +30,7 @@ func createHandler() *Handler {
 	h := NewHeaderOption()
 	httpClient := &http.Client{}
 	restClient := rest.NewClient(httpClient, logger)
-	alias, err := readAliasFile()
-	checkErr(err)
-	handler := NewHandler(restClient, logger, h, alias)
+	handler := NewHandler(restClient, logger, h)
 	return handler
 }
 
@@ -65,11 +60,11 @@ func Build(version string) *cobra.Command {
 	post := buildPost(handler)
 	put := buildPut(handler)
 	patch := buildPatch(handler)
-	delete := buildDelete(handler)
-	root.AddCommand(get, head, post, put, patch, delete)
+	del := buildDelete(handler)
+	root.AddCommand(get, head, post, put, patch, del)
 
 	// URL alias
-	url := buildURL()
+	url := buildURL(handler)
 	root.AddCommand(url)
 
 	// Command for generating completion
@@ -220,37 +215,11 @@ func checkErr(err error) {
 
 }
 
-func buildURL() *cobra.Command {
-	listAlias := func() {
-		alias, err := readAliasFile()
-		checkErr(err)
-		for a, url := range alias {
-			fmt.Printf("%s  ->  %s\n", a, url)
-		}
-	}
-
-	setAlias := func(alias, url string) {
-		filepath := getAliasFilepath()
-		file, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		checkErr(err)
-		defer file.Close()
-		_, err = file.WriteString(fmt.Sprintf("%s %s\n", alias, url))
-		checkErr(err)
-	}
-
+func buildURL(handler *Handler) *cobra.Command {
 	return &cobra.Command{
 		Use:   "url <alias> <url>",
 		Short: "Create a persistant URL alias.",
-		Run: func(_ *cobra.Command, args []string) {
-			switch len(args) {
-			case 0:
-				listAlias()
-			case 2:
-				setAlias(args[0], args[1])
-			default:
-				fmt.Fprintln(os.Stderr, "unknown number of arguments")
-			}
-		},
+		Run:   handler.handleAlias,
 	}
 }
 
@@ -281,39 +250,4 @@ DEFAULT_HEADERS, where multiple headers must be separated by an |.`)
 
 	// Silent mode
 	cmd.Flags().BoolP(SilentFlagName, "s", false, "Suppress output of response body.")
-}
-
-func readAliasFile() (map[string]string, error) {
-	alias := make(map[string]string)
-	filepath := getAliasFilepath()
-	file, err := os.Open(filepath)
-	if os.IsNotExist(err) {
-		return alias, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	content, err := io.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	for _, line := range strings.Split(string(content), "\n") {
-		line = strings.TrimSpace(line)
-		if len(line) == 0 {
-			continue
-		}
-		s := strings.Split(line, " ")
-		if len(s) != 2 {
-			continue
-		}
-		alias[s[0]] = s[1]
-	}
-	return alias, nil
-}
-
-func getAliasFilepath() string {
-	filepath, err := os.UserHomeDir()
-	checkErr(err)
-	return path.Join(filepath, ".httpreq", "alias")
 }
