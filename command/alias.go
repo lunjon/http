@@ -10,13 +10,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	aliasDir      string
+	aliasFilepath string
+)
+
 func init() {
 	filepath, err := os.UserHomeDir()
 	checkErr(err)
-	aliasFilepath = path.Join(filepath, ".http", "alias")
-}
 
-var aliasFilepath string
+	aliasDir = path.Join(filepath, ".gohttp")
+	aliasFilepath = path.Join(aliasDir, "alias")
+}
 
 func (handler *Handler) handleAlias(_ *cobra.Command, args []string) {
 	switch len(args) {
@@ -39,15 +44,9 @@ func (handler *Handler) listAlias() {
 
 func (handler *Handler) setAlias(alias, url string) {
 	aliases, err := handler.readAliasFile()
-	aliases[alias] = url
-
-	file, err := os.OpenFile(aliasFilepath, os.O_WRONLY|os.O_CREATE, 0600)
 	checkErr(err)
-	defer file.Close()
-	for alias, url := range aliases {
-		_, err = file.WriteString(fmt.Sprintf("%s %s\n", alias, url))
-		checkErr(err)
-	}
+	aliases[alias] = url
+	handler.writeAliasFile(aliases)
 }
 
 func (handler *Handler) readAliasFile() (map[string]string, error) {
@@ -59,11 +58,13 @@ func (handler *Handler) readAliasFile() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer file.Close()
 	content, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
+
 	for _, line := range strings.Split(string(content), "\n") {
 		line = strings.TrimSpace(line)
 		if len(line) == 0 {
@@ -76,4 +77,19 @@ func (handler *Handler) readAliasFile() (map[string]string, error) {
 		alias[s[0]] = s[1]
 	}
 	return alias, nil
+}
+
+func (handler *Handler) writeAliasFile(aliases map[string]string) {
+	if _, err := os.Stat(aliasDir); os.IsNotExist(err) {
+		err := os.MkdirAll(aliasDir, 0700)
+		checkErr(err)
+	}
+
+	file, err := os.OpenFile(aliasFilepath, os.O_WRONLY|os.O_CREATE, 0600)
+	checkErr(err)
+	defer file.Close()
+	for alias, url := range aliases {
+		_, err = file.WriteString(fmt.Sprintf("%s %s\n", alias, url))
+		checkErr(err)
+	}
 }

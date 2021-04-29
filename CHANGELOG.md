@@ -4,6 +4,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.9.1] - 2021-04-29
+
 ### Added
 - Shorthand to `--body` flag: `-B`
 - Ability to read body from stdin
