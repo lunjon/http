@@ -38,21 +38,14 @@ func createHandler() *Handler {
 func Build(version string) *cobra.Command {
 	handler := createHandler()
 
-	root := &cobra.Command{
-		Version: version,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			// Verbose flag
-			verbose, _ := cmd.Flags().GetBool(VerboseFlagName)
-			handler.Verbose(verbose)
-
-			// Timeout flag
-			timeout, _ := cmd.Flags().GetDuration(TimeoutFlagName)
-			handler.Timeout(timeout)
+	root := buildRoot(handler)
+	root.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Print version",
+		Run: func(*cobra.Command, []string) {
+			fmt.Printf("http version: %s\n", version)
 		},
-		Use:   "http",
-		Short: "http <method> <url> [options]",
-		Long:  description,
-	}
+	})
 
 	// HTTP
 	get := buildGet(handler)
@@ -68,27 +61,38 @@ func Build(version string) *cobra.Command {
 	root.AddCommand(alias)
 
 	// Command for generating completion
-	gen := buildGen(root)
-	root.AddCommand(gen)
+	comp := buildComp(root)
+	root.AddCommand(comp)
 
 	// Persistant flags
-	root.PersistentFlags().BoolP(VerboseFlagName, "V", false, "Shows debug logs.")
-	root.PersistentFlags().DurationP(
-		TimeoutFlagName,
-		"T",
-		defaultTimeout,
-		"Request timeout duration.")
+	root.PersistentFlags().BoolP(VerboseFlagName, "v", false, "Show logs.")
+	root.PersistentFlags().DurationP(TimeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 
 	return root
 }
 
-func buildGen(root *cobra.Command) *cobra.Command {
+func buildRoot(handler *Handler) *cobra.Command {
+	root := &cobra.Command{
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			verbose, _ := cmd.Flags().GetBool(VerboseFlagName)
+			handler.Verbose(verbose)
+
+			timeout, _ := cmd.Flags().GetDuration(TimeoutFlagName)
+			handler.Timeout(timeout)
+		},
+		Use:   "http",
+		Short: "http <method> <url> [options]",
+		Long:  description,
+	}
+	return root
+}
+
+func buildComp(root *cobra.Command) *cobra.Command {
 	filenameDefault := ""
 	gen := &cobra.Command{
-		Use:     "gen <type>",
-		Aliases: []string{"g"},
-		Short:   "Generate completion for shell <type>: bash, zsh, fish",
-		Args:    cobra.ExactArgs(1),
+		Use:   "comp <type>",
+		Short: "Generate completion for a supported shell: bash, zsh or fish",
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			shell := args[0]
 			filename, _ := cmd.Flags().GetString("filename")
@@ -122,11 +126,10 @@ func buildGen(root *cobra.Command) *cobra.Command {
 
 func buildGet(handler *Handler) *cobra.Command {
 	get := &cobra.Command{
-		Use:     "get <url>",
-		Aliases: []string{"g"},
-		Short:   "HTTP GET request.",
-		Args:    cobra.ExactArgs(1),
-		Run:     handler.Get,
+		Use:   "get <url>",
+		Short: "HTTP GET request",
+		Args:  cobra.ExactArgs(1),
+		Run:   handler.Get,
 	}
 
 	addCommonFlags(get, handler)
@@ -135,11 +138,10 @@ func buildGet(handler *Handler) *cobra.Command {
 
 func buildHead(handler *Handler) *cobra.Command {
 	head := &cobra.Command{
-		Use:     "head <url>",
-		Aliases: []string{"h", "hd"},
-		Short:   "HTTP HEAD request.",
-		Args:    cobra.ExactArgs(1),
-		Run:     handler.Head,
+		Use:   "head <url>",
+		Short: "HTTP HEAD request",
+		Args:  cobra.ExactArgs(1),
+		Run:   handler.Head,
 	}
 
 	addCommonFlags(head, handler)
@@ -148,10 +150,9 @@ func buildHead(handler *Handler) *cobra.Command {
 
 func buildPost(handler *Handler) *cobra.Command {
 	post := &cobra.Command{
-		Use:     `post <url> --body <body>`,
-		Aliases: []string{"po"},
-		Short:   "HTTP POST request with a body.",
-		Long: `Make an HTTP POST request to the URL with a body.
+		Use:   `post <url> --body <body>`,
+		Short: "HTTP POST request",
+		Long: `Make an HTTP POST request to the URL
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
 		Run:  handler.Post,
@@ -164,10 +165,9 @@ This command requires the --body flag, which can be a string content or a file.`
 
 func buildPatch(handler *Handler) *cobra.Command {
 	patch := &cobra.Command{
-		Use:     `patch <url> --body <body>`,
-		Aliases: []string{"pa"},
-		Short:   "HTTP PATCH request with a body.",
-		Long: `Make an HTTP PATCH request to the URL with a body.
+		Use:   `patch <url> --body <body>`,
+		Short: "HTTP PATCH request",
+		Long: `Make an HTTP PATCH request to the URL
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
 		Run:  handler.Patch,
@@ -180,10 +180,9 @@ This command requires the --body flag, which can be a string content or a file.`
 
 func buildPut(handler *Handler) *cobra.Command {
 	put := &cobra.Command{
-		Use:     `put <url> --body <body>`,
-		Aliases: []string{"pu"},
-		Short:   "HTTP PUT request with a body.",
-		Long: `Make an HTTP PUT request to the URL with a body.
+		Use:   `put <url> --body <body>`,
+		Short: "HTTP PUT request",
+		Long: `Make an HTTP PUT request to the URL
 This command requires the --body flag, which can be a string content or a file.`,
 		Args: cobra.ExactArgs(1),
 		Run:  handler.Put,
@@ -196,11 +195,10 @@ This command requires the --body flag, which can be a string content or a file.`
 
 func buildDelete(handler *Handler) *cobra.Command {
 	del := &cobra.Command{
-		Use:     `delete <url>`,
-		Aliases: []string{"d", "de", "del"},
-		Short:   "HTTP DELETE request.",
-		Args:    cobra.ExactArgs(1),
-		Run:     handler.Delete,
+		Use:   `delete <url>`,
+		Short: "HTTP DELETE request",
+		Args:  cobra.ExactArgs(1),
+		Run:   handler.Delete,
 	}
 
 	addCommonFlags(del, handler)
@@ -218,7 +216,7 @@ func checkErr(err error) {
 func buildAlias(handler *Handler) *cobra.Command {
 	return &cobra.Command{
 		Use:   "alias <name> <url>",
-		Short: "Create a persistant URL alias.",
+		Short: "Create a persistant URL alias",
 		Run:   handler.handleAlias,
 	}
 }

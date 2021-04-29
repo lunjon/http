@@ -11,6 +11,11 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Changed
 - Rename sub-command `url` to `alias`
+- Change `--version`/`-V` into sub-command
+- Rename shorthand `-V` for verbose to `-v`
+
+### Removed
+- Sub-command aliases
 
 ## [0.8.0] - 2021-03-23
 
