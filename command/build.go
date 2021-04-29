@@ -224,25 +224,23 @@ func buildAlias(handler *Handler) *cobra.Command {
 }
 
 func addCommonFlags(cmd *cobra.Command, handler *Handler) {
-	// Headers
 	cmd.Flags().VarP(handler.header, HeaderFlagName, "H", `HTTP header, may be specified multiple times.
 The value must conform to the format "name: value". "name" and "value" can
 be separated by either a colon ":" or an equal sign "=", and the space
 between is optional. Can be set in the same format using the env. variable
 DEFAULT_HEADERS, where multiple headers must be separated by an |.`)
 
-	// AWS signature V4 flags
+	cmd.Flags().IntP(RepeatFlagName, "r", 1, "Repeat the request.")
+
 	cmd.Flags().BoolP(
 		AWSSigV4FlagName,
 		"4",
 		false,
 		"Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
-
 	cmd.Flags().String(
 		AWSRegionFlagName,
 		DefaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
-
 	cmd.Flags().String(
 		AWSProfileFlagName,
 		"",

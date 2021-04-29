@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var newline = []byte("\n")
+
 // Handler ...
 type Handler struct {
 	logger *log.Logger
@@ -89,21 +91,24 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 	headers, err := handler.getHeaders()
 	handler.checkUserError(err, cmd)
 
-	req, err := handler.client.BuildRequest(method, url, body, headers)
-	handler.checkUserError(err, cmd)
+	repeat, _ := cmd.Flags().GetInt(RepeatFlagName)
+	for i := 0; i < repeat; i++ {
+		req, err := handler.client.BuildRequest(method, url, body, headers)
+		handler.checkUserError(err, cmd)
 
-	signRequest, _ := cmd.Flags().GetBool(AWSSigV4FlagName)
-	if signRequest {
-		region, _ := cmd.Flags().GetString(AWSRegionFlagName)
-		profile, _ := cmd.Flags().GetString(AWSProfileFlagName)
+		signRequest, _ := cmd.Flags().GetBool(AWSSigV4FlagName)
+		if signRequest {
+			region, _ := cmd.Flags().GetString(AWSRegionFlagName)
+			profile, _ := cmd.Flags().GetString(AWSProfileFlagName)
 
-		err = handler.client.SignRequest(req, body, region, profile)
-		handler.checkExecutionError(err)
+			err = handler.client.SignRequest(req, body, region, profile)
+			handler.checkExecutionError(err)
+		}
+
+		res := handler.client.SendRequest(req)
+		handler.checkExecutionError(res.Error())
+		handler.outputResults(cmd, res)
 	}
-
-	res := handler.client.SendRequest(req)
-	handler.checkExecutionError(res.Error())
-	handler.outputResults(cmd, res)
 }
 
 func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
@@ -116,6 +121,7 @@ func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
 	handler.checkExecutionError(err)
 	_, err = handler.infos.Write(body)
 	handler.checkExecutionError(err)
+	_, _ = handler.infos.Write(newline)
 }
 
 // Get the request headers from the handler header field as well as
@@ -144,7 +150,7 @@ func (handler *Handler) checkExecutionError(err error) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(handler.errors, "Error: %v\n", err)
+	fmt.Fprintf(handler.errors, "error: %v\n", err)
 	os.Exit(1)
 }
 
@@ -152,7 +158,7 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(handler.errors, "Error: %v\n", err)
+	fmt.Fprintf(handler.errors, "error: %v\n", err)
 	cmd.Usage()
 	os.Exit(1)
 }
@@ -178,13 +184,11 @@ func (handler *Handler) expectBody(cmd *cobra.Command) []byte {
 	// We first try to read as a file
 	body, err := ioutil.ReadFile(bodyFlag)
 	if err != nil && !os.IsNotExist(err) {
-		handler.logger.Printf("Failed to open input file: %v", err)
 		handler.checkUserError(err, cmd)
 	}
 
 	if body == nil {
 		// Assume that the content was given as string
-		handler.logger.Print("Assuming body was given as content string")
 		body = []byte(bodyFlag)
 	}
 

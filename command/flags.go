@@ -2,6 +2,7 @@ package command
 
 const (
 	HeaderFlagName     = "header"
+	RepeatFlagName     = "repeat"
 	AWSSigV4FlagName   = "aws-sigv4"
 	AWSProfileFlagName = "aws-profile"
 	AWSRegionFlagName  = "aws-region"

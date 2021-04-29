@@ -7,6 +7,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Added
 - Shorthand to `--body` flag: `-B`
 - Ability to read body from stdin
+- `repeat` flag
 
 ### Changed
 - Rename sub-command `url` to `alias`
