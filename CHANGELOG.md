@@ -4,8 +4,17 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Changed
+- Rename sub-command `url` to `alias`
+
+## [0.8.0] - 2021-03-23
+
 ### Added
 - `gen` command to generate shell completion files.
+- `url` command to create URL aliases.
+
+### Changed
+- Log to stderr
 
 ## [0.7.1] - 2020-11-08
 

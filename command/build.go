@@ -64,8 +64,8 @@ func Build(version string) *cobra.Command {
 	root.AddCommand(get, head, post, put, patch, del)
 
 	// URL alias
-	url := buildURL(handler)
-	root.AddCommand(url)
+	alias := buildAlias(handler)
+	root.AddCommand(alias)
 
 	// Command for generating completion
 	gen := buildGen(root)
@@ -215,9 +215,9 @@ func checkErr(err error) {
 
 }
 
-func buildURL(handler *Handler) *cobra.Command {
+func buildAlias(handler *Handler) *cobra.Command {
 	return &cobra.Command{
-		Use:   "url <alias> <url>",
+		Use:   "alias <name> <url>",
 		Short: "Create a persistant URL alias.",
 		Run:   handler.handleAlias,
 	}

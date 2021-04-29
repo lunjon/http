@@ -7,7 +7,7 @@ A CLI program for sending basic HTTP requests. Features:
 
 ## Installation
 
-Having Go 1.13+ installed run:
+Having Go 1.14+ installed run:
 
 ```sh
 # Without cloning repository
@@ -65,3 +65,14 @@ Elapsed  102.97 ms
 Default headers can be set by using an environment variable: `DEFAULT_HEADERS`.
 The string should contain headers in the same format specified using the
 `--header` flag, and multiple headers should be separated by a `|`.
+
+### URL alias
+
+URL alias can be created with the `alias` sub-command like so:
+ - List: `httpreq alias`
+ - Add:  `httpreq alias <name> <url>`
+
+An alias can then be used in the request URL:
+```sh
+$ httpreq get "{name}/api/path"
+```

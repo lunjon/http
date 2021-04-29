@@ -1,13 +1,13 @@
 all: format build test
 
 format:
-	go fmt ./...
+	@go fmt ./...
 
 build: format
-	go build ./...
+	@go build ./...
 
 test: build
-	go test ./...
+	@go test ./... | grep -v 'no test files'
 
 install:
 	go install
