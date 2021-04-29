@@ -77,7 +77,7 @@ func Build(version string) *cobra.Command {
 		TimeoutFlagName,
 		"T",
 		defaultTimeout,
-		"Request timeout in seconds.")
+		"Request timeout duration.")
 
 	return root
 }
