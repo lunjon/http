@@ -3,20 +3,13 @@
 A CLI program for sending basic HTTP requests. Features:
  - Simplified URL parsing, e.g. `:1234/path` becomes `http://localhost:1234/path`
  - Persistant URL aliases
+ - Convenient request body handling through stdin, file or flag
  - AWS signature v4 support
- - Reading request body either a string or file, it can detect the difference
 
 ## Installation
 
-Having Go 1.14+ installed run:
-
-```sh
-# Without cloning repository...
-$ go get github.com/lunjon/http
-
-# or in project root
-$ go install
-```
+Visit [releases](https://github.com/lunjon/http/releases/latest) and download
+executable for your platform (if available).
 
 ## Usage
 
@@ -59,3 +52,10 @@ An alias can then be used in the request URL:
 ```sh
 $ http get "{name}/api/path"
 ```
+
+### Request body
+
+Can be specified by three methods:
+- As string: `http post http://example.com/api --body '{"name":"meow"}'`
+- As file: `http post http://example.com/api --body r.json`
+- Pipe from stdin: `http post http://example.com/api < r.json`

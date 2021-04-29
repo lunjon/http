@@ -21,3 +21,9 @@ $ git commit -m "Release $version"
 $ git tag -a $version
 $ git push --follow-tags
 ```
+
+### 4. Create GitHub release
+
+1. Create executables: `./build.sh`.
+1. Head over to https://github.com/lunjon/http/releases and create a new release.
+1. Attach the executables.
