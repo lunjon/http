@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/lunjon/httpreq/rest"
+	"github.com/lunjon/http/rest"
 	"github.com/stretchr/testify/assert"
 )
 

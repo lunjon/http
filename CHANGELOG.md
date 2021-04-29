@@ -24,7 +24,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ## [0.7.1] - 2020-11-08
 
 ### Added
-- `version` option to print version of `httpreq`.
+- `version` option to print version of `http`.
 
 ## [0.7.0] - 2020-11-08
 
@@ -34,15 +34,15 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - HTTP verbs: HEAD, PUT, PATCH
 
 ### Changed
-- Name of `--json` to `--body` in `httpreq post` command. It also changed the behavior to also
+- Name of `--json` to `--body` in `http post` command. It also changed the behavior to also
   accept a filename instead of just a string of content.
 - Name of `--output-file` to `--output` only.
 - Output errors on stderr file descriptor
 
 ### Removed
 - Unused features:
-    * `httpreq run`
-    * `httpreq parse-url`
+    * `http run`
+    * `http parse-url`
 
 ## [0.6.0] - 2019-12-17
 

@@ -13,7 +13,7 @@ import (
 func init() {
 	filepath, err := os.UserHomeDir()
 	checkErr(err)
-	aliasFilepath = path.Join(filepath, ".httpreq", "alias")
+	aliasFilepath = path.Join(filepath, ".http", "alias")
 }
 
 var aliasFilepath string

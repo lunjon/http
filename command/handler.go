@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lunjon/httpreq/rest"
+	"github.com/lunjon/http/rest"
 	"github.com/spf13/cobra"
 )
 

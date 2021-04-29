@@ -13,7 +13,7 @@ do
     GOOS=${split[0]}
     GOARCH=${split[1]}
     
-    output="bin/httpreq.$GOOS.$GOARCH"
+    output="bin/http.$GOOS.$GOARCH"
     if [ $GOOS = "windows" ]; then
         output+=".exe"
     fi

@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/lunjon/httpreq/logging"
-	"github.com/lunjon/httpreq/rest"
+	"github.com/lunjon/http/logging"
+	"github.com/lunjon/http/rest"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,7 @@ func createHandler() *Handler {
 	return handler
 }
 
-// Build the root command for httpreq and set version.
+// Build the root command for http and set version.
 func Build(version string) *cobra.Command {
 	handler := createHandler()
 
@@ -49,8 +49,8 @@ func Build(version string) *cobra.Command {
 			timeout, _ := cmd.Flags().GetDuration(TimeoutFlagName)
 			handler.Timeout(timeout)
 		},
-		Use:   "httpreq",
-		Short: "httpreq <method> <url> [options]",
+		Use:   "http",
+		Short: "http <method> <url> [options]",
 		Long:  description,
 	}
 

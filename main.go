@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lunjon/httpreq/command"
+	"github.com/lunjon/http/command"
 )
 
 func main() {
 	const version = "0.8.0"
-	httpreq := command.Build(version)
-	err := httpreq.Execute()
+	http := command.Build(version)
+	err := http.Execute()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

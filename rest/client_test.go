@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/lunjon/httpreq/logging"
+	"github.com/lunjon/http/logging"
 )
 
 type TestServer struct{}
