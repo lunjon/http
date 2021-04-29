@@ -157,7 +157,7 @@ This command requires the --body flag, which can be a string content or a file.`
 		Run:  handler.Post,
 	}
 
-	post.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
+	post.Flags().StringP(BodyFlagName, "B", "", "Request body to use. Can be string content or a filename.")
 	addCommonFlags(post, handler)
 	return post
 }

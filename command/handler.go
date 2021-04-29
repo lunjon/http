@@ -162,7 +162,16 @@ func (handler *Handler) expectBody(cmd *cobra.Command) []byte {
 	bodyFlag = strings.TrimSpace(bodyFlag)
 
 	if bodyFlag == "" {
-		handler.logger.Printf("Empty body")
+		// Not provided via flags, check stdin
+		stat, _ := os.Stdin.Stat()
+		if (stat.Mode() & os.ModeCharDevice) == 0 {
+			handler.logger.Print("Reading body from stdin")
+			b, err := io.ReadAll(os.Stdin)
+			handler.checkExecutionError(err)
+			return b
+		}
+
+		handler.logger.Print("No body provided")
 		return nil
 	}
 
