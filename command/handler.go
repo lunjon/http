@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,19 +15,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var newline = []byte("\n")
+var (
+	newline           = []byte("\n")
+	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
+)
 
 // Handler ...
 type Handler struct {
 	logger *log.Logger
-	// infos is where the handler will write the results.
-	// It is initialized to os.Stdout as default
 	infos  io.Writer
 	errors io.Writer
 	client *rest.Client
-	// A pointer to the header flag instance, i.e. headers
-	// provided as a flag will be inserted here (or into it's values)
 	header *HeaderOption
+	// Set on init
+	cmd       *cobra.Command
+	fail      bool
+	formatter Formatter
 }
 
 func NewHandler(
@@ -34,19 +38,44 @@ func NewHandler(
 	logger *log.Logger,
 	h *HeaderOption) *Handler {
 	return &Handler{
-		logger: logger,
-		infos:  os.Stdout,
-		errors: os.Stderr,
-		client: client,
-		header: h,
+		logger:    logger,
+		infos:     os.Stdout,
+		errors:    os.Stderr,
+		client:    client,
+		header:    h,
+		formatter: DefaultFormatter{},
 	}
 }
 
-func (handler *Handler) Verbose(v bool) {
-	if v {
+func (handler *Handler) Init(cmd *cobra.Command) {
+	if cmd == nil {
+		return
+	}
+
+	timeout, _ := cmd.Flags().GetDuration(timeoutFlagName)
+	handler.Timeout(timeout)
+
+	verbose, _ := cmd.Flags().GetBool(verboseFlagName)
+	if verbose {
 		handler.logger.SetOutput(os.Stderr)
 	} else {
 		handler.logger.SetOutput(ioutil.Discard)
+	}
+
+	handler.fail, _ = cmd.Flags().GetBool(failFlagName)
+
+	brief, _ := cmd.Flags().GetBool(briefFlagName)
+	silent, _ := cmd.Flags().GetBool(silentFlagName)
+
+	if brief && silent {
+		handler.checkUserError(errBriefAndSilent, cmd)
+	}
+
+	if silent {
+		handler.formatter = NullFormatter{}
+	}
+	if brief {
+		handler.formatter = BriefFormatter{}
 	}
 }
 
@@ -63,17 +92,17 @@ func (handler *Handler) Head(cmd *cobra.Command, args []string) {
 }
 
 func (handler *Handler) Post(cmd *cobra.Command, args []string) {
-	body := handler.expectBody(cmd)
+	body := handler.getRequestBody(cmd)
 	handler.handleRequest(http.MethodPost, body, cmd, args)
 }
 
 func (handler *Handler) Patch(cmd *cobra.Command, args []string) {
-	body := handler.expectBody(cmd)
+	body := handler.getRequestBody(cmd)
 	handler.handleRequest(http.MethodPatch, body, cmd, args)
 }
 
 func (handler *Handler) Put(cmd *cobra.Command, args []string) {
-	body := handler.expectBody(cmd)
+	body := handler.getRequestBody(cmd)
 	handler.handleRequest(http.MethodPut, body, cmd, args)
 }
 
@@ -91,19 +120,10 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 	headers, err := handler.getHeaders()
 	handler.checkUserError(err, cmd)
 
-	repeat, _ := cmd.Flags().GetInt(RepeatFlagName)
+	repeat, _ := cmd.Flags().GetInt(repeatFlagName)
 	for i := 0; i < repeat; i++ {
-		req, err := handler.client.BuildRequest(method, url, body, headers)
+		req, err := handler.buildRequest(cmd, method, url, body, headers)
 		handler.checkUserError(err, cmd)
-
-		signRequest, _ := cmd.Flags().GetBool(AWSSigV4FlagName)
-		if signRequest {
-			region, _ := cmd.Flags().GetString(AWSRegionFlagName)
-			profile, _ := cmd.Flags().GetString(AWSProfileFlagName)
-
-			err = handler.client.SignRequest(req, body, region, profile)
-			handler.checkExecutionError(err)
-		}
 
 		res := handler.client.SendRequest(req)
 		handler.checkExecutionError(res.Error())
@@ -111,17 +131,39 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 	}
 }
 
-func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
-	silent, _ := cmd.Flags().GetBool(SilentFlagName)
-	if silent {
-		return
+func (handler *Handler) buildRequest(cmd *cobra.Command, method string, url *rest.URL, body []byte, header http.Header) (*http.Request, error) {
+	req, err := handler.client.BuildRequest(method, url, body, header)
+	if err != nil {
+		return nil, err
 	}
 
-	body, err := r.Body()
+	signRequest, _ := cmd.Flags().GetBool(awsSigV4FlagName)
+	if signRequest {
+		region, _ := cmd.Flags().GetString(awsRegionFlagName)
+		profile, _ := cmd.Flags().GetString(awsProfileFlagName)
+
+		err = handler.client.SignRequest(req, body, region, profile)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return req, nil
+}
+
+func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
+	b, err := handler.formatter.Format(r)
 	handler.checkExecutionError(err)
-	_, err = handler.infos.Write(body)
-	handler.checkExecutionError(err)
-	_, _ = handler.infos.Write(newline)
+
+	if len(b) > 0 {
+		_, err = handler.infos.Write(b)
+		handler.checkExecutionError(err)
+		_, _ = handler.infos.Write(newline)
+	}
+
+	if handler.fail && !r.Successful() {
+		handler.logger.Printf("Request failed with status %s", r.Status())
+		os.Exit(1)
+	}
 }
 
 // Get the request headers from the handler header field as well as
@@ -158,13 +200,13 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(handler.errors, "error: %v\n", err)
+	fmt.Fprintf(handler.errors, "error: %v\n\n", err)
 	cmd.Usage()
 	os.Exit(1)
 }
 
-func (handler *Handler) expectBody(cmd *cobra.Command) []byte {
-	bodyFlag, _ := cmd.Flags().GetString(BodyFlagName)
+func (handler *Handler) getRequestBody(cmd *cobra.Command) []byte {
+	bodyFlag, _ := cmd.Flags().GetString(bodyFlagName)
 	bodyFlag = strings.TrimSpace(bodyFlag)
 
 	if bodyFlag == "" {

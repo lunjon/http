@@ -1,11 +1,13 @@
 package rest
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"net/http/httptrace"
@@ -30,11 +32,15 @@ func newTracer(logger *log.Logger) *Tracer {
 }
 
 func (t *Tracer) Report(total time.Duration) {
-	t.logger.Print("Request duration:")
-	t.logger.Printf("  Total: %v", total)
-	t.logger.Printf("  DNS lookup: %v", t.dnsDuration)
-	t.logger.Printf("  TLS handshake: %v", t.tlsDuration)
-	t.logger.Printf("  Connection: %v", t.connectDuration)
+	buf := bytes.NewBuffer(nil)
+	w := tabwriter.NewWriter(buf, 0, 0, 2, ' ', tabwriter.TabIndent)
+	fmt.Fprintf(w, "Request duration:\n")
+	fmt.Fprintf(w, "  Total:\t%v\n", total)
+	fmt.Fprintf(w, "  DNS lookup:\t%v\n", t.dnsDuration)
+	fmt.Fprintf(w, "  TLS handshake:\t%v\n", t.tlsDuration)
+	fmt.Fprintf(w, "  Connection:\t%v", t.connectDuration)
+	w.Flush()
+	t.logger.Print(buf.String())
 }
 
 func (t *Tracer) RoundTrip(req *http.Request) (*http.Response, error) {

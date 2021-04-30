@@ -21,8 +21,8 @@ Examples:
  * localhost/path	->	http://localhost/path
  * :1234/index		->	http://localhost:1234/index
 `
-	DefaultAWSRegion  = "eu-west-1"
-	DefaultHeadersEnv = "DEFAULT_HEADERS"
+	defaultAWSRegion  = "eu-west-1"
+	defaultHeadersEnv = "DEFAULT_HEADERS"
 )
 
 func createHandler() *Handler {
@@ -65,8 +65,8 @@ func Build(version string) *cobra.Command {
 	root.AddCommand(comp)
 
 	// Persistant flags
-	root.PersistentFlags().BoolP(VerboseFlagName, "v", false, "Show logs.")
-	root.PersistentFlags().DurationP(TimeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
+	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
+	root.PersistentFlags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 
 	return root
 }
@@ -74,11 +74,7 @@ func Build(version string) *cobra.Command {
 func buildRoot(handler *Handler) *cobra.Command {
 	root := &cobra.Command{
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			verbose, _ := cmd.Flags().GetBool(VerboseFlagName)
-			handler.Verbose(verbose)
-
-			timeout, _ := cmd.Flags().GetDuration(TimeoutFlagName)
-			handler.Timeout(timeout)
+			handler.Init(cmd)
 		},
 		Use:   "http",
 		Short: "http <method> <url> [options]",
@@ -158,7 +154,7 @@ This command requires the --body flag, which can be a string content or a file.`
 		Run:  handler.Post,
 	}
 
-	post.Flags().StringP(BodyFlagName, "B", "", "Request body to use. Can be string content or a filename.")
+	post.Flags().StringP(bodyFlagName, "B", "", "Request body to use. Can be string content or a filename.")
 	addCommonFlags(post, handler)
 	return post
 }
@@ -222,28 +218,29 @@ func buildAlias(handler *Handler) *cobra.Command {
 }
 
 func addCommonFlags(cmd *cobra.Command, handler *Handler) {
-	cmd.Flags().VarP(handler.header, HeaderFlagName, "H", `HTTP header, may be specified multiple times.
+	cmd.Flags().VarP(handler.header, headerFlagName, "H", `HTTP header, may be specified multiple times.
 The value must conform to the format "name: value". "name" and "value" can
 be separated by either a colon ":" or an equal sign "=", and the space
 between is optional. Can be set in the same format using the env. variable
 DEFAULT_HEADERS, where multiple headers must be separated by an |.`)
 
-	cmd.Flags().IntP(RepeatFlagName, "r", 1, "Repeat the request.")
+	cmd.Flags().IntP(repeatFlagName, "r", 1, "Repeat the request.")
 
 	cmd.Flags().BoolP(
-		AWSSigV4FlagName,
+		awsSigV4FlagName,
 		"4",
 		false,
 		"Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
 	cmd.Flags().String(
-		AWSRegionFlagName,
-		DefaultAWSRegion,
+		awsRegionFlagName,
+		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 	cmd.Flags().String(
-		AWSProfileFlagName,
+		awsProfileFlagName,
 		"",
 		"The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 
-	// Silent mode
-	cmd.Flags().BoolP(SilentFlagName, "s", false, "Suppress output of response body.")
+	cmd.Flags().BoolP(silentFlagName, "s", false, "Suppress output of response body.")
+	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
+	cmd.Flags().Bool(briefFlagName, false, "Output brief summary of the request.")
 }

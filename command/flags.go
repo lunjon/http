@@ -1,14 +1,16 @@
 package command
 
 const (
-	HeaderFlagName     = "header"
-	RepeatFlagName     = "repeat"
-	AWSSigV4FlagName   = "aws-sigv4"
-	AWSProfileFlagName = "aws-profile"
-	AWSRegionFlagName  = "aws-region"
-	BodyFlagName       = "body"
-	SilentFlagName     = "silent"
-	DetailsFlagName    = "details"
-	TimeoutFlagName    = "timeout"
-	VerboseFlagName    = "verbose"
+	headerFlagName     = "header"
+	repeatFlagName     = "repeat"
+	awsSigV4FlagName   = "aws-sigv4"
+	awsProfileFlagName = "aws-profile"
+	awsRegionFlagName  = "aws-region"
+	bodyFlagName       = "body"
+	silentFlagName     = "silent"
+	failFlagName       = "fail"
+	briefFlagName      = "brief"
+	detailsFlagName    = "details"
+	timeoutFlagName    = "timeout"
+	verboseFlagName    = "verbose"
 )

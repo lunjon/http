@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"net/http/httptrace"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 )
 
 var (
@@ -115,7 +116,7 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 
 	client.logger.Printf("Sending request: %s %s", req.Method, req.URL.String())
 	if len(req.Header) > 0 {
-		var b strings.Builder
+		b := strings.Builder{}
 		fmt.Fprintln(&b, "Request headers:")
 		for name, value := range req.Header {
 			fmt.Fprintf(&b, "  %s: %s\n", name, value)
@@ -129,21 +130,17 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 
 	if err != nil {
 		client.logger.Printf("Request failed: %v", err)
-		return &Result{
-			response: nil,
-			elapsed:  elapsed,
-			err:      err,
-		}
+		return &Result{elapsed: elapsed, err: err}
 	}
 
 	client.logger.Printf("Response status: %s", res.Status)
-
 	client.tracer.Report(elapsed)
+
 	if err == nil && res != nil {
-		var b strings.Builder
+		b := strings.Builder{}
 		fmt.Fprintln(&b, "Response headers:")
 		for name, value := range res.Header {
-			fmt.Fprintf(&b, "  %s: %s\n", name, value)
+			fmt.Fprintf(&b, "  %s:\t%s\n", name, value)
 		}
 		client.logger.Print(b.String())
 	}

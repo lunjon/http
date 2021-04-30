@@ -13,6 +13,14 @@ type Result struct {
 	body     []byte
 }
 
+func (res *Result) Status() string {
+	return res.response.Status
+}
+
+func (res *Result) Request() *http.Request {
+	return res.response.Request
+}
+
 func (res *Result) Successful() bool {
 	return res.response.StatusCode < 400
 }
