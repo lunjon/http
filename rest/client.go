@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -27,14 +28,19 @@ var (
 )
 
 type Client struct {
-	httpClient  *http.Client
-	tracer      *Tracer
-	clientTrace *httptrace.ClientTrace
-	logger      *log.Logger
+	httpClient   *http.Client
+	tracer       *Tracer
+	clientTrace  *httptrace.ClientTrace
+	clientLogger *log.Logger
+	traceLogger  *log.Logger
 }
 
-func NewClient(httpClient *http.Client, logger *log.Logger) *Client {
-	t := newTracer(logger)
+func NewClient(
+	httpClient *http.Client,
+	clientLogger *log.Logger,
+	traceLogger *log.Logger,
+) *Client {
+	t := newTracer(traceLogger)
 	trace := &httptrace.ClientTrace{
 		TLSHandshakeStart: t.TLSHandshakeStart,
 		TLSHandshakeDone:  t.TLSHandshakeDone,
@@ -45,15 +51,29 @@ func NewClient(httpClient *http.Client, logger *log.Logger) *Client {
 	}
 
 	return &Client{
-		httpClient:  httpClient,
-		tracer:      t,
-		clientTrace: trace,
-		logger:      logger,
+		httpClient:   httpClient,
+		tracer:       t,
+		clientLogger: clientLogger,
+		clientTrace:  trace,
 	}
 }
 
-func (handler *Client) Timeout(timeout time.Duration) {
-	handler.httpClient.Timeout = timeout
+func (client *Client) Timeout(timeout time.Duration) {
+	client.httpClient.Timeout = timeout
+}
+
+func (client *Client) Cert(publicPath, privatePath string) error {
+	cert, err := tls.LoadX509KeyPair(publicPath, privatePath)
+	if err != nil {
+		return err
+	}
+	tls := tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+	client.httpClient.Transport = &http.Transport{
+		TLSClientConfig: &tls,
+	}
+	return nil
 }
 
 func (client *Client) BuildRequest(method string, url *URL, json []byte, header http.Header) (*http.Request, error) {
@@ -63,19 +83,19 @@ func (client *Client) BuildRequest(method string, url *URL, json []byte, header 
 		return nil, fmt.Errorf("invalid or unsupported method: %s", method)
 	}
 
-	client.logger.Printf("Building request: %s %s", method, url)
+	client.clientLogger.Printf("Building request: %s %s", method, url)
 
-	client.logger.Printf("Parsed URL: %v", url.String())
+	client.clientLogger.Printf("Parsed URL: %v", url.String())
 
 	var body io.Reader
 	if json != nil {
-		client.logger.Printf("Using request body: %s", string(json))
+		client.clientLogger.Printf("Using request body: %s", string(json))
 		body = bytes.NewReader(json)
 	}
 
 	req, err := http.NewRequest(method, url.String(), body)
 	if err != nil {
-		client.logger.Printf("Failed to build request: %v", err)
+		client.clientLogger.Printf("Failed to build request: %v", err)
 		return nil, err
 	}
 
@@ -91,17 +111,17 @@ func (client *Client) SignRequest(req *http.Request, body []byte, region, profil
 		return fmt.Errorf("must specify an AWS region")
 	}
 
-	client.logger.Print("Signing request using Sig V4")
+	client.clientLogger.Print("Signing request using Sig V4")
 
 	var credProvider credentials.Provider
 	if profile != "" {
-		client.logger.Print("No AWS profile specified, trying default")
+		client.clientLogger.Print("No AWS profile specified, trying default")
 		credProvider = &credentials.SharedCredentialsProvider{
 			Filename: "", // Use default, i.e. the configuration in use home directory
 			Profile:  profile,
 		}
 	} else {
-		client.logger.Print("Using AWS credentials from environment")
+		client.clientLogger.Print("Using AWS credentials from environment")
 		credProvider = &credentials.EnvProvider{}
 	}
 
@@ -114,14 +134,14 @@ func (client *Client) SignRequest(req *http.Request, body []byte, region, profil
 func (client *Client) SendRequest(req *http.Request) *Result {
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), client.clientTrace))
 
-	client.logger.Printf("Sending request: %s %s", req.Method, req.URL.String())
+	client.clientLogger.Printf("Sending request: %s %s", req.Method, req.URL.String())
 	if len(req.Header) > 0 {
 		b := strings.Builder{}
 		fmt.Fprintln(&b, "Request headers:")
 		for name, value := range req.Header {
 			fmt.Fprintf(&b, "  %s: %s\n", name, value)
 		}
-		client.logger.Print(b.String())
+		client.clientLogger.Print(b.String())
 	}
 
 	start := time.Now()
@@ -129,11 +149,11 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 	elapsed := time.Since(start)
 
 	if err != nil {
-		client.logger.Printf("Request failed: %v", err)
+		client.clientLogger.Printf("Request failed: %v", err)
 		return &Result{elapsed: elapsed, err: err}
 	}
 
-	client.logger.Printf("Response status: %s", res.Status)
+	client.clientLogger.Printf("Response status: %s", res.Status)
 	client.tracer.Report(elapsed)
 
 	if err == nil && res != nil {
@@ -142,7 +162,7 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 		for name, value := range res.Header {
 			fmt.Fprintf(&b, "  %s:\t%s\n", name, value)
 		}
-		client.logger.Print(b.String())
+		client.clientLogger.Print(b.String())
 	}
 
 	return &Result{

@@ -7,6 +7,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Added
 - Fail flag: `--fail`/`-f`
 - Brief output: `--brief`
+- Client certificate flags: `--cert-pub-file` and `--cert-key-file`
 
 ## [0.9.1] - 2021-04-29
 

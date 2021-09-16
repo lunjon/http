@@ -18,15 +18,17 @@ import (
 var (
 	newline           = []byte("\n")
 	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
+	errCertFlags      = errors.New("--cert-pub-file requires --cert-key-file and vice versa")
 )
 
 // Handler ...
 type Handler struct {
-	logger *log.Logger
-	infos  io.Writer
-	errors io.Writer
-	client *rest.Client
-	header *HeaderOption
+	logger      *log.Logger
+	traceLogger *log.Logger
+	infos       io.Writer
+	errors      io.Writer
+	client      *rest.Client
+	header      *HeaderOption
 	// Set on init
 	cmd       *cobra.Command
 	fail      bool
@@ -36,14 +38,16 @@ type Handler struct {
 func NewHandler(
 	client *rest.Client,
 	logger *log.Logger,
+	traceLogger *log.Logger,
 	h *HeaderOption) *Handler {
 	return &Handler{
-		logger:    logger,
-		infos:     os.Stdout,
-		errors:    os.Stderr,
-		client:    client,
-		header:    h,
-		formatter: DefaultFormatter{},
+		logger:      logger,
+		traceLogger: traceLogger,
+		infos:       os.Stdout,
+		errors:      os.Stderr,
+		client:      client,
+		header:      h,
+		formatter:   DefaultFormatter{},
 	}
 }
 
@@ -55,11 +59,29 @@ func (handler *Handler) Init(cmd *cobra.Command) {
 	timeout, _ := cmd.Flags().GetDuration(timeoutFlagName)
 	handler.Timeout(timeout)
 
+	certPub, _ := cmd.Flags().GetString(certpubFlagName)
+	certKey, _ := cmd.Flags().GetString(certkeyFlagName)
+	if certPub != "" && certKey == "" {
+		handler.checkUserError(errCertFlags, cmd)
+	} else if certPub == "" && certKey != "" {
+		handler.checkUserError(errCertFlags, cmd)
+	} else if certPub != "" && certKey != "" {
+		err := handler.client.Cert(certPub, certKey)
+		handler.checkUserError(err, cmd)
+	}
+
 	verbose, _ := cmd.Flags().GetBool(verboseFlagName)
 	if verbose {
 		handler.logger.SetOutput(os.Stderr)
 	} else {
 		handler.logger.SetOutput(ioutil.Discard)
+	}
+
+	trace, _ := cmd.Flags().GetBool(traceFlagName)
+	if trace {
+		handler.traceLogger.SetOutput(os.Stderr)
+	} else {
+		handler.traceLogger.SetOutput(ioutil.Discard)
 	}
 
 	handler.fail, _ = cmd.Flags().GetBool(failFlagName)

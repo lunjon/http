@@ -27,10 +27,12 @@ Examples:
 
 func createHandler() *Handler {
 	logger := logging.NewLogger()
-	h := NewHeaderOption()
+	traceLogger := logging.NewLogger()
+
+	headerOpts := NewHeaderOption()
 	httpClient := &http.Client{}
-	restClient := rest.NewClient(httpClient, logger)
-	handler := NewHandler(restClient, logger, h)
+	restClient := rest.NewClient(httpClient, logger, traceLogger)
+	handler := NewHandler(restClient, logger, traceLogger, headerOpts)
 	return handler
 }
 
@@ -66,7 +68,6 @@ func Build(version string) *cobra.Command {
 
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
-	root.PersistentFlags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 
 	return root
 }
@@ -243,4 +244,8 @@ DEFAULT_HEADERS, where multiple headers must be separated by an |.`)
 	cmd.Flags().BoolP(silentFlagName, "s", false, "Suppress output of response body.")
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	cmd.Flags().Bool(briefFlagName, false, "Output brief summary of the request.")
+	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
+	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
+	cmd.Flags().String(certpubFlagName, "", "Use as client certificate public key (requires --cert-key-file flag).")
+	cmd.Flags().String(certkeyFlagName, "", "Use as client certificate private key (requires --cert-pub-file flag).")
 }

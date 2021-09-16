@@ -17,7 +17,7 @@ func setupClient(t *testing.T) (*Client, *URL) {
 	logger := logging.NewLogger()
 	router := &TestServer{}
 	server := httptest.NewServer(router)
-	client := NewClient(server.Client(), logger)
+	client := NewClient(server.Client(), logger, logger)
 
 	t.Cleanup(func() {
 		server.Close()
