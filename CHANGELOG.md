@@ -4,6 +4,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.10.0] - 2021-09-16
+
 ### Added
 - Fail flag: `--fail`/`-f`
 - Brief output: `--brief`
