@@ -20,6 +20,7 @@ var (
 	newline           = []byte("\n")
 	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
 	errCertFlags      = errors.New("--cert-pub-file requires --cert-key-file and vice versa")
+	emptyRequestBody  = requestBody{}
 )
 
 // Handler handles all commands.
@@ -54,7 +55,7 @@ func NewHandler(
 		infos:       infos,
 		errors:      errors,
 		client:      client,
-		header:      &HeaderOption{},
+		header:      NewHeaderOption(),
 		formatter:   DefaultFormatter{},
 	}
 }
@@ -114,11 +115,11 @@ func (handler *Handler) Timeout(timeout time.Duration) {
 }
 
 func (handler *Handler) Get(cmd *cobra.Command, args []string) {
-	handler.handleRequest(http.MethodGet, nil, cmd, args)
+	handler.handleRequest(http.MethodGet, emptyRequestBody, cmd, args)
 }
 
 func (handler *Handler) Head(cmd *cobra.Command, args []string) {
-	handler.handleRequest(http.MethodHead, nil, cmd, args)
+	handler.handleRequest(http.MethodHead, emptyRequestBody, cmd, args)
 }
 
 func (handler *Handler) Post(cmd *cobra.Command, args []string) {
@@ -137,10 +138,10 @@ func (handler *Handler) Put(cmd *cobra.Command, args []string) {
 }
 
 func (handler *Handler) Delete(cmd *cobra.Command, args []string) {
-	handler.handleRequest(http.MethodDelete, nil, cmd, args)
+	handler.handleRequest(http.MethodDelete, emptyRequestBody, cmd, args)
 }
 
-func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Command, args []string) {
+func (handler *Handler) handleRequest(method string, body requestBody, cmd *cobra.Command, args []string) {
 	alias, err := handler.readAliasFile()
 	handler.checkExecutionError(err)
 
@@ -149,10 +150,15 @@ func (handler *Handler) handleRequest(method string, body []byte, cmd *cobra.Com
 
 	headers, err := handler.getHeaders()
 	handler.checkUserError(err, cmd)
+	setContentType := headers.Get("content-type") == "" && body.mime != rest.MIMETypeUnknown
+	if setContentType {
+		handler.logger.Printf("Detected MIME type: %s", body.mime)
+		headers.Add("Content-Type", body.mime.String())
+	}
 
 	repeat, _ := cmd.Flags().GetInt(repeatFlagName)
 	for i := 0; i < repeat; i++ {
-		req, err := handler.buildRequest(cmd, method, url, body, headers)
+		req, err := handler.buildRequest(cmd, method, url, body.bytes, headers)
 		handler.checkUserError(err, cmd)
 
 		res := handler.client.SendRequest(req)
@@ -235,9 +241,16 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 	os.Exit(1)
 }
 
-func (handler *Handler) getRequestBody(cmd *cobra.Command) []byte {
+type requestBody struct {
+	bytes []byte
+	mime  rest.MIMEType
+}
+
+func (handler *Handler) getRequestBody(cmd *cobra.Command) requestBody {
 	bodyFlag, _ := cmd.Flags().GetString(bodyFlagName)
 	bodyFlag = strings.TrimSpace(bodyFlag)
+
+	mime := rest.MIMETypeUnknown
 
 	if bodyFlag == "" {
 		// Not provided via flags, check stdin
@@ -246,11 +259,12 @@ func (handler *Handler) getRequestBody(cmd *cobra.Command) []byte {
 			handler.logger.Print("Reading body from stdin")
 			b, err := io.ReadAll(os.Stdin)
 			handler.checkExecutionError(err)
-			return b
+
+			return requestBody{b, mime}
 		}
 
 		handler.logger.Print("No body provided")
-		return nil
+		return requestBody{nil, mime}
 	}
 
 	// We first try to read as a file
@@ -259,10 +273,24 @@ func (handler *Handler) getRequestBody(cmd *cobra.Command) []byte {
 		handler.checkUserError(err, cmd)
 	}
 
+	if body != nil {
+		// Try detecting filetype in order to set MIME type
+		switch path.Ext(bodyFlag) {
+		case ".html":
+			mime = rest.MIMETypeHTML
+		case ".csv":
+			mime = rest.MIMETypeCSV
+		case ".json":
+			mime = rest.MIMETypeJSON
+		case ".xml":
+			mime = rest.MIMETypeXML
+		}
+	}
+
 	if body == nil {
 		// Assume that the content was given as string
 		body = []byte(bodyFlag)
 	}
 
-	return body
+	return requestBody{body, mime}
 }
