@@ -3,5 +3,6 @@
 .vscode/
 
 # Build artifacts
-httpreq
+*.out
+http
 bin/

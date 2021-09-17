@@ -7,11 +7,14 @@ import (
 	"testing"
 
 	"github.com/lunjon/http/logging"
+	"github.com/stretchr/testify/require"
 )
 
 type TestServer struct{}
 
-func (ts *TestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
+func (ts *TestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(`{"result":{"data": "string"}}`))
+}
 
 func setupClient(t *testing.T) (*Client, *URL) {
 	logger := logging.NewLogger()
@@ -64,7 +67,7 @@ func TestBuildRequest(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
+func TestClientGet(t *testing.T) {
 	client, url := setupClient(t)
 	req, err := client.BuildRequest("GET", url, nil, nil)
 	if err != nil {
@@ -83,7 +86,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestPost(t *testing.T) {
+func TestClientPost(t *testing.T) {
 	client, url := setupClient(t)
 	tests := []string{
 		"{}",
@@ -112,4 +115,24 @@ func TestPost(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestClientResult(t *testing.T) {
+	client, url := setupClient(t)
+	req, err := client.BuildRequest("GET", url, nil, nil)
+	require.NoError(t, err)
+
+	res := client.SendRequest(req)
+	require.NoError(t, res.Error())
+
+	require.False(t, res.HasError())
+	require.True(t, res.Successful())
+
+	require.NotNil(t, res.Request())
+	require.NotZero(t, res.ElapsedMilliseconds())
+	require.NotZero(t, res.Status())
+
+	body, err := res.Body()
+	require.NoError(t, err)
+	require.NotEmpty(t, body)
 }

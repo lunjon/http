@@ -6,6 +6,7 @@ import (
 
 	"github.com/lunjon/http/rest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type urlTest struct {
@@ -149,4 +150,17 @@ func TestParseURL_Alias(t *testing.T) {
 			assert.Equal(t, url.String(), tt.expected)
 		})
 	}
+}
+
+func TestURLDetailedString(t *testing.T) {
+	url, err := rest.ParseURL("https://api.example/path:1234", map[string]string{})
+	require.NoError(t, err)
+	require.NotEmpty(t, url.DetailString())
+}
+
+func TestURLBaseURL(t *testing.T) {
+	url, err := rest.ParseURL("https://api.example/path:1234", map[string]string{})
+	require.NoError(t, err)
+	baseURL := url.BaseURL()
+	require.NotEmpty(t, baseURL)
 }

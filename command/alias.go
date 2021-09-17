@@ -4,24 +4,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
-
-var (
-	aliasDir      string
-	aliasFilepath string
-)
-
-func init() {
-	filepath, err := os.UserHomeDir()
-	checkErr(err)
-
-	aliasDir = path.Join(filepath, ".gohttp")
-	aliasFilepath = path.Join(aliasDir, "alias")
-}
 
 func (handler *Handler) handleAlias(_ *cobra.Command, args []string) {
 	switch len(args) {
@@ -51,7 +37,7 @@ func (handler *Handler) setAlias(alias, url string) {
 
 func (handler *Handler) readAliasFile() (map[string]string, error) {
 	alias := make(map[string]string)
-	file, err := os.Open(aliasFilepath)
+	file, err := os.Open(handler.aliasFile)
 	if os.IsNotExist(err) {
 		return alias, nil
 	}
@@ -80,12 +66,12 @@ func (handler *Handler) readAliasFile() (map[string]string, error) {
 }
 
 func (handler *Handler) writeAliasFile(aliases map[string]string) {
-	if _, err := os.Stat(aliasDir); os.IsNotExist(err) {
-		err := os.MkdirAll(aliasDir, 0700)
+	if _, err := os.Stat(handler.dir); os.IsNotExist(err) {
+		err := os.MkdirAll(handler.dir, 0700)
 		checkErr(err)
 	}
 
-	file, err := os.OpenFile(aliasFilepath, os.O_WRONLY|os.O_CREATE, 0600)
+	file, err := os.OpenFile(handler.aliasFile, os.O_WRONLY|os.O_CREATE, 0600)
 	checkErr(err)
 	defer file.Close()
 	for alias, url := range aliases {

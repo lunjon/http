@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
 	"github.com/lunjon/http/logging"
@@ -25,21 +26,36 @@ Examples:
 	defaultHeadersEnv = "DEFAULT_HEADERS"
 )
 
-func createHandler() *Handler {
+func newDefaultHandler() *Handler {
 	logger := logging.NewLogger()
 	traceLogger := logging.NewLogger()
 
-	headerOpts := NewHeaderOption()
 	httpClient := &http.Client{}
 	restClient := rest.NewClient(httpClient, logger, traceLogger)
-	handler := NewHandler(restClient, logger, traceLogger, headerOpts)
+
+	homedir, err := os.UserHomeDir()
+	checkErr(err)
+	dir := path.Join(homedir, ".gohttp")
+
+	handler := NewHandler(
+		restClient,
+		logger,
+		traceLogger,
+		os.Stdout,
+		os.Stderr,
+		dir,
+	)
+
 	return handler
 }
 
-// Build the root command for http and set version.
 func Build(version string) *cobra.Command {
-	handler := createHandler()
+	h := newDefaultHandler()
+	return build(version, h)
+}
 
+// Build the root command for http and set version.
+func build(version string, handler *Handler) *cobra.Command {
 	root := buildRoot(handler)
 	root.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -62,10 +78,6 @@ func Build(version string) *cobra.Command {
 	alias := buildAlias(handler)
 	root.AddCommand(alias)
 
-	// Command for generating completion
-	comp := buildComp(root)
-	root.AddCommand(comp)
-
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
 
@@ -82,43 +94,6 @@ func buildRoot(handler *Handler) *cobra.Command {
 		Long:  description,
 	}
 	return root
-}
-
-func buildComp(root *cobra.Command) *cobra.Command {
-	filenameDefault := ""
-	gen := &cobra.Command{
-		Use:   "comp <type>",
-		Short: "Generate completion for a supported shell: bash, zsh or fish",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			shell := args[0]
-			filename, _ := cmd.Flags().GetString("filename")
-			if filename == filenameDefault {
-				filename = shell
-			}
-
-			var err error
-			switch shell {
-			case "bash":
-				err = root.GenBashCompletionFile(filename)
-			case "zsh":
-				err = root.GenZshCompletionFile(filename)
-			case "fish":
-				err = root.GenFishCompletionFile(filename, false)
-			default:
-				fmt.Fprintf(os.Stderr, "invalid shell type: %s", shell)
-				os.Exit(1)
-			}
-
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to generate %s completion file: %v", shell, err)
-				os.Exit(1)
-			}
-		},
-	}
-
-	gen.Flags().StringP("filename", "f", filenameDefault, "Output file name.")
-	return gen
 }
 
 func buildGet(handler *Handler) *cobra.Command {

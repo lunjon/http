@@ -4,6 +4,9 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Removed
+- `comp` command
+
 ## [0.10.0] - 2021-09-16
 
 ### Added

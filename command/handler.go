@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -21,8 +22,10 @@ var (
 	errCertFlags      = errors.New("--cert-pub-file requires --cert-key-file and vice versa")
 )
 
-// Handler ...
+// Handler handles all commands.
 type Handler struct {
+	dir         string
+	aliasFile   string
 	logger      *log.Logger
 	traceLogger *log.Logger
 	infos       io.Writer
@@ -39,14 +42,19 @@ func NewHandler(
 	client *rest.Client,
 	logger *log.Logger,
 	traceLogger *log.Logger,
-	h *HeaderOption) *Handler {
+	infos io.Writer,
+	errors io.Writer,
+	dir string,
+) *Handler {
 	return &Handler{
+		dir:         dir,
+		aliasFile:   path.Join(dir, "alias"),
 		logger:      logger,
 		traceLogger: traceLogger,
-		infos:       os.Stdout,
-		errors:      os.Stderr,
+		infos:       infos,
+		errors:      errors,
 		client:      client,
-		header:      h,
+		header:      &HeaderOption{},
 		formatter:   DefaultFormatter{},
 	}
 }
