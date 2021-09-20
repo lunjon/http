@@ -6,12 +6,13 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Changed
 - Only use environment variables for AWS credentials
+- Default timeout to 30 s
 
 ### Removed
 - `--aws-profile` option
 
 ### Added
-- MIME type detection in `--body` flag if file is given.
+- MIME type detection in `--body` flag if file is given
 
 ### Removed
 - `comp` command
@@ -41,8 +42,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ## [0.8.0] - 2021-03-23
 
 ### Added
-- `gen` command to generate shell completion files.
-- `url` command to create URL aliases.
+- `gen` command to generate shell completion files
+- `url` command to create URL aliases
 
 ### Changed
 - Log to stderr
@@ -50,19 +51,19 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ## [0.7.1] - 2020-11-08
 
 ### Added
-- `version` option to print version of `http`.
+- `version` option to print version of `http`
 
 ## [0.7.0] - 2020-11-08
 
 ### Added
-- Flag named `--verbose` to output debug logs.
-- Flag named `--response-body-only` to only output the response body.
+- Flag named `--verbose` to output debug logs
+- Flag named `--response-body-only` to only output the response body
 - HTTP verbs: HEAD, PUT, PATCH
 
 ### Changed
 - Name of `--json` to `--body` in `http post` command. It also changed the behavior to also
-  accept a filename instead of just a string of content.
-- Name of `--output-file` to `--output` only.
+  accept a filename instead of just a string of content
+- Name of `--output-file` to `--output` only
 - Output errors on stderr file descriptor
 
 ### Removed
@@ -89,19 +90,19 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ## [0.3.0] - 2019-09-15
 
 ### Added
-- `--sandbox` flag to run command.
+- `--sandbox` flag to run command
 
 ## [0.2.1] - 2019-09-15
 
 ### Fixed
-- Parsing URLs with query parameters.
+- Parsing URLs with query parameters
 
 ## [0.2.0] - 2019-09-15
 
 ### Added
-- `parse-url` command.
+- `parse-url` command
 
 ### Fixed
-- Running get, post or delete with `--sandbox` now returns correct path.
+- Running get, post or delete with `--sandbox` now returns correct path
 
 ## [0.1.0] - 2019-09-14

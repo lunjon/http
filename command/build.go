@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	defaultTimeout = time.Second * 10
+	defaultTimeout = time.Second * 30
 	description    = `Executes an HTTP request. Supported HTTP methods are GET, HEAD, PUT, POST, PATCH and DELETE.
 URL parameter is always required and must match something like "[https?://]host[:port][/path][?query]"
 
