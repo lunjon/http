@@ -167,7 +167,13 @@ func (handler *Handler) handleRequest(method string, body requestBody, cmd *cobr
 	}
 }
 
-func (handler *Handler) buildRequest(cmd *cobra.Command, method string, url *rest.URL, body []byte, header http.Header) (*http.Request, error) {
+func (handler *Handler) buildRequest(
+	cmd *cobra.Command,
+	method string,
+	url *rest.URL,
+	body []byte,
+	header http.Header,
+) (*http.Request, error) {
 	req, err := handler.client.BuildRequest(method, url, body, header)
 	if err != nil {
 		return nil, err
