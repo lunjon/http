@@ -106,26 +106,14 @@ func (client *Client) BuildRequest(method string, url *URL, json []byte, header 
 	return req, nil
 }
 
-func (client *Client) SignRequest(req *http.Request, body []byte, region, profile string) error {
+func (client *Client) SignRequest(req *http.Request, body []byte, region string) error {
 	if region == "" {
-		return fmt.Errorf("must specify an AWS region")
+		region = "eu-west-1"
 	}
 
 	client.clientLogger.Print("Signing request using Sig V4")
 
-	var credProvider credentials.Provider
-	if profile != "" {
-		client.clientLogger.Print("No AWS profile specified, trying default")
-		credProvider = &credentials.SharedCredentialsProvider{
-			Filename: "", // Use default, i.e. the configuration in use home directory
-			Profile:  profile,
-		}
-	} else {
-		client.clientLogger.Print("Using AWS credentials from environment")
-		credProvider = &credentials.EnvProvider{}
-	}
-
-	creds := credentials.NewCredentials(credProvider)
+	creds := credentials.NewCredentials(&credentials.EnvProvider{})
 	signer := v4.NewSigner(creds)
 	_, err := signer.Sign(req, bytes.NewReader(body), "execute-api", region, time.Now())
 	return err

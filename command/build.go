@@ -206,15 +206,14 @@ DEFAULT_HEADERS, where multiple headers must be separated by an |.`)
 		awsSigV4FlagName,
 		"4",
 		false,
-		"Use AWS signature V4 as authentication in the request. Requires the --aws-region option.")
+		`Use AWS signature V4 as authentication in the request. AWS region can be
+set with the --aws-region option. Credentials are expected to be set
+in environment variables.
+`)
 	cmd.Flags().String(
 		awsRegionFlagName,
 		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
-	cmd.Flags().String(
-		awsProfileFlagName,
-		"",
-		"The name of an AWS profile in your AWS configuration. If not specified, environment variables are used.")
 
 	cmd.Flags().BoolP(silentFlagName, "s", false, "Suppress output of response body.")
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")

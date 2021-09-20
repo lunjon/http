@@ -4,6 +4,12 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Changed
+- Only use environment variables for AWS credentials
+
+### Removed
+- `--aws-profile` option
+
 ### Added
 - MIME type detection in `--body` flag if file is given.
 

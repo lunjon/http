@@ -182,9 +182,8 @@ func (handler *Handler) buildRequest(
 	signRequest, _ := cmd.Flags().GetBool(awsSigV4FlagName)
 	if signRequest {
 		region, _ := cmd.Flags().GetString(awsRegionFlagName)
-		profile, _ := cmd.Flags().GetString(awsProfileFlagName)
 
-		err = handler.client.SignRequest(req, body, region, profile)
+		err = handler.client.SignRequest(req, body, region)
 		if err != nil {
 			return nil, err
 		}
