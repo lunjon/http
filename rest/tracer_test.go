@@ -1,7 +1,8 @@
 package rest
 
 import (
-	"net/http/httptest"
+	"crypto/tls"
+	"net/http/httptrace"
 	"testing"
 
 	"github.com/lunjon/http/logging"
@@ -10,10 +11,6 @@ import (
 
 func TestTracer(t *testing.T) {
 	logger := logging.NewLogger()
-	router := &TestServer{}
-	server := httptest.NewTLSServer(router)
-	defer server.Close()
-
 	client := NewClient(server.Client(), logger, logger)
 
 	url, _ := ParseURL(server.URL, nil)
@@ -22,4 +19,25 @@ func TestTracer(t *testing.T) {
 
 	res := client.SendRequest(req)
 	require.Nil(t, res.Error())
+}
+
+func TestTracerDNS(t *testing.T) {
+	logger := logging.NewLogger()
+	tracer := newTracer(logger)
+
+	tracer.DNSStart(httptrace.DNSStartInfo{})
+	tracer.DNSDone(httptrace.DNSDoneInfo{})
+
+	require.NotZero(t, tracer.dnsStart)
+	require.NotZero(t, tracer.dnsDuration)
+}
+
+func TestTracerTLS(t *testing.T) {
+	logger := logging.NewLogger()
+	tracer := newTracer(logger)
+
+	tracer.TLSHandshakeStart()
+	require.NotZero(t, tracer.tlsStart)
+
+	tracer.TLSHandshakeDone(tls.ConnectionState{}, nil)
 }

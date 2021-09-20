@@ -2,30 +2,15 @@ package rest
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/lunjon/http/logging"
 	"github.com/stretchr/testify/require"
 )
 
-type TestServer struct{}
-
-func (ts *TestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(`{"result":{"data": "string"}}`))
-}
-
 func setupClient(t *testing.T) (*Client, *URL) {
 	logger := logging.NewLogger()
-	router := &TestServer{}
-	server := httptest.NewServer(router)
 	client := NewClient(server.Client(), logger, logger)
-
-	t.Cleanup(func() {
-		server.Close()
-	})
-
 	url, _ := ParseURL(server.URL, nil)
 	return client, url
 }
