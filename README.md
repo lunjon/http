@@ -22,7 +22,7 @@ To get started use `http --help`.
 ```sh
 # POST http://localhost:1234/api/test 
 $ http post :1234/api/test --json '{"field":"value"}'
-GET      http://localhost:1234/api/test
+POST      http://localhost:1234/api/test
 Status   201 OK
 Elapsed  15.11 ms
 {
