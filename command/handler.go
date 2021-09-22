@@ -25,14 +25,23 @@ var (
 
 // Handler handles all commands.
 type Handler struct {
-	dir         string
-	aliasFile   string
-	logger      *log.Logger
+	// The directory of the CLI in home (or other for testing)
+	gohttpDir     string
+	aliasFilePath string
+	// General logger
+	logger *log.Logger
+	// Specific logger for TLS tracing
 	traceLogger *log.Logger
-	infos       io.Writer
-	errors      io.Writer
-	client      *rest.Client
-	header      *HeaderOption
+	// Output of infos
+	infos io.Writer
+	// Output of errors
+	errors io.Writer
+	// HTTP client. Configured in Handler.Init()
+	client *rest.Client
+	// Field that all headers are set
+	header *HeaderOption
+	// Function to invoke on errors which cannot be recovered from
+	exitFunc func()
 	// Set on init
 	cmd       *cobra.Command
 	fail      bool
@@ -46,17 +55,19 @@ func NewHandler(
 	infos io.Writer,
 	errors io.Writer,
 	dir string,
+	exitFunc func(),
 ) *Handler {
 	return &Handler{
-		dir:         dir,
-		aliasFile:   path.Join(dir, "alias"),
-		logger:      logger,
-		traceLogger: traceLogger,
-		infos:       infos,
-		errors:      errors,
-		client:      client,
-		header:      NewHeaderOption(),
-		formatter:   DefaultFormatter{},
+		gohttpDir:     dir,
+		aliasFilePath: path.Join(dir, "alias"),
+		logger:        logger,
+		traceLogger:   traceLogger,
+		infos:         infos,
+		errors:        errors,
+		client:        client,
+		header:        NewHeaderOption(),
+		formatter:     DefaultFormatter{},
+		exitFunc:      exitFunc,
 	}
 }
 
@@ -203,7 +214,7 @@ func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
 
 	if handler.fail && !r.Successful() {
 		handler.logger.Printf("Request failed with status %s", r.Status())
-		os.Exit(1)
+		handler.exitFunc()
 	}
 }
 
@@ -211,7 +222,7 @@ func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
 // the environment variable for default headers.
 func (handler *Handler) getHeaders() (http.Header, error) {
 	headers := handler.header.values
-	val, set := os.LookupEnv("DEFAULT_HEADERS")
+	val, set := os.LookupEnv(defaultHeadersEnv)
 	if !set {
 		return headers, nil
 	}
@@ -220,9 +231,8 @@ func (handler *Handler) getHeaders() (http.Header, error) {
 	for _, h := range strings.Split(val, "|") {
 		key, value, err := parseHeader(strings.TrimSpace(h))
 		if err != nil {
-			return headers, fmt.Errorf("invalid header format in DEFAULT_HEADERS: %w", err)
+			return headers, fmt.Errorf("invalid header format in %s: %w", defaultHeadersEnv, err)
 		}
-
 		headers.Add(key, value)
 	}
 
@@ -234,7 +244,7 @@ func (handler *Handler) checkExecutionError(err error) {
 		return
 	}
 	fmt.Fprintf(handler.errors, "error: %v\n", err)
-	os.Exit(1)
+	handler.exitFunc()
 }
 
 func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
@@ -243,7 +253,7 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 	}
 	fmt.Fprintf(handler.errors, "error: %v\n\n", err)
 	cmd.Usage()
-	os.Exit(1)
+	handler.exitFunc()
 }
 
 type requestBody struct {

@@ -37,7 +37,7 @@ func (handler *Handler) setAlias(alias, url string) {
 
 func (handler *Handler) readAliasFile() (map[string]string, error) {
 	alias := make(map[string]string)
-	file, err := os.Open(handler.aliasFile)
+	file, err := os.Open(handler.aliasFilePath)
 	if os.IsNotExist(err) {
 		return alias, nil
 	}
@@ -66,12 +66,12 @@ func (handler *Handler) readAliasFile() (map[string]string, error) {
 }
 
 func (handler *Handler) writeAliasFile(aliases map[string]string) {
-	if _, err := os.Stat(handler.dir); os.IsNotExist(err) {
-		err := os.MkdirAll(handler.dir, 0700)
+	if _, err := os.Stat(handler.gohttpDir); os.IsNotExist(err) {
+		err := os.MkdirAll(handler.gohttpDir, 0700)
 		checkErr(err)
 	}
 
-	file, err := os.OpenFile(handler.aliasFile, os.O_WRONLY|os.O_CREATE, 0600)
+	file, err := os.OpenFile(handler.aliasFilePath, os.O_WRONLY|os.O_CREATE, 0600)
 	checkErr(err)
 	defer file.Close()
 	for alias, url := range aliases {

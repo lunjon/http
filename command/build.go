@@ -44,6 +44,9 @@ func newDefaultHandler() *Handler {
 		os.Stdout,
 		os.Stderr,
 		dir,
+		func() {
+			os.Exit(1)
+		},
 	)
 
 	return handler
@@ -176,19 +179,11 @@ func buildDelete(handler *Handler) *cobra.Command {
 	addCommonFlags(del, handler)
 	return del
 }
-func checkErr(err error) {
-	if err == nil {
-		return
-	}
-	fmt.Fprintf(os.Stderr, "Error: failed to read alias file: %s\n", err)
-	os.Exit(1)
-
-}
 
 func buildAlias(handler *Handler) *cobra.Command {
 	return &cobra.Command{
 		Use:   "alias <name> <url>",
-		Short: "Create a persistant URL alias",
+		Short: "List and create persistant URL aliases",
 		Run:   handler.handleAlias,
 	}
 }
@@ -220,6 +215,14 @@ in environment variables.
 	cmd.Flags().Bool(briefFlagName, false, "Output brief summary of the request.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
-	cmd.Flags().String(certpubFlagName, "", "Use as client certificate public key (requires --cert-key-file flag).")
+	cmd.Flags().String(certpubFlagName, "", "Use as client certificate public key  (requires --cert-key-file flag).")
 	cmd.Flags().String(certkeyFlagName, "", "Use as client certificate private key (requires --cert-pub-file flag).")
+}
+
+func checkErr(err error) {
+	if err == nil {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	os.Exit(1)
 }

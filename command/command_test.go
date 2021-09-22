@@ -24,7 +24,6 @@ func (s *serverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestMain(m *testing.M) {
-
 	server := httptest.NewServer(&serverHandler{})
 	serverURL = server.URL
 	status := m.Run()
@@ -57,7 +56,7 @@ func setup(t *testing.T) *fixture {
 
 	infos := &strings.Builder{}
 	errors := &strings.Builder{}
-	handler := NewHandler(rc, logger, logger, infos, errors, testdir)
+	handler := NewHandler(rc, logger, logger, infos, errors, testdir, func() {})
 	root := build("test", handler)
 	root.SetOutput(io.Discard)
 
