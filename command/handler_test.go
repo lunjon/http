@@ -81,3 +81,22 @@ func TestUnknownCommand(t *testing.T) {
 	err := fixture.root.Execute()
 	require.Error(t, err)
 }
+
+func TestInvalidFlagCombinations(t *testing.T) {
+	fixture := setup(t)
+
+	tests := map[string][]string{
+		"cert - missing --cert-key-file": {"get", serverURL, "--cert-pub-file", "file"},
+		"cert - missing --cert-pub-file": {"get", serverURL, "--cert-key-file", "file"},
+		"both --brief and --silent":      {"get", serverURL, "--brief", "--silent"},
+	}
+	for name, args := range tests {
+		t.Run(name, func(t *testing.T) {
+			fixture.root.SetArgs(args)
+			err := fixture.root.Execute()
+			require.NoError(t, err)
+			require.NotEmpty(t, fixture.errors.String())
+			require.True(t, fixture.state.exitCalled)
+		})
+	}
+}

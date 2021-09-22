@@ -32,11 +32,16 @@ func TestMain(m *testing.M) {
 	os.Exit(status)
 }
 
+type state struct {
+	exitCalled bool
+}
+
 type fixture struct {
 	handler *Handler
 	root    *cobra.Command
 	infos   *strings.Builder
 	errors  *strings.Builder
+	state   *state
 }
 
 func setup(t *testing.T) *fixture {
@@ -50,13 +55,16 @@ func setup(t *testing.T) *fixture {
 		os.RemoveAll(testdir)
 	})
 
+	state := &state{}
 	logger := logging.NewLogger()
 	logger.SetOutput(io.Discard)
-	rc := client.NewClient(&http.Client{}, logger, logger)
+	c := client.NewClient(&http.Client{}, logger, logger)
 
 	infos := &strings.Builder{}
 	errors := &strings.Builder{}
-	handler := NewHandler(rc, logger, logger, infos, errors, testdir, func() {})
+	handler := NewHandler(c, logger, logger, infos, errors, testdir, func() {
+		state.exitCalled = true
+	})
 	root := build("test", handler)
 	root.SetOutput(io.Discard)
 
@@ -65,5 +73,6 @@ func setup(t *testing.T) *fixture {
 		handler: handler,
 		infos:   infos,
 		errors:  errors,
+		state:   state,
 	}
 }
