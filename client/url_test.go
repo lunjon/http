@@ -1,95 +1,95 @@
-package rest_test
+package client_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/lunjon/http/rest"
+	"github.com/lunjon/http/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type urlTest struct {
 	url       string
-	exptected *rest.URL
+	exptected *client.URL
 	str       string
 }
 
 func TestParseURL_Valid(t *testing.T) {
 	tests := []urlTest{
-		{":9999/path", &rest.URL{
-			Scheme: rest.HTTP,
+		{":9999/path", &client.URL{
+			Scheme: client.HTTP,
 			Port:   9999,
 			Host:   "localhost",
 			Path:   "/path",
 		}, "http://localhost:9999/path"},
-		{"localhost/path", &rest.URL{
-			Scheme: rest.HTTP,
+		{"localhost/path", &client.URL{
+			Scheme: client.HTTP,
 			Port:   80,
 			Host:   "localhost",
 			Path:   "/path",
 		}, "http://localhost/path"},
-		{"127.0.0.1/path", &rest.URL{
-			Scheme: rest.HTTP,
+		{"127.0.0.1/path", &client.URL{
+			Scheme: client.HTTP,
 			Port:   80,
 			Host:   "127.0.0.1",
 			Path:   "/path",
 			Query:  "",
 		}, "http://127.0.0.1/path"},
-		{"https://127.0.0.1/path?query=value", &rest.URL{
-			Scheme: rest.HTTPS,
+		{"https://127.0.0.1/path?query=value", &client.URL{
+			Scheme: client.HTTPS,
 			Port:   443,
 			Host:   "127.0.0.1",
 			Path:   "/path",
 			Query:  "query=value",
 		}, "https://127.0.0.1/path?query=value"},
-		{"http://localhost", &rest.URL{
-			Scheme: rest.HTTP,
+		{"http://localhost", &client.URL{
+			Scheme: client.HTTP,
 			Port:   80,
 			Host:   "localhost",
 			Path:   "",
 		}, "http://localhost"},
-		{"http://localhost/path", &rest.URL{
-			Scheme: rest.HTTP,
+		{"http://localhost/path", &client.URL{
+			Scheme: client.HTTP,
 			Port:   80,
 			Host:   "localhost",
 			Path:   "/path",
 		}, "http://localhost/path"},
-		{"https://localhost/path", &rest.URL{
-			Scheme: rest.HTTPS,
+		{"https://localhost/path", &client.URL{
+			Scheme: client.HTTPS,
 			Port:   443,
 			Host:   "localhost",
 			Path:   "/path",
 		}, "https://localhost/path"},
-		{"http://127.0.0.1:50126/path", &rest.URL{
-			Scheme: rest.HTTP,
+		{"http://127.0.0.1:50126/path", &client.URL{
+			Scheme: client.HTTP,
 			Port:   50126,
 			Host:   "127.0.0.1",
 			Path:   "/path",
 		}, "http://127.0.0.1:50126/path"},
-		{"http://127.0.0.1:50126/path?query=value", &rest.URL{
-			Scheme: rest.HTTP,
+		{"http://127.0.0.1:50126/path?query=value", &client.URL{
+			Scheme: client.HTTP,
 			Port:   50126,
 			Host:   "127.0.0.1",
 			Path:   "/path",
 			Query:  "query=value",
 		}, "http://127.0.0.1:50126/path?query=value"},
-		{"http://api.host:5000?query=value", &rest.URL{
-			Scheme: rest.HTTP,
+		{"http://api.host:5000?query=value", &client.URL{
+			Scheme: client.HTTP,
 			Port:   5000,
 			Host:   "api.host",
 			Path:   "",
 			Query:  "query=value",
 		}, "http://api.host:5000?query=value"},
-		{"api.host:5000?query=value", &rest.URL{
-			Scheme: rest.HTTPS,
+		{"api.host:5000?query=value", &client.URL{
+			Scheme: client.HTTPS,
 			Port:   5000,
 			Host:   "api.host",
 			Path:   "",
 			Query:  "query=value",
 		}, "https://api.host:5000?query=value"},
-		{"https://api.com:5000/external/route", &rest.URL{
-			Scheme: rest.HTTPS,
+		{"https://api.com:5000/external/route", &client.URL{
+			Scheme: client.HTTPS,
 			Port:   5000,
 			Host:   "api.com",
 			Path:   "/external/route",
@@ -101,7 +101,7 @@ func TestParseURL_Valid(t *testing.T) {
 	for i, tt := range tests {
 		name := fmt.Sprintf("%d) ParseURL(%s)", i, tt.url)
 		t.Run(name, func(t *testing.T) {
-			url, err := rest.ParseURL(tt.url, aliases)
+			url, err := client.ParseURL(tt.url, aliases)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.exptected.Scheme, url.Scheme, "invalid scheme")
 			assert.Equal(t, tt.exptected.Port, url.Port, "invalid port")
@@ -125,7 +125,7 @@ func TestParseURL_Invalid(t *testing.T) {
 	for i, tt := range tests {
 		name := fmt.Sprintf("%d) ParseURL(%s)", i, tt)
 		t.Run(name, func(t *testing.T) {
-			url, err := rest.ParseURL(tt, nil)
+			url, err := client.ParseURL(tt, nil)
 			assert.Error(t, err)
 			assert.Nil(t, url)
 
@@ -145,7 +145,7 @@ func TestParseURL_Alias(t *testing.T) {
 	for i, tt := range tests {
 		name := fmt.Sprintf("%d) ParseURL(%s)", i, tt)
 		t.Run(name, func(t *testing.T) {
-			url, err := rest.ParseURL(tt.url, tt.aliases)
+			url, err := client.ParseURL(tt.url, tt.aliases)
 			assert.NoError(t, err)
 			assert.Equal(t, url.String(), tt.expected)
 		})
@@ -153,13 +153,13 @@ func TestParseURL_Alias(t *testing.T) {
 }
 
 func TestURLDetailedString(t *testing.T) {
-	url, err := rest.ParseURL("https://api.example/path:1234", map[string]string{})
+	url, err := client.ParseURL("https://api.example/path:1234", map[string]string{})
 	require.NoError(t, err)
 	require.NotEmpty(t, url.DetailString())
 }
 
 func TestURLBaseURL(t *testing.T) {
-	url, err := rest.ParseURL("https://api.example/path:1234", map[string]string{})
+	url, err := client.ParseURL("https://api.example/path:1234", map[string]string{})
 	require.NoError(t, err)
 	baseURL := url.BaseURL()
 	require.NotEmpty(t, baseURL)

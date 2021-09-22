@@ -5,28 +5,28 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/lunjon/http/rest"
+	"github.com/lunjon/http/client"
 )
 
 type Formatter interface {
-	Format(*rest.Result) ([]byte, error)
+	Format(*client.Result) ([]byte, error)
 }
 
 type DefaultFormatter struct{}
 
-func (f DefaultFormatter) Format(r *rest.Result) ([]byte, error) {
+func (f DefaultFormatter) Format(r *client.Result) ([]byte, error) {
 	return r.Body()
 }
 
 type NullFormatter struct{}
 
-func (f NullFormatter) Format(*rest.Result) ([]byte, error) {
+func (f NullFormatter) Format(*client.Result) ([]byte, error) {
 	return nil, nil
 }
 
 type BriefFormatter struct{}
 
-func (f BriefFormatter) Format(r *rest.Result) ([]byte, error) {
+func (f BriefFormatter) Format(r *client.Result) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	w := tabwriter.NewWriter(buf, 0, 0, 2, ' ', tabwriter.TabIndent)
 

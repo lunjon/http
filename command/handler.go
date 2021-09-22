@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lunjon/http/rest"
+	"github.com/lunjon/http/client"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ type Handler struct {
 	// Output of errors
 	errors io.Writer
 	// HTTP client. Configured in Handler.Init()
-	client *rest.Client
+	client *client.Client
 	// Field that all headers are set
 	header *HeaderOption
 	// Function to invoke on errors which cannot be recovered from
@@ -49,7 +49,7 @@ type Handler struct {
 }
 
 func NewHandler(
-	client *rest.Client,
+	client *client.Client,
 	logger *log.Logger,
 	traceLogger *log.Logger,
 	infos io.Writer,
@@ -156,12 +156,12 @@ func (handler *Handler) handleRequest(method string, body requestBody, cmd *cobr
 	alias, err := handler.readAliasFile()
 	handler.checkExecutionError(err)
 
-	url, err := rest.ParseURL(args[0], alias)
+	url, err := client.ParseURL(args[0], alias)
 	handler.checkUserError(err, cmd)
 
 	headers, err := handler.getHeaders()
 	handler.checkUserError(err, cmd)
-	setContentType := headers.Get("content-type") == "" && body.mime != rest.MIMETypeUnknown
+	setContentType := headers.Get("content-type") == "" && body.mime != client.MIMETypeUnknown
 	if setContentType {
 		handler.logger.Printf("Detected MIME type: %s", body.mime)
 		headers.Add("Content-Type", body.mime.String())
@@ -181,7 +181,7 @@ func (handler *Handler) handleRequest(method string, body requestBody, cmd *cobr
 func (handler *Handler) buildRequest(
 	cmd *cobra.Command,
 	method string,
-	url *rest.URL,
+	url *client.URL,
 	body []byte,
 	header http.Header,
 ) (*http.Request, error) {
@@ -202,7 +202,7 @@ func (handler *Handler) buildRequest(
 	return req, nil
 }
 
-func (handler *Handler) outputResults(cmd *cobra.Command, r *rest.Result) {
+func (handler *Handler) outputResults(cmd *cobra.Command, r *client.Result) {
 	b, err := handler.formatter.Format(r)
 	handler.checkExecutionError(err)
 
@@ -258,14 +258,14 @@ func (handler *Handler) checkUserError(err error, cmd *cobra.Command) {
 
 type requestBody struct {
 	bytes []byte
-	mime  rest.MIMEType
+	mime  client.MIMEType
 }
 
 func (handler *Handler) getRequestBody(cmd *cobra.Command) requestBody {
 	bodyFlag, _ := cmd.Flags().GetString(bodyFlagName)
 	bodyFlag = strings.TrimSpace(bodyFlag)
 
-	mime := rest.MIMETypeUnknown
+	mime := client.MIMETypeUnknown
 
 	if bodyFlag == "" {
 		// Not provided via flags, check stdin
@@ -292,13 +292,13 @@ func (handler *Handler) getRequestBody(cmd *cobra.Command) requestBody {
 		// Try detecting filetype in order to set MIME type
 		switch path.Ext(bodyFlag) {
 		case ".html":
-			mime = rest.MIMETypeHTML
+			mime = client.MIMETypeHTML
 		case ".csv":
-			mime = rest.MIMETypeCSV
+			mime = client.MIMETypeCSV
 		case ".json":
-			mime = rest.MIMETypeJSON
+			mime = client.MIMETypeJSON
 		case ".xml":
-			mime = rest.MIMETypeXML
+			mime = client.MIMETypeXML
 		}
 	}
 

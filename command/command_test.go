@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/logging"
-	"github.com/lunjon/http/rest"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +52,7 @@ func setup(t *testing.T) *fixture {
 
 	logger := logging.NewLogger()
 	logger.SetOutput(io.Discard)
-	rc := rest.NewClient(&http.Client{}, logger, logger)
+	rc := client.NewClient(&http.Client{}, logger, logger)
 
 	infos := &strings.Builder{}
 	errors := &strings.Builder{}

@@ -7,8 +7,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/logging"
-	"github.com/lunjon/http/rest"
 	"github.com/spf13/cobra"
 )
 
@@ -30,15 +30,14 @@ func newDefaultHandler() *Handler {
 	logger := logging.NewLogger()
 	traceLogger := logging.NewLogger()
 
-	httpClient := &http.Client{}
-	restClient := rest.NewClient(httpClient, logger, traceLogger)
+	cl := client.NewClient(&http.Client{}, logger, traceLogger)
 
 	homedir, err := os.UserHomeDir()
 	checkErr(err)
 	dir := path.Join(homedir, ".gohttp")
 
 	handler := NewHandler(
-		restClient,
+		cl,
 		logger,
 		traceLogger,
 		os.Stdout,
