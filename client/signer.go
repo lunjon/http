@@ -32,3 +32,9 @@ func (s *AWSigner) Sign(r *http.Request, body io.ReadSeeker) error {
 	_, err := signer.Sign(r, body, "execute-api", s.region, time.Now())
 	return err
 }
+
+type DefaultSigner struct{}
+
+func (s DefaultSigner) Sign(r *http.Request, body io.ReadSeeker) error {
+	return nil
+}

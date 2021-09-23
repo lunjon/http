@@ -1,51 +1,58 @@
 package command
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestAliasListEmpty(t *testing.T) {
-	fixture := setup(t)
-	fixture.root.SetArgs([]string{"alias"})
+type aliasTestFixture struct {
+	handler *AliasHandler
+	infos   *strings.Builder
+	errors  *strings.Builder
+}
 
-	err := fixture.root.Execute()
+func setupAliasTest(t *testing.T) *aliasTestFixture {
+	infos := &strings.Builder{}
+	errors := &strings.Builder{}
+
+	h := &AliasHandler{
+		aliasFilepath: testAliasFilepath,
+		infos:         infos,
+		errors:        errors,
+	}
+
+	return &aliasTestFixture{
+		handler: h,
+		infos:   infos,
+		errors:  errors,
+	}
+}
+
+func TestAliasListEmpty(t *testing.T) {
+	fixture := setupAliasTest(t)
+	err := fixture.handler.listAlias()
+
 	require.NoError(t, err)
 	require.Empty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
 }
 
 func TestAliasList(t *testing.T) {
-	fixture := setup(t)
-	fixture.handler.setAlias("local", "http://localhost")
-	fixture.root.SetArgs([]string{"alias"})
+	fixture := setupAliasTest(t)
+	err := fixture.handler.setAlias("local", "http://localhost")
+	require.NoError(t, err)
 
-	err := fixture.root.Execute()
+	err = fixture.handler.listAlias()
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
 }
 
 func TestAliasSet(t *testing.T) {
-	fixture := setup(t)
-	fixture.root.SetArgs([]string{"alias", "ss", "http://localhost"})
-
-	err := fixture.root.Execute()
+	fixture := setupAliasTest(t)
+	err := fixture.handler.setAlias("local", "http://localhost")
 	require.NoError(t, err)
-	require.Empty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
-
-	aliases, err := fixture.handler.readAliasFile()
-	require.NoError(t, err)
-	require.NotEmpty(t, aliases)
-}
-
-func TestAliasInvalidParams(t *testing.T) {
-	fixture := setup(t)
-	fixture.root.SetArgs([]string{"alias", "odd"})
-
-	err := fixture.root.Execute()
-	require.NoError(t, err)
-	require.NotEmpty(t, fixture.errors)
 }

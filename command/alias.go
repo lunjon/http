@@ -4,40 +4,44 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
-
-	"github.com/spf13/cobra"
 )
 
-func (handler *Handler) handleAlias(_ *cobra.Command, args []string) {
-	switch len(args) {
-	case 0:
-		handler.listAlias()
-	case 2:
-		handler.setAlias(args[0], args[1])
-	default:
-		fmt.Fprintln(handler.errors, "unknown number of arguments")
-	}
+type AliasHandler struct {
+	aliasFilepath string
+	// Output of infos
+	infos io.Writer
+	// Output of errors
+	errors io.Writer
 }
 
-func (handler *Handler) listAlias() {
-	alias, err := handler.readAliasFile()
-	checkErr(err)
+func (handler *AliasHandler) listAlias() error {
+	alias, err := readAliasFile(handler.aliasFilepath)
+	if err != nil {
+		return err
+	}
+
+	// TODO: use tabwriter
 	for a, url := range alias {
 		fmt.Fprintf(handler.infos, "%s  ->  %s\n", a, url)
 	}
+	return nil
 }
 
-func (handler *Handler) setAlias(alias, url string) {
-	aliases, err := handler.readAliasFile()
-	checkErr(err)
+func (handler *AliasHandler) setAlias(alias, url string) error {
+	aliases, err := readAliasFile(handler.aliasFilepath)
+	if err != nil {
+		return err
+	}
+
 	aliases[alias] = url
-	handler.writeAliasFile(aliases)
+	return writeAliasFile(handler.aliasFilepath, aliases)
 }
 
-func (handler *Handler) readAliasFile() (map[string]string, error) {
+func readAliasFile(filepath string) (map[string]string, error) {
 	alias := make(map[string]string)
-	file, err := os.Open(handler.aliasFilePath)
+	file, err := os.Open(filepath)
 	if os.IsNotExist(err) {
 		return alias, nil
 	}
@@ -65,17 +69,27 @@ func (handler *Handler) readAliasFile() (map[string]string, error) {
 	return alias, nil
 }
 
-func (handler *Handler) writeAliasFile(aliases map[string]string) {
-	if _, err := os.Stat(handler.gohttpDir); os.IsNotExist(err) {
-		err := os.MkdirAll(handler.gohttpDir, 0700)
-		checkErr(err)
+func writeAliasFile(filepath string, aliases map[string]string) error {
+	dir := path.Dir(filepath)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0700)
+		if err != nil {
+			return err
+		}
 	}
 
-	file, err := os.OpenFile(handler.aliasFilePath, os.O_WRONLY|os.O_CREATE, 0600)
-	checkErr(err)
+	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
 	defer file.Close()
 	for alias, url := range aliases {
 		_, err = file.WriteString(fmt.Sprintf("%s %s\n", alias, url))
-		checkErr(err)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }

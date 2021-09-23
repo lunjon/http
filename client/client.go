@@ -2,7 +2,6 @@ package client
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -11,9 +10,6 @@ import (
 
 	"net/http/httptrace"
 	"strings"
-
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/signer/v4"
 )
 
 var (
@@ -58,25 +54,7 @@ func NewClient(
 	}
 }
 
-func (client *Client) Timeout(timeout time.Duration) {
-	client.httpClient.Timeout = timeout
-}
-
-func (client *Client) Cert(publicPath, privatePath string) error {
-	cert, err := tls.LoadX509KeyPair(publicPath, privatePath)
-	if err != nil {
-		return err
-	}
-	tls := tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-	client.httpClient.Transport = &http.Transport{
-		TLSClientConfig: &tls,
-	}
-	return nil
-}
-
-func (client *Client) BuildRequest(method string, url *URL, json []byte, header http.Header) (*http.Request, error) {
+func (client *Client) BuildRequest(method string, url *URL, body []byte, header http.Header) (*http.Request, error) {
 	method = strings.ToUpper(strings.TrimSpace(method))
 	supported, found := supportedMethods[method]
 	if !(supported && found) {
@@ -85,15 +63,13 @@ func (client *Client) BuildRequest(method string, url *URL, json []byte, header 
 
 	client.clientLogger.Printf("Building request: %s %s", method, url)
 
-	client.clientLogger.Printf("Parsed URL: %v", url.String())
-
-	var body io.Reader
-	if json != nil {
-		client.clientLogger.Printf("Using request body: %s", string(json))
-		body = bytes.NewReader(json)
+	var b io.Reader
+	if body != nil {
+		client.clientLogger.Printf("Using request body: %s", string(body))
+		b = bytes.NewReader(body)
 	}
 
-	req, err := http.NewRequest(method, url.String(), body)
+	req, err := http.NewRequest(method, url.String(), b)
 	if err != nil {
 		client.clientLogger.Printf("Failed to build request: %v", err)
 		return nil, err
@@ -104,19 +80,6 @@ func (client *Client) BuildRequest(method string, url *URL, json []byte, header 
 	}
 
 	return req, nil
-}
-
-func (client *Client) SignRequest(req *http.Request, body []byte, region string) error {
-	if region == "" {
-		region = "eu-west-1"
-	}
-
-	client.clientLogger.Print("Signing request using Sig V4")
-
-	creds := credentials.NewCredentials(&credentials.EnvProvider{})
-	signer := v4.NewSigner(creds)
-	_, err := signer.Sign(req, bytes.NewReader(body), "execute-api", region, time.Now())
-	return err
 }
 
 func (client *Client) SendRequest(req *http.Request) *Result {

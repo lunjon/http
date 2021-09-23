@@ -15,9 +15,5 @@ func (w *LogWriter) Write(b []byte) (int, error) {
 }
 
 func NewLogger() *log.Logger {
-	w := &LogWriter{
-		dst: os.Stdout,
-	}
-	logger := log.New(w, "", 0)
-	return logger
+	return log.New(os.Stdout, "", 0)
 }
