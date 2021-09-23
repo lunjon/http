@@ -71,7 +71,7 @@ func NewHandler(
 	}
 }
 
-func (handler *Handler) Init(cmd *cobra.Command) {
+func (handler *Handler) init(cmd *cobra.Command) {
 	if cmd == nil {
 		return
 	}
@@ -229,7 +229,7 @@ func (handler *Handler) getHeaders() (http.Header, error) {
 
 	// val is a string containing headers separated by a vertical pipe: |
 	for _, h := range strings.Split(val, "|") {
-		key, value, err := parseHeader(strings.TrimSpace(h))
+		key, value, err := parseHeader(h)
 		if err != nil {
 			return headers, fmt.Errorf("invalid header format in %s: %w", defaultHeadersEnv, err)
 		}

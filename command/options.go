@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+var (
+	headerReg = regexp.MustCompile(`^([a-zA-Z0-9\-_]+)\s*[:=]\s*(\S[\s\S]*)+$`)
+)
+
 type HeaderOption struct {
 	values http.Header
 }
@@ -39,12 +43,10 @@ func (h *HeaderOption) String() string {
 func parseHeader(h string) (string, string, error) {
 	h = strings.TrimSpace(h)
 	if len(h) == 0 {
-		return "", "", fmt.Errorf("empty")
+		return "", "", fmt.Errorf("empty header")
 	}
 
-	re := regexp.MustCompile(`^([a-zA-Z0-9\-_]+)\s*[:=]\s*(\S[\s\S]*)+$`)
-
-	match := re.FindAllStringSubmatch(h, -1)
+	match := headerReg.FindAllStringSubmatch(h, -1)
 	if match == nil {
 		return "", "", fmt.Errorf("invalid header format: %s", h)
 	}

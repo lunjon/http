@@ -36,7 +36,7 @@ func newDefaultHandler() *Handler {
 	checkErr(err)
 	dir := path.Join(homedir, ".gohttp")
 
-	handler := NewHandler(
+	return NewHandler(
 		cl,
 		logger,
 		traceLogger,
@@ -47,8 +47,6 @@ func newDefaultHandler() *Handler {
 			os.Exit(1)
 		},
 	)
-
-	return handler
 }
 
 func Build(version string) *cobra.Command {
@@ -89,7 +87,7 @@ func build(version string, handler *Handler) *cobra.Command {
 func buildRoot(handler *Handler) *cobra.Command {
 	root := &cobra.Command{
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			handler.Init(cmd)
+			handler.init(cmd)
 		},
 		Use:   "http",
 		Short: "http <method> <url> [options]",

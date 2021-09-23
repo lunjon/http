@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/signer/v4"
 )
 
-// TODO: use i handler or client
-type Signer interface {
+// RequestSigner is used to sign request using AWS sig v4.
+type RequestSigner interface {
 	Sign(r *http.Request, body io.ReadSeeker) error
 }
 
