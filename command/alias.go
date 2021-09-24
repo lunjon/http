@@ -5,10 +5,16 @@ import (
 	"io"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/util"
+)
+
+var (
+	aliasPattern = regexp.MustCompile(`^[a-zA-Z_]\w{0,19}$`)
 )
 
 type AliasHandler struct {
@@ -41,12 +47,21 @@ func (handler *AliasHandler) listAlias() error {
 }
 
 func (handler *AliasHandler) setAlias(alias, url string) error {
+	if !aliasPattern.MatchString(alias) {
+		return fmt.Errorf("invalid alias name: %s", alias)
+	}
+
+	u, err := client.ParseURL(url, nil)
+	if err != nil {
+		return fmt.Errorf("invalid alias URL: %s", url)
+	}
+
 	aliases, err := readAliasFile(handler.aliasFilepath)
 	if err != nil {
 		return err
 	}
 
-	aliases[alias] = url
+	aliases[alias] = u.String()
 	return writeAliasFile(handler.aliasFilepath, aliases)
 }
 
@@ -75,6 +90,7 @@ func readAliasFile(filepath string) (map[string]string, error) {
 		if len(s) != 2 {
 			continue
 		}
+
 		alias[s[0]] = s[1]
 	}
 	return alias, nil

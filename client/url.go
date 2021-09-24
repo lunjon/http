@@ -12,7 +12,7 @@ var (
 	protoPattern     = regexp.MustCompile(`^https?://`)
 	localhostPattern = regexp.MustCompile(`^(localhost|127\.0\.0\.1)`)
 	hostPattern      = regexp.MustCompile(`^[a-z](\.[a-z]+)*`)
-	aliasPattern     = regexp.MustCompile(`\{[a-z]+\}`)
+	aliasPattern     = regexp.MustCompile(`\{[\w]+\}`)
 )
 
 // ParseURL parses the given URL
@@ -22,7 +22,7 @@ func ParseURL(url string, aliases map[string]string) (*url.URL, error) {
 		return nil, fmt.Errorf("empty URL")
 	}
 
-	if aliasPattern.MatchString(url) {
+	if aliases != nil && aliasPattern.MatchString(url) {
 		var err error
 		url, err = substitute(url, aliases)
 		if err != nil {

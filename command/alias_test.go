@@ -47,3 +47,19 @@ func TestAliasSet(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, fixture.errors.String())
 }
+
+func TestAliasSetInvalid(t *testing.T) {
+	names := []string{
+		"",
+		"1",
+		"^",
+		"a#",
+		"yEs!",
+	}
+
+	fixture := setupAliasTest(t)
+	for _, name := range names {
+		err := fixture.handler.setAlias(name, "http://localhost")
+		require.Error(t, err)
+	}
+}

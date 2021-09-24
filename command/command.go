@@ -297,8 +297,15 @@ func buildDelete(cfg *config) *cobra.Command {
 
 func buildAlias(cfg *config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "alias <name> <url>",
+		Use:   "alias [<name> <url>]",
 		Short: "List and create persistant URL aliases",
+		Long: `List and create persistant URL aliases.
+Running 'alias' only will list all aliases.
+Running 'alias name url' will create a persistant alias.
+
+The name must match the pattern: ^[a-zA-Z_]\w*$, in other words
+it must begin with _, a small or capital letter followed by zero
+or more _, letters or numbers (max size of name is 20).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			handler := AliasHandler{
 				aliasFilepath: cfg.aliasFilepath,

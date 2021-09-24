@@ -7,6 +7,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Changed
 - Only use environment variables for AWS credentials
 - Default timeout to 30 s
+- Enforce alias name pattern
 
 ### Removed
 - `--aws-profile` option
