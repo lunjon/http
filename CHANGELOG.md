@@ -4,6 +4,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.11.0] - 2021-09-24
+
 ### Added
 - MIME type detection in `--body` flag if file is given
 - Remove alias flag: `alias --remove name`
@@ -15,8 +17,6 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Removed
 - `--aws-profile` option
-
-### Removed
 - `comp` command
 
 ## [0.10.0] - 2021-09-16

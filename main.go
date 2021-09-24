@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	cmd, err := command.Build("0.10.0")
+	cmd, err := command.Build("0.11.0")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -14,6 +14,8 @@ Open [CHANGELOG.md](./CHANGELOG.md) and add a new release heading for the versio
 
 Run the commands below to commit, tag, and push
 
+**NOTE!** Include `v` in version, e.g. `vX.Y.Z`.
+
 ```shell
 $ version=<version>
 $ git add .
