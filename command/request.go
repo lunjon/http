@@ -21,7 +21,7 @@ var (
 	headerOption      = NewHeaderOption()
 	errCertFlags      = errors.New("--cert-pub-file requires --cert-key-file and vice versa")
 	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
-	emptyRequestBody  = requestBody{}
+	emptyRequestBody  = requestBody{mime: client.MIMETypeUnknown}
 )
 
 // RequestHandler handles all commands.
