@@ -1,6 +1,6 @@
 # http
 
-A CLI program for sending basic HTTP requests. Features:
+A CLI for sending basic HTTP requests. Features:
  - Simplified URL parsing, e.g. `:1234/path` becomes `http://localhost:1234/path`
  - Persistant URL aliases
  - Convenient request body handling through stdin, file or flag
@@ -9,28 +9,23 @@ A CLI program for sending basic HTTP requests. Features:
 ## Installation
 
 Visit [releases](https://github.com/lunjon/http/releases/latest) and download
-executable for your platform (if available).
+executable for your platform (if available) or use `go get github.com/lunjon/http`.
 
 ## Usage
 
-### Sending requests
-
 To get started use `http --help`.
+
+### Sending requests
 
 **Examples**:
 
 ```sh
 # POST http://localhost:1234/api/test 
-$ http post :1234/api/test --json '{"field":"value"}'
-POST      http://localhost:1234/api/test
-Status   201 OK
-Elapsed  15.11 ms
-{
-    ...
-}
+$ http post :1234/api/test --body '{"field":"value"}'
+...
 
 # GET https://api.example/resources/abbccc-122333, using header X-User with value donald
-$ http get https://api.example/resources/abbccc-122333 --header x-user=donald
+$ http get --brief api.example/resources/abbccc-122333 --header x-user=donald
 GET      https://api.example/resources/abbccc-122333
 Status   403 Forbidden
 Elapsed  102.97 ms
@@ -44,9 +39,10 @@ The string should contain headers in the same format specified using the
 
 ### URL alias
 
-URL alias can be created with the `alias` sub-command like so:
+The `alias` is used to list, create and remove URL aliases:
  - List: `http alias`
- - Add:  `http alias <name> <url>`
+ - Add: `http alias name url`
+ - Remove: `http alias --remove name`
 
 An alias can then be used in the request URL:
 ```sh
@@ -55,7 +51,7 @@ $ http get "{name}/api/path"
 
 ### Request body
 
-Can be specified by three methods:
-- As string: `http post http://example.com/api --body '{"name":"meow"}'`
-- As file: `http post http://example.com/api --body r.json`
-- Pipe from stdin: `http post http://example.com/api < r.json`
+Can be specified as:
+- string: `http post http://example.com/api --body '{"name":"meow"}'`
+- file: `http post http://example.com/api --body r.json`
+- stdin: `cat file | http post http://example.com/api`
