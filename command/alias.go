@@ -46,6 +46,31 @@ func (handler *AliasHandler) listAlias() error {
 	return nil
 }
 
+func (handler *AliasHandler) removeAlias(name string) error {
+	name = strings.TrimSpace(name)
+	if !aliasPattern.MatchString(name) {
+		return fmt.Errorf("impossible alias name: %s", name)
+	}
+
+	aliases, err := readAliasFile(handler.aliasFilepath)
+	if err != nil {
+		return err
+	}
+
+	_, found := aliases[name]
+	if !found {
+		return fmt.Errorf("unknown alias: %s\n", name)
+	}
+
+	delete(aliases, name)
+	err = writeAliasFile(handler.aliasFilepath, aliases)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(handler.infos, "Removed alias %s\n", name)
+	return nil
+}
+
 func (handler *AliasHandler) setAlias(alias, url string) error {
 	if !aliasPattern.MatchString(alias) {
 		return fmt.Errorf("invalid alias name: %s", alias)

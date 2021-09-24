@@ -41,6 +41,33 @@ func TestAliasList(t *testing.T) {
 	require.Empty(t, fixture.errors.String())
 }
 
+func TestAliasRemove(t *testing.T) {
+	fixture := setupAliasTest(t)
+	err := fixture.handler.setAlias("local", "http://localhost")
+	require.NoError(t, err)
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{"local", false},
+		{"unknown", true},
+		{"", true},
+		{"a!", true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := fixture.handler.removeAlias(test.name)
+			if test.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestAliasSet(t *testing.T) {
 	fixture := setupAliasTest(t)
 	err := fixture.handler.setAlias("local", "http://localhost")

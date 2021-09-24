@@ -4,6 +4,10 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Added
+- MIME type detection in `--body` flag if file is given
+- Remove alias flag: `alias --remove name`
+
 ### Changed
 - Only use environment variables for AWS credentials
 - Default timeout to 30 s
@@ -11,9 +15,6 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Removed
 - `--aws-profile` option
-
-### Added
-- MIME type detection in `--body` flag if file is given
 
 ### Removed
 - `comp` command

@@ -296,12 +296,14 @@ func buildDelete(cfg *config) *cobra.Command {
 }
 
 func buildAlias(cfg *config) *cobra.Command {
-	return &cobra.Command{
+	c := &cobra.Command{
 		Use:   "alias [<name> <url>]",
 		Short: "List and create persistant URL aliases",
 		Long: `List and create persistant URL aliases.
-Running 'alias' only will list all aliases.
-Running 'alias name url' will create a persistant alias.
+Valid alias commands:
+  - alias: list all aliases
+  - alias name url: will create a persistant alias
+  - alias --remove name: remove alias by name
 
 The name must match the pattern: ^[a-zA-Z_]\w*$, in other words
 it must begin with _, a small or capital letter followed by zero
@@ -316,7 +318,11 @@ or more _, letters or numbers (max size of name is 20).`,
 			var err error
 			switch len(args) {
 			case 0:
-				err = handler.listAlias()
+				if r, _ := cmd.Flags().GetString("remove"); r != "" {
+					err = handler.removeAlias(r)
+				} else {
+					err = handler.listAlias()
+				}
 			case 2:
 				err = handler.setAlias(args[0], args[1])
 			default:
@@ -329,6 +335,9 @@ or more _, letters or numbers (max size of name is 20).`,
 			}
 		},
 	}
+
+	c.Flags().StringP("remove", "r", "", "Remove alias with this name.")
+	return c
 }
 
 func addCommonFlags(cmd *cobra.Command) {
