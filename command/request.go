@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -118,7 +119,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 
 func (handler *RequestHandler) buildRequest(
 	method string,
-	url *client.URL,
+	url *url.URL,
 	body []byte,
 	header http.Header,
 ) (*http.Request, error) {

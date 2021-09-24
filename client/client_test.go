@@ -8,15 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupClient(t *testing.T) (*Client, *URL) {
+func setupClient(t *testing.T) *Client {
 	logger := logging.NewLogger()
 	client := NewClient(server.Client(), logger, logger)
-	url, _ := ParseURL(server.URL, nil)
-	return client, url
+	return client
 }
 
 func TestBuildRequest(t *testing.T) {
-	client, _ := setupClient(t)
+	client := setupClient(t)
 	tests := []struct {
 		method  string
 		url     string
@@ -53,26 +52,23 @@ func TestBuildRequest(t *testing.T) {
 }
 
 func TestClientGet(t *testing.T) {
-	client, url := setupClient(t)
-	req, err := client.BuildRequest("GET", url, nil, nil)
-	if err != nil {
-		t.Errorf("failed to build: %v", err)
-		return
-	}
+	client := setupClient(t)
+	u, err := parseURL(server.URL)
+	require.NoError(t, err)
+
+	req, err := client.BuildRequest("GET", u, nil, nil)
+	require.NoError(t, err)
 
 	res := client.SendRequest(req)
-	if res.Error() != nil {
-		t.Errorf("failed to send: %v", err)
-		return
-	}
-	if !res.Successful() {
-		t.Errorf("failed to send: %v", err)
-		return
-	}
+	require.NoError(t, res.Error())
+	require.True(t, res.Successful())
 }
 
 func TestClientPost(t *testing.T) {
-	client, url := setupClient(t)
+	client := setupClient(t)
+	url, err := parseURL(server.URL)
+	require.NoError(t, err)
+
 	tests := []string{
 		"{}",
 		`{"name": "test"}`,
@@ -103,7 +99,9 @@ func TestClientPost(t *testing.T) {
 }
 
 func TestClientResult(t *testing.T) {
-	client, url := setupClient(t)
+	client := setupClient(t)
+	url, err := parseURL(server.URL)
+	require.NoError(t, err)
 	req, err := client.BuildRequest("GET", url, nil, nil)
 	require.NoError(t, err)
 

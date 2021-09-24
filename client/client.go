@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"net/http/httptrace"
@@ -54,14 +55,14 @@ func NewClient(
 	}
 }
 
-func (client *Client) BuildRequest(method string, url *URL, body []byte, header http.Header) (*http.Request, error) {
+func (client *Client) BuildRequest(method string, u *url.URL, body []byte, header http.Header) (*http.Request, error) {
 	method = strings.ToUpper(strings.TrimSpace(method))
 	supported, found := supportedMethods[method]
 	if !(supported && found) {
 		return nil, fmt.Errorf("invalid or unsupported method: %s", method)
 	}
 
-	client.clientLogger.Printf("Building request: %s %s", method, url)
+	client.clientLogger.Printf("Building request: %s %s", method, u.String())
 
 	var b io.Reader
 	if body != nil {
@@ -69,7 +70,7 @@ func (client *Client) BuildRequest(method string, url *URL, body []byte, header 
 		b = bytes.NewReader(body)
 	}
 
-	req, err := http.NewRequest(method, url.String(), b)
+	req, err := http.NewRequest(method, u.String(), b)
 	if err != nil {
 		client.clientLogger.Printf("Failed to build request: %v", err)
 		return nil, err
