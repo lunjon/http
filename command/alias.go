@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/lunjon/http/util"
 )
 
 type AliasHandler struct {
@@ -22,10 +24,11 @@ func (handler *AliasHandler) listAlias() error {
 		return err
 	}
 
-	// TODO: use tabwriter
-	for a, url := range alias {
-		fmt.Fprintf(handler.infos, "%s  ->  %s\n", a, url)
+	taber := util.NewTaber("")
+	for name, url := range alias {
+		taber.WriteLine(name+":", url)
 	}
+	fmt.Fprintln(handler.infos, taber.String())
 	return nil
 }
 
