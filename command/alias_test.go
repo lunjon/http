@@ -30,15 +30,6 @@ func setupAliasTest(t *testing.T) *aliasTestFixture {
 	}
 }
 
-func TestAliasListEmpty(t *testing.T) {
-	fixture := setupAliasTest(t)
-	err := fixture.handler.listAlias()
-
-	require.NoError(t, err)
-	require.Empty(t, fixture.infos.String())
-	require.Empty(t, fixture.errors.String())
-}
-
 func TestAliasList(t *testing.T) {
 	fixture := setupAliasTest(t)
 	err := fixture.handler.setAlias("local", "http://localhost")

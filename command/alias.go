@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/lunjon/http/util"
@@ -24,9 +25,16 @@ func (handler *AliasHandler) listAlias() error {
 		return err
 	}
 
+	// Sort by name
+	names := []string{}
+	for name := range alias {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
 	taber := util.NewTaber("")
-	for name, url := range alias {
-		taber.WriteLine(name+":", url)
+	for _, name := range names {
+		taber.WriteLine(name+":", alias[name])
 	}
 	fmt.Fprintln(handler.infos, taber.String())
 	return nil
