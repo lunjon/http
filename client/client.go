@@ -11,6 +11,8 @@ import (
 
 	"net/http/httptrace"
 	"strings"
+
+	"github.com/lunjon/http/util"
 )
 
 var (
@@ -88,12 +90,14 @@ func (client *Client) Send(req *http.Request) (*http.Response, error) {
 
 	client.clientLogger.Printf("Sending request: %s %s", req.Method, req.URL.String())
 	if len(req.Header) > 0 {
-		b := strings.Builder{}
-		fmt.Fprintln(&b, "Request headers:")
+		taber := util.NewTaber("  ")
+		taber.Writef("Request headers:\n")
 		for name, value := range req.Header {
-			fmt.Fprintf(&b, "  %s: %s\n", name, value)
+			line := []string{name + ":"}
+			line = append(line, value...)
+			taber.WriteLine(line...)
 		}
-		client.clientLogger.Print(b.String())
+		client.clientLogger.Print(taber.String())
 	}
 
 	start := time.Now()
@@ -109,12 +113,14 @@ func (client *Client) Send(req *http.Request) (*http.Response, error) {
 	client.tracer.Report(elapsed)
 
 	if err == nil && res != nil {
-		b := strings.Builder{}
-		fmt.Fprintln(&b, "Response headers:")
+		taber := util.NewTaber("  ")
+		taber.Writef("Response headers:\n")
 		for name, value := range res.Header {
-			fmt.Fprintf(&b, "  %s:\t%s\n", name, value)
+			line := []string{name + ":"}
+			line = append(line, value...)
+			taber.WriteLine(line...)
 		}
-		client.clientLogger.Print(b.String())
+		client.clientLogger.Print(taber.String())
 	}
 
 	return res, err
