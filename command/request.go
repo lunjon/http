@@ -102,8 +102,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 			return newUserError(err)
 		}
 
-		res := handler.client.SendRequest(req)
-		err = res.Error()
+		res, err := handler.client.Send(req)
 		if err != nil {
 			return err
 		}
@@ -132,7 +131,7 @@ func (handler *RequestHandler) buildRequest(
 	return req, err
 }
 
-func (handler *RequestHandler) outputResults(r *client.Result) error {
+func (handler *RequestHandler) outputResults(r *http.Response) error {
 	b, err := handler.formatter.Format(r)
 	if err != nil {
 		return err
@@ -150,8 +149,9 @@ func (handler *RequestHandler) outputResults(r *client.Result) error {
 		}
 	}
 
-	if handler.fail && !r.Successful() {
-		handler.logger.Printf("Request failed with status %s", r.Status())
+	doFail := handler.fail && r.StatusCode >= 400
+	if doFail {
+		handler.logger.Printf("Request failed with status %s", r.Status)
 		handler.failFunc()
 	}
 

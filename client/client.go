@@ -83,7 +83,7 @@ func (client *Client) BuildRequest(method string, u *url.URL, body []byte, heade
 	return req, nil
 }
 
-func (client *Client) SendRequest(req *http.Request) *Result {
+func (client *Client) Send(req *http.Request) (*http.Response, error) {
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), client.clientTrace))
 
 	client.clientLogger.Printf("Sending request: %s %s", req.Method, req.URL.String())
@@ -102,7 +102,7 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 
 	if err != nil {
 		client.clientLogger.Printf("Request failed: %v", err)
-		return &Result{elapsed: elapsed, err: err}
+		return nil, err
 	}
 
 	client.clientLogger.Printf("Response status: %s", res.Status)
@@ -117,9 +117,5 @@ func (client *Client) SendRequest(req *http.Request) *Result {
 		client.clientLogger.Print(b.String())
 	}
 
-	return &Result{
-		response: res,
-		elapsed:  elapsed,
-		err:      err,
-	}
+	return res, err
 }

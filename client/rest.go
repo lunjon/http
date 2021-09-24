@@ -7,7 +7,7 @@ const (
 	MIMETypeCSV     MIMEType = "text/csv"
 	MIMETypeJSON    MIMEType = "application/json"
 	MIMETypeXML     MIMEType = "application/xml"
-	MIMETypeUnknown MIMEType = ""
+	MIMETypeUnknown MIMEType = "unknown"
 )
 
 func (m MIMEType) String() string {

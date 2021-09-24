@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lunjon/http/client"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
@@ -33,9 +32,10 @@ type formatterMock struct {
 	called bool
 }
 
-func (f *formatterMock) Format(r *client.Result) ([]byte, error) {
+func (f *formatterMock) Format(r *http.Response) ([]byte, error) {
 	f.called = true
-	return r.Body()
+	defer r.Body.Close()
+	return io.ReadAll(r.Body)
 }
 
 type serverHandler struct{}

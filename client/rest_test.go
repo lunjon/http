@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -25,4 +27,19 @@ func TestMain(m *testing.M) {
 	server.Close()
 
 	os.Exit(status)
+}
+
+func TestMIMETypeString(t *testing.T) {
+	tests := []MIMEType{
+		MIMETypeCSV,
+		MIMETypeHTML,
+		MIMETypeJSON,
+		MIMETypeXML,
+		MIMETypeUnknown,
+	}
+	for _, mime := range tests {
+		t.Run(string(mime), func(t *testing.T) {
+			require.NotEmpty(t, mime.String())
+		})
+	}
 }

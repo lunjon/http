@@ -59,9 +59,9 @@ func TestClientGet(t *testing.T) {
 	req, err := client.BuildRequest("GET", u, nil, nil)
 	require.NoError(t, err)
 
-	res := client.SendRequest(req)
-	require.NoError(t, res.Error())
-	require.True(t, res.Successful())
+	res, err := client.Send(req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 }
 
 func TestClientPost(t *testing.T) {
@@ -85,37 +85,9 @@ func TestClientPost(t *testing.T) {
 				return
 			}
 
-			res := client.SendRequest(req)
-			if res.Error() != nil {
-				t.Errorf("%s failed to send: %v", name, err)
-				return
-			}
-			if !res.Successful() {
-				t.Errorf("%s failed to send: %v", name, err)
-				return
-			}
+			res, err := client.Send(req)
+			require.NoError(t, err)
+			require.NotNil(t, res)
 		})
 	}
-}
-
-func TestClientResult(t *testing.T) {
-	client := setupClient(t)
-	url, err := parseURL(server.URL)
-	require.NoError(t, err)
-	req, err := client.BuildRequest("GET", url, nil, nil)
-	require.NoError(t, err)
-
-	res := client.SendRequest(req)
-	require.NoError(t, res.Error())
-
-	require.False(t, res.HasError())
-	require.True(t, res.Successful())
-
-	require.NotNil(t, res.Request())
-	require.NotZero(t, res.ElapsedMilliseconds())
-	require.NotZero(t, res.Status())
-
-	body, err := res.Body()
-	require.NoError(t, err)
-	require.NotEmpty(t, body)
 }

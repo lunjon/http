@@ -17,8 +17,8 @@ func TestTracer(t *testing.T) {
 	req, err := client.BuildRequest("GET", url, nil, nil)
 	require.NoError(t, err)
 
-	res := client.SendRequest(req)
-	require.Nil(t, res.Error())
+	_, err = client.Send(req)
+	require.NoError(t, err)
 }
 
 func TestTracerDNS(t *testing.T) {
