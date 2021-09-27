@@ -298,11 +298,11 @@ func buildDelete(cfg *config) *cobra.Command {
 func buildAlias(cfg *config) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "alias [<name> <url>]",
-		Short: "List and create persistant URL aliases",
-		Long: `List and create persistant URL aliases.
+		Short: "List, create or remove persistant URL aliases",
+		Long: `List, create or remove persistant URL aliases.
 Valid alias commands:
   - alias: list all aliases
-  - alias name url: will create a persistant alias
+  - alias name url: create a persistant alias
   - alias --remove name: remove alias by name
 
 The name must match the pattern: ^[a-zA-Z_]\w*$, in other words
