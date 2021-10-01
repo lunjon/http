@@ -3,6 +3,7 @@ package command
 import (
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -52,6 +53,7 @@ func setupRequestTest(t *testing.T) *fixture {
 		failFunc,
 		1,
 	)
+
 	return &fixture{
 		handler: handler,
 		infos:   infos,
@@ -80,6 +82,15 @@ func TestGetErrorWithFail(t *testing.T) {
 	require.Empty(t, fixture.errors.String())
 }
 
+func TestWithHeaders(t *testing.T) {
+	fixture := setupRequestTest(t)
+	os.Setenv("DEFAULT_HEADERS", "x-custom: value | authorization: bearer token")
+
+	err := fixture.handler.handleRequest("get", server.URL, "")
+	require.NoError(t, err)
+	require.NotEmpty(t, fixture.infos.String())
+}
+
 func TestPost(t *testing.T) {
 	bodies := []string{
 		"",                  // empty
@@ -94,4 +105,12 @@ func TestPost(t *testing.T) {
 		require.NotEmpty(t, fixture.infos.String())
 		require.Empty(t, fixture.errors.String())
 	}
+}
+
+func TestGetDefaultHeaders(t *testing.T) {
+	fixture := setupRequestTest(t)
+	os.Setenv("DEFAULT_HEADERS", "x-custom: value | authorization: bearer token")
+	header, err := fixture.handler.getHeaders()
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(header), 2)
 }
