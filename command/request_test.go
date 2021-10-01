@@ -69,6 +69,17 @@ func TestGet(t *testing.T) {
 	require.Empty(t, fixture.errors.String())
 }
 
+func TestGetErrorWithFail(t *testing.T) {
+	fixture := setupRequestTest(t)
+	fixture.handler.fail = true
+
+	err := fixture.handler.handleRequest("get", server.URL+"/error", "")
+	require.NoError(t, err)
+	require.True(t, fixture.state.failCalled)
+	require.Empty(t, fixture.infos.String())
+	require.Empty(t, fixture.errors.String())
+}
+
 func TestPost(t *testing.T) {
 	bodies := []string{
 		"",                  // empty

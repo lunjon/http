@@ -41,7 +41,13 @@ func (f *formatterMock) Format(r *http.Response) ([]byte, error) {
 type serverHandler struct{}
 
 func (s *serverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(`{"body": true}`))
+	switch r.URL.Path {
+	case "/error":
+		w.WriteHeader(http.StatusInternalServerError)
+	default:
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"body": true}`))
+	}
 }
 
 func TestMain(m *testing.M) {
@@ -71,10 +77,9 @@ func setupCommandTest(args ...string) *commandTestFixture {
 	errs := &strings.Builder{}
 
 	cfg := config{
-		aliasFilepath: "",
-		logs:          logs,
-		infos:         infos,
-		errs:          errs,
+		logs:  logs,
+		infos: infos,
+		errs:  errs,
 	}
 
 	cmd := build("test", &cfg)

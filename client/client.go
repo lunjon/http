@@ -112,7 +112,7 @@ func (client *Client) Send(req *http.Request) (*http.Response, error) {
 	client.clientLogger.Printf("Response status: %s", res.Status)
 	client.tracer.Report(elapsed)
 
-	if err == nil && res != nil {
+	if len(res.Header) > 0 {
 		taber := util.NewTaber("  ")
 		taber.Writef("Response headers:\n")
 		for name, value := range res.Header {
