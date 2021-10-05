@@ -17,11 +17,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type FailFunc func()
+type FailFunc func(status int)
 
 type RunFunc func(*cobra.Command, []string)
-
-type UsageFunc func() error
 
 type execError struct {
 	err       error
@@ -175,14 +173,15 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 		repeat, _ := cmd.Flags().GetInt(repeatFlagName)
 		cfg.setRepeat(repeat)
 
+		aliasManager := newAliasLoader(cfg.aliasFilepath)
+
 		handler := newHandler(
 			cl,
+			aliasManager,
 			formatter,
 			signer,
 			logger,
-			func() {
-				os.Exit(1)
-			},
+			os.Exit,
 			cfg,
 		)
 
@@ -295,9 +294,9 @@ it must begin with _, a small or capital letter followed by zero
 or more _, letters or numbers (max size of name is 20).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			handler := AliasHandler{
-				aliasFilepath: cfg.aliasFilepath,
-				infos:         cfg.infos,
-				errors:        cfg.errs,
+				manager: newAliasLoader(cfg.aliasFilepath),
+				infos:   cfg.infos,
+				errors:  cfg.errs,
 			}
 
 			var err error
@@ -378,5 +377,5 @@ func getAliasFilepath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return path.Join(homedir, ".gohttp", "alias"), nil
+	return path.Join(homedir, ".gohttp", "aliases.json"), nil
 }

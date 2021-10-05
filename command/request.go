@@ -25,22 +25,23 @@ var (
 
 // RequestHandler handles all commands.
 type RequestHandler struct {
+	client         *client.Client
+	aliasManager   AliasManager
 	formatter      Formatter
 	signer         client.RequestSigner
 	infos          io.Writer
 	errors         io.Writer
 	logger         *log.Logger
-	client         *client.Client
 	fail           bool
 	failFunc       FailFunc
 	repeat         int
-	aliasFilePath  string
 	defaultHeaders string
 	headerOpt      *HeaderOption
 }
 
 func newHandler(
 	client *client.Client,
+	aliasManager AliasManager,
 	formatter Formatter,
 	signer client.RequestSigner,
 	logger *log.Logger,
@@ -48,13 +49,13 @@ func newHandler(
 	cfg *config,
 ) *RequestHandler {
 	return &RequestHandler{
-		aliasFilePath:  cfg.aliasFilepath,
+		client:         client,
+		aliasManager:   aliasManager,
 		defaultHeaders: cfg.defaultHeaders,
 		headerOpt:      cfg.headerOpt,
 		logger:         logger,
 		infos:          cfg.infos,
 		errors:         cfg.errs,
-		client:         client,
 		signer:         signer,
 		formatter:      formatter,
 		fail:           cfg.fail,
@@ -73,7 +74,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		body = b
 	}
 
-	alias, err := readAliasFile(handler.aliasFilePath)
+	alias, err := handler.aliasManager.Load()
 	if err != nil {
 		return err
 	}
@@ -150,7 +151,7 @@ func (handler *RequestHandler) outputResults(r *http.Response) error {
 	doFail := handler.fail && r.StatusCode >= 400
 	if doFail {
 		handler.logger.Printf("Request failed with status %s", r.Status)
-		handler.failFunc()
+		handler.failFunc(1)
 	}
 
 	return nil

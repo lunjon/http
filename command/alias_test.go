@@ -1,11 +1,35 @@
 package command
 
 import (
+	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type aliasManagerMock struct {
+	aliases map[string]string
+}
+
+func newAliasManagerMock() *aliasManagerMock {
+	return &aliasManagerMock{make(map[string]string)}
+}
+
+func (m *aliasManagerMock) set(name, value string) {
+	m.aliases[name] = value
+}
+
+func (m *aliasManagerMock) Load() (map[string]string, error) {
+	return m.aliases, nil
+}
+
+func (m *aliasManagerMock) Save(aliases map[string]string) error {
+	m.aliases = aliases
+	return nil
+}
 
 type aliasTestFixture struct {
 	handler *AliasHandler
@@ -13,14 +37,16 @@ type aliasTestFixture struct {
 	errors  *strings.Builder
 }
 
-func setupAliasTest(t *testing.T) *aliasTestFixture {
+func setupAliasHandlerTest(t *testing.T) *aliasTestFixture {
 	infos := &strings.Builder{}
 	errors := &strings.Builder{}
 
+	m := newAliasManagerMock()
+
 	h := &AliasHandler{
-		aliasFilepath: testAliasFilepath,
-		infos:         infos,
-		errors:        errors,
+		manager: m,
+		infos:   infos,
+		errors:  errors,
 	}
 
 	return &aliasTestFixture{
@@ -31,7 +57,7 @@ func setupAliasTest(t *testing.T) *aliasTestFixture {
 }
 
 func TestAliasList(t *testing.T) {
-	fixture := setupAliasTest(t)
+	fixture := setupAliasHandlerTest(t)
 	err := fixture.handler.setAlias("local", "http://localhost")
 	require.NoError(t, err)
 
@@ -42,7 +68,7 @@ func TestAliasList(t *testing.T) {
 }
 
 func TestAliasRemove(t *testing.T) {
-	fixture := setupAliasTest(t)
+	fixture := setupAliasHandlerTest(t)
 	err := fixture.handler.setAlias("local", "http://localhost")
 	require.NoError(t, err)
 
@@ -69,7 +95,7 @@ func TestAliasRemove(t *testing.T) {
 }
 
 func TestAliasSet(t *testing.T) {
-	fixture := setupAliasTest(t)
+	fixture := setupAliasHandlerTest(t)
 	err := fixture.handler.setAlias("local", "http://localhost")
 	require.NoError(t, err)
 	require.Empty(t, fixture.errors.String())
@@ -84,9 +110,52 @@ func TestAliasSetInvalid(t *testing.T) {
 		"yEs!",
 	}
 
-	fixture := setupAliasTest(t)
+	fixture := setupAliasHandlerTest(t)
 	for _, name := range names {
 		err := fixture.handler.setAlias(name, "http://localhost")
 		require.Error(t, err)
 	}
+}
+
+func setupAliasManagerTest(t *testing.T, aliases map[string]string) *fileAliasManager {
+	if aliases != nil {
+		b, err := json.Marshal(aliases)
+		if err != nil {
+			t.Fatalf("error on setup: %s", err)
+		}
+		err = os.WriteFile(testAliasFilepath, b, 0600)
+		if err != nil {
+			t.Fatalf("error on setup: %s", err)
+		}
+	}
+	t.Cleanup(func() {
+		os.Remove(testAliasFilepath)
+	})
+	return newAliasLoader(testAliasFilepath)
+}
+
+func TestFileAliasaManagerLoad(t *testing.T) {
+	m := setupAliasManagerTest(t, nil)
+
+	aliases, err := m.Load()
+	require.NoError(t, err)
+	assert.Empty(t, aliases)
+}
+
+func TestFileAliasaManagerLoadWithData(t *testing.T) {
+	m := setupAliasManagerTest(t, map[string]string{
+		"test": "http://localhost/path",
+	})
+
+	aliases, err := m.Load()
+	require.NoError(t, err)
+	assert.Len(t, aliases, 1)
+}
+
+func TestFileAliasaManagerSave(t *testing.T) {
+	m := setupAliasManagerTest(t, nil)
+	err := m.Save(map[string]string{
+		"test": "http://localhost/path",
+	})
+	require.NoError(t, err)
 }

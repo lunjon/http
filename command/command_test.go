@@ -16,7 +16,7 @@ import (
 var (
 	server            *httptest.Server
 	testdir           = "test-http"
-	testAliasFilepath = path.Join(testdir, "aliases")
+	testAliasFilepath = path.Join(testdir, "aliases.json")
 )
 
 type signerMock struct {

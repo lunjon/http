@@ -31,7 +31,7 @@ func setupRequestTest(t *testing.T) *fixture {
 	c := client.NewClient(server.Client(), logger, logger)
 
 	state := &state{}
-	failFunc := func() {
+	failFunc := func(int) {
 		state.failCalled = true
 	}
 
@@ -54,6 +54,7 @@ func setupRequestTest(t *testing.T) *fixture {
 
 	handler := newHandler(
 		c,
+		newAliasManagerMock(),
 		fm,
 		sm,
 		logger,

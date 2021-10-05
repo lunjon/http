@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -17,8 +18,25 @@ var (
 	aliasPattern = regexp.MustCompile(`^[a-zA-Z_]\w{0,19}$`)
 )
 
+type AliasManager interface {
+	Load() (map[string]string, error)
+	Save(map[string]string) error
+}
+
+// An implementation of AliasLoader that loads from the configured filepath.
+type fileAliasManager struct {
+	aliases  map[string]string
+	filepath string
+}
+
+func newAliasLoader(filepath string) *fileAliasManager {
+	return &fileAliasManager{
+		filepath: filepath,
+	}
+}
+
 type AliasHandler struct {
-	aliasFilepath string
+	manager AliasManager
 	// Output of infos
 	infos io.Writer
 	// Output of errors
@@ -26,21 +44,21 @@ type AliasHandler struct {
 }
 
 func (handler *AliasHandler) listAlias() error {
-	alias, err := readAliasFile(handler.aliasFilepath)
+	aliases, err := handler.manager.Load()
 	if err != nil {
 		return err
 	}
 
 	// Sort by name
 	names := []string{}
-	for name := range alias {
+	for name := range aliases {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 
 	taber := util.NewTaber("")
 	for _, name := range names {
-		taber.WriteLine(name+":", alias[name])
+		taber.WriteLine(name+":", aliases[name])
 	}
 	fmt.Fprintln(handler.infos, taber.String())
 	return nil
@@ -52,7 +70,7 @@ func (handler *AliasHandler) removeAlias(name string) error {
 		return fmt.Errorf("impossible alias name: %s", name)
 	}
 
-	aliases, err := readAliasFile(handler.aliasFilepath)
+	aliases, err := handler.manager.Load()
 	if err != nil {
 		return err
 	}
@@ -63,7 +81,7 @@ func (handler *AliasHandler) removeAlias(name string) error {
 	}
 
 	delete(aliases, name)
-	err = writeAliasFile(handler.aliasFilepath, aliases)
+	err = handler.manager.Save(aliases)
 	if err != nil {
 		return err
 	}
@@ -81,48 +99,42 @@ func (handler *AliasHandler) setAlias(alias, url string) error {
 		return fmt.Errorf("invalid alias URL: %s", url)
 	}
 
-	aliases, err := readAliasFile(handler.aliasFilepath)
+	aliases, err := handler.manager.Load()
 	if err != nil {
 		return err
 	}
 
 	aliases[alias] = u.String()
-	return writeAliasFile(handler.aliasFilepath, aliases)
+	return handler.manager.Save(aliases)
 }
 
-func readAliasFile(filepath string) (map[string]string, error) {
-	alias := make(map[string]string)
-	file, err := os.Open(filepath)
-	if os.IsNotExist(err) {
-		return alias, nil
+func (f *fileAliasManager) Load() (map[string]string, error) {
+	if f.aliases != nil {
+		return f.aliases, nil
 	}
+
+	var alias map[string]string
+	file, err := os.Open(f.filepath)
+	if os.IsNotExist(err) {
+		return make(map[string]string), nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
-
 	defer file.Close()
+
 	content, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, line := range strings.Split(string(content), "\n") {
-		line = strings.TrimSpace(line)
-		if len(line) == 0 {
-			continue
-		}
-		s := strings.Split(line, " ")
-		if len(s) != 2 {
-			continue
-		}
-
-		alias[s[0]] = s[1]
-	}
-	return alias, nil
+	err = json.Unmarshal(content, &alias)
+	return alias, err
 }
 
-func writeAliasFile(filepath string, aliases map[string]string) error {
-	dir := path.Dir(filepath)
+func (f *fileAliasManager) Save(aliases map[string]string) error {
+	dir := path.Dir(f.filepath)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err := os.MkdirAll(dir, 0700)
 		if err != nil {
@@ -130,18 +142,24 @@ func writeAliasFile(filepath string, aliases map[string]string) error {
 		}
 	}
 
-	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0600)
+	// Write to temporary file
+	tmp := fmt.Sprintf("%s.new", f.filepath)
+	file, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	b, err := json.MarshalIndent(aliases, "", "   ")
 	if err != nil {
 		return err
 	}
 
-	defer file.Close()
-	for alias, url := range aliases {
-		_, err = file.WriteString(fmt.Sprintf("%s %s\n", alias, url))
-		if err != nil {
-			return err
-		}
+	_, err = file.Write(b)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	// Move to real name
+	return os.Rename(tmp, f.filepath)
 }
