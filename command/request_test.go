@@ -41,17 +41,24 @@ func setupRequestTest(t *testing.T) *fixture {
 	infos := &strings.Builder{}
 	errors := &strings.Builder{}
 
-	handler := NewHandler(
+	cfg := config{
+		fail:           false,
+		repeat:         1,
+		defaultHeaders: "x-custom: value | authorization: bearer token",
+		headerOpt:      newHeaderOption(),
+		aliasFilepath:  testAliasFilepath,
+		logs:           io.Discard,
+		infos:          infos,
+		errs:           errors,
+	}
+
+	handler := newHandler(
 		c,
 		fm,
 		sm,
 		logger,
-		infos,
-		errors,
-		testAliasFilepath,
-		false,
 		failFunc,
-		1,
+		&cfg,
 	)
 
 	return &fixture{
@@ -109,8 +116,8 @@ func TestPost(t *testing.T) {
 
 func TestGetDefaultHeaders(t *testing.T) {
 	fixture := setupRequestTest(t)
-	os.Setenv("DEFAULT_HEADERS", "x-custom: value | authorization: bearer token")
 	header, err := fixture.handler.getHeaders()
 	require.NoError(t, err)
 	require.GreaterOrEqual(t, len(header), 2)
+	require.Contains(t, header, "X-Custom")
 }

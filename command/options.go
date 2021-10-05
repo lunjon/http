@@ -15,7 +15,7 @@ type HeaderOption struct {
 	values http.Header
 }
 
-func NewHeaderOption() *HeaderOption {
+func newHeaderOption() *HeaderOption {
 	return &HeaderOption{
 		values: make(http.Header),
 	}

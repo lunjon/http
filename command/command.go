@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -44,13 +43,6 @@ func (e *execError) Unwrap() error {
 	return e.err
 }
 
-type config struct {
-	aliasFilepath string
-	logs          io.Writer
-	infos         io.Writer
-	errs          io.Writer
-}
-
 const (
 	defaultTimeout    = time.Second * 30
 	defaultAWSRegion  = "eu-west-1"
@@ -59,18 +51,11 @@ const (
 
 // Build the root command for http and set version.
 func Build(version string) (*cobra.Command, error) {
-	aliasFilepath, err := getAliasFilepath()
+	cfg, err := newDefaultConfig()
 	if err != nil {
 		return nil, err
 	}
-
-	cfg := config{
-		aliasFilepath: aliasFilepath,
-		logs:          os.Stderr,
-		infos:         os.Stdout,
-		errs:          os.Stderr,
-	}
-	return build(version, &cfg), nil
+	return build(version, cfg), nil
 }
 
 func build(version string, cfg *config) *cobra.Command {
@@ -111,6 +96,8 @@ Examples:
 	return root
 }
 
+// Returns a run function that handles a request for the given HTTP method
+// and respects the config.
 func buildRequestRun(method string, cfg *config) RunFunc {
 	return func(cmd *cobra.Command, args []string) {
 		logger := logging.NewLogger()
@@ -157,7 +144,6 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 
 		cl := client.NewClient(httpClient, logger, traceLogger)
 
-		fail, _ := cmd.Flags().GetBool(failFlagName)
 		brief, _ := cmd.Flags().GetBool(briefFlagName)
 		silent, _ := cmd.Flags().GetBool(silentFlagName)
 
@@ -184,21 +170,20 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 			signer = client.DefaultSigner{}
 		}
 
+		fail, _ := cmd.Flags().GetBool(failFlagName)
+		cfg.setFail(fail)
 		repeat, _ := cmd.Flags().GetInt(repeatFlagName)
+		cfg.setRepeat(repeat)
 
-		handler := NewHandler(
+		handler := newHandler(
 			cl,
 			formatter,
 			signer,
 			logger,
-			cfg.infos,
-			cfg.errs,
-			cfg.aliasFilepath,
-			fail,
 			func() {
 				os.Exit(1)
 			},
-			repeat,
+			cfg,
 		)
 
 		url := args[0]
@@ -222,7 +207,7 @@ func buildGet(cfg *config) *cobra.Command {
 		Run:   buildRequestRun(http.MethodGet, cfg),
 	}
 
-	addCommonFlags(get)
+	addCommonFlags(get, cfg.headerOpt)
 	return get
 }
 
@@ -234,7 +219,7 @@ func buildHead(cfg *config) *cobra.Command {
 		Run:   buildRequestRun(http.MethodHead, cfg),
 	}
 
-	addCommonFlags(head)
+	addCommonFlags(head, cfg.headerOpt)
 	return head
 }
 
@@ -249,7 +234,7 @@ This command requires the --body flag, which can be a string content or a file.`
 	}
 
 	post.Flags().StringP(bodyFlagName, "B", "", "Request body to use. Can be string content or a filename.")
-	addCommonFlags(post)
+	addCommonFlags(post, cfg.headerOpt)
 	return post
 }
 
@@ -264,7 +249,7 @@ This command requires the --body flag, which can be a string content or a file.`
 	}
 
 	patch.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
-	addCommonFlags(patch)
+	addCommonFlags(patch, cfg.headerOpt)
 	return patch
 }
 
@@ -279,7 +264,7 @@ This command requires the --body flag, which can be a string content or a file.`
 	}
 
 	put.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
-	addCommonFlags(put)
+	addCommonFlags(put, cfg.headerOpt)
 	return put
 }
 
@@ -291,7 +276,7 @@ func buildDelete(cfg *config) *cobra.Command {
 		Run:   buildRequestRun(http.MethodDelete, cfg),
 	}
 
-	addCommonFlags(del)
+	addCommonFlags(del, cfg.headerOpt)
 	return del
 }
 
@@ -340,8 +325,8 @@ or more _, letters or numbers (max size of name is 20).`,
 	return c
 }
 
-func addCommonFlags(cmd *cobra.Command) {
-	cmd.Flags().VarP(headerOption, headerFlagName, "H", `HTTP header, may be specified multiple times.
+func addCommonFlags(cmd *cobra.Command, h *HeaderOption) {
+	cmd.Flags().VarP(h, headerFlagName, "H", `HTTP header, may be specified multiple times.
 The value must conform to the format "name: value". "name" and "value" can
 be separated by either a colon ":" or an equal sign "=", and the space
 between is optional. Can be set in the same format using the env. variable

@@ -23,7 +23,7 @@ func TestHeaderOption(t *testing.T) {
 		{": value", true},
 	}
 
-	header := NewHeaderOption()
+	header := newHeaderOption()
 	for _, tt := range tests {
 		t.Run("Parse header: "+tt.value, func(t *testing.T) {
 			err := header.Set(tt.value)

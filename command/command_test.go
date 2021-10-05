@@ -77,9 +77,11 @@ func setupCommandTest(args ...string) *commandTestFixture {
 	errs := &strings.Builder{}
 
 	cfg := config{
-		logs:  logs,
-		infos: infos,
-		errs:  errs,
+		logs:          logs,
+		infos:         infos,
+		errs:          errs,
+		aliasFilepath: testAliasFilepath,
+		headerOpt:     newHeaderOption(),
 	}
 
 	cmd := build("test", &cfg)

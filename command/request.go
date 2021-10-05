@@ -18,7 +18,6 @@ import (
 
 var (
 	newline           = []byte("\n")
-	headerOption      = NewHeaderOption()
 	errCertFlags      = errors.New("--cert-pub-file requires --cert-key-file and vice versa")
 	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
 	emptyRequestBody  = requestBody{mime: client.MIMETypeUnknown}
@@ -26,42 +25,41 @@ var (
 
 // RequestHandler handles all commands.
 type RequestHandler struct {
-	usage         UsageFunc
-	formatter     Formatter
-	signer        client.RequestSigner
-	infos         io.Writer
-	errors        io.Writer
-	logger        *log.Logger
-	client        *client.Client
-	fail          bool
-	failFunc      FailFunc
-	repeat        int
-	aliasFilePath string
+	formatter      Formatter
+	signer         client.RequestSigner
+	infos          io.Writer
+	errors         io.Writer
+	logger         *log.Logger
+	client         *client.Client
+	fail           bool
+	failFunc       FailFunc
+	repeat         int
+	aliasFilePath  string
+	defaultHeaders string
+	headerOpt      *HeaderOption
 }
 
-func NewHandler(
+func newHandler(
 	client *client.Client,
 	formatter Formatter,
 	signer client.RequestSigner,
 	logger *log.Logger,
-	infos io.Writer,
-	errors io.Writer,
-	aliasFilepath string,
-	fail bool,
 	failFunc FailFunc,
-	repeat int,
+	cfg *config,
 ) *RequestHandler {
 	return &RequestHandler{
-		aliasFilePath: aliasFilepath,
-		logger:        logger,
-		infos:         infos,
-		errors:        errors,
-		client:        client,
-		signer:        signer,
-		formatter:     formatter,
-		fail:          fail,
-		failFunc:      failFunc,
-		repeat:        repeat,
+		aliasFilePath:  cfg.aliasFilepath,
+		defaultHeaders: cfg.defaultHeaders,
+		headerOpt:      cfg.headerOpt,
+		logger:         logger,
+		infos:          cfg.infos,
+		errors:         cfg.errs,
+		client:         client,
+		signer:         signer,
+		formatter:      formatter,
+		fail:           cfg.fail,
+		failFunc:       failFunc,
+		repeat:         cfg.repeat,
 	}
 }
 
@@ -161,14 +159,13 @@ func (handler *RequestHandler) outputResults(r *http.Response) error {
 // Get the request headers from the handler header field as well as
 // the environment variable for default headers.
 func (handler *RequestHandler) getHeaders() (http.Header, error) {
-	headers := headerOption.values
-	val, set := os.LookupEnv(defaultHeadersEnv)
-	if !set {
+	headers := handler.headerOpt.values
+	if handler.defaultHeaders == "" {
 		return headers, nil
 	}
 
 	// val is a string containing headers separated by a vertical pipe: |
-	for _, h := range strings.Split(val, "|") {
+	for _, h := range strings.Split(handler.defaultHeaders, "|") {
 		key, value, err := parseHeader(h)
 		if err != nil {
 			return headers, fmt.Errorf("invalid header format in %s: %w", defaultHeadersEnv, err)
