@@ -11,9 +11,11 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 
 	"github.com/lunjon/http/client"
+	"github.com/lunjon/http/util"
 )
 
 var (
@@ -21,6 +23,11 @@ var (
 	errCertFlags      = errors.New("--cert-pub-file requires --cert-key-file and vice versa")
 	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
 	emptyRequestBody  = requestBody{mime: client.MIMETypeUnknown}
+)
+
+const (
+	userAgentHeader   = "User-Agent"
+	contentTypeHeader = "Content-Type"
 )
 
 // RequestHandler handles all commands.
@@ -37,6 +44,7 @@ type RequestHandler struct {
 	repeat         int
 	defaultHeaders string
 	headerOpt      *HeaderOption
+	version        string
 }
 
 func newHandler(
@@ -61,6 +69,7 @@ func newHandler(
 		fail:           cfg.fail,
 		failFunc:       failFunc,
 		repeat:         cfg.repeat,
+		version:        cfg.version,
 	}
 }
 
@@ -89,10 +98,10 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		return newUserError(err)
 	}
 
-	setContentType := headers.Get("content-type") == "" && body.mime != client.MIMETypeUnknown
+	setContentType := headers.Get(contentTypeHeader) == "" && body.mime != client.MIMETypeUnknown
 	if setContentType {
 		handler.logger.Printf("Detected MIME type: %s", body.mime)
-		headers.Add("Content-Type", body.mime.String())
+		headers.Set(contentTypeHeader, body.mime.String())
 	}
 
 	for i := 0; i < handler.repeat; i++ {
@@ -157,21 +166,28 @@ func (handler *RequestHandler) outputResults(r *http.Response) error {
 	return nil
 }
 
-// Get the request headers from the handler header field as well as
-// the environment variable for default headers.
+// Get request headers passed as parameters and defaultHeaders.
+// Also sets the User-Agent header if not set by the client.
 func (handler *RequestHandler) getHeaders() (http.Header, error) {
 	headers := handler.headerOpt.values
-	if handler.defaultHeaders == "" {
-		return headers, nil
-	}
 
-	// val is a string containing headers separated by a vertical pipe: |
-	for _, h := range strings.Split(handler.defaultHeaders, "|") {
+	// handler.defaultHeaders must be a string containing headers separated by |
+	values := strings.Split(handler.defaultHeaders, "|") // Split by |
+	values = util.Map(values, strings.TrimSpace)         // Remove whitespace
+	values = util.Filter(values, func(s string) bool {   // Filter empty
+		return len(s) > 0
+	})
+	for _, h := range values {
 		key, value, err := parseHeader(h)
 		if err != nil {
 			return headers, fmt.Errorf("invalid header format in %s: %w", defaultHeadersEnv, err)
 		}
 		headers.Add(key, value)
+	}
+
+	if headers.Get(userAgentHeader) == "" {
+		s := fmt.Sprintf("go-http-cli/%s (%s; %s)", handler.version, runtime.GOOS, runtime.GOARCH)
+		headers.Set(userAgentHeader, s)
 	}
 
 	return headers, nil

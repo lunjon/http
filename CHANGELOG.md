@@ -4,6 +4,9 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Added
+- Add "User-Agent" header (does not override any specified by user)
+
 ## [0.11.0] - 2021-09-24
 
 ### Added

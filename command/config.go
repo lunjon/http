@@ -6,6 +6,7 @@ import (
 )
 
 type config struct {
+	version        string
 	fail           bool
 	repeat         int
 	defaultHeaders string
@@ -16,9 +17,10 @@ type config struct {
 	headerOpt      *HeaderOption
 }
 
-func newDefaultConfig() (*config, error) {
+func newDefaultConfig(version string) (*config, error) {
 	f, err := getAliasFilepath()
 	return &config{
+		version:        version,
 		repeat:         1,
 		defaultHeaders: os.Getenv(defaultHeadersEnv),
 		aliasFilepath:  f,

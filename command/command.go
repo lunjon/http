@@ -49,7 +49,7 @@ const (
 
 // Build the root command for http and set version.
 func Build(version string) (*cobra.Command, error) {
-	cfg, err := newDefaultConfig()
+	cfg, err := newDefaultConfig(version)
 	if err != nil {
 		return nil, err
 	}

@@ -119,6 +119,7 @@ func TestGetDefaultHeaders(t *testing.T) {
 	fixture := setupRequestTest(t)
 	header, err := fixture.handler.getHeaders()
 	require.NoError(t, err)
-	require.GreaterOrEqual(t, len(header), 2)
+	require.GreaterOrEqual(t, len(header), 3)
 	require.Contains(t, header, "X-Custom")
+	require.Contains(t, header, userAgentHeader)
 }
