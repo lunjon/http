@@ -189,6 +189,7 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 		bodyFlag, _ := cmd.Flags().GetString(bodyFlagName)
 		err := handler.handleRequest(method, url, bodyFlag)
 		if err != nil {
+			fmt.Fprintf(cfg.errs, "error: %s\n", err)
 			var execErr *execError
 			if errors.As(err, &execErr) && execErr.showUsage {
 				cmd.Usage()
