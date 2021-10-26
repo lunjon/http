@@ -128,6 +128,7 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 		httpClient := &http.Client{
 			Timeout: timeout,
 			Transport: &http.Transport{
+				Proxy:           http.ProxyFromEnvironment,
 				TLSClientConfig: &tlsConfig,
 			},
 		}
