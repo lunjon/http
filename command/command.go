@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -41,6 +42,18 @@ func (e *execError) Unwrap() error {
 	return e.err
 }
 
+var (
+	noConfigure   = func(*cobra.Command) {}
+	bodyConfigure = func(cmd *cobra.Command) {
+		cmd.Flags().StringP(
+			bodyFlagName,
+			"B",
+			"",
+			"Request body to use. Can be string content or a filename.",
+		)
+	}
+)
+
 const (
 	defaultTimeout    = time.Second * 30
 	defaultAWSRegion  = "eu-west-1"
@@ -68,6 +81,7 @@ Examples:
  * localhost/path	->	http://localhost/path
  * :1234/index		->	http://localhost:1234/index`,
 	}
+
 	root.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Print version",
@@ -77,13 +91,17 @@ Examples:
 	})
 
 	// HTTP
-	get := buildGet(cfg)
-	head := buildHead(cfg)
-	post := buildPost(cfg)
-	put := buildPut(cfg)
-	patch := buildPatch(cfg)
-	del := buildDelete(cfg)
-	root.AddCommand(get, head, post, put, patch, del)
+	get := buildHTTPCommand(cfg, http.MethodGet, "", noConfigure)
+	head := buildHTTPCommand(cfg, http.MethodHead, "", noConfigure)
+	options := buildHTTPCommand(cfg, http.MethodOptions, "", noConfigure)
+	post := buildHTTPCommand(cfg, http.MethodPost, `Make an HTTP POST request to the URL
+This command requires the --body flag, which can be a string content or a file.`, bodyConfigure)
+	put := buildHTTPCommand(cfg, http.MethodPut, `Make an HTTP PUT request to the URL
+This command requires the --body flag, which can be a string content or a file.`, bodyConfigure)
+	patch := buildHTTPCommand(cfg, http.MethodPatch, `Make an HTTP PATCH request to the URL
+This command requires the --body flag, which can be a string content or a file.`, bodyConfigure)
+	del := buildHTTPCommand(cfg, http.MethodDelete, "", noConfigure)
+	root.AddCommand(get, head, options, post, put, patch, del)
 
 	// URL alias
 	alias := buildAlias(cfg)
@@ -200,85 +218,22 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 	}
 }
 
-func buildGet(cfg *config) *cobra.Command {
-	get := &cobra.Command{
-		Use:   "get <url>",
-		Short: "HTTP GET request",
+func buildHTTPCommand(
+	cfg *config,
+	method,
+	long string,
+	configure func(*cobra.Command),
+) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   fmt.Sprintf("%s <url>", strings.ToLower(method)),
+		Short: fmt.Sprintf("HTTP %s request", strings.ToUpper(method)),
 		Args:  cobra.ExactArgs(1),
-		Run:   buildRequestRun(http.MethodGet, cfg),
+		Run:   buildRequestRun(method, cfg),
 	}
 
-	addCommonFlags(get, cfg.headerOpt)
-	return get
-}
-
-func buildHead(cfg *config) *cobra.Command {
-	head := &cobra.Command{
-		Use:   "head <url>",
-		Short: "HTTP HEAD request",
-		Args:  cobra.ExactArgs(1),
-		Run:   buildRequestRun(http.MethodHead, cfg),
-	}
-
-	addCommonFlags(head, cfg.headerOpt)
-	return head
-}
-
-func buildPost(cfg *config) *cobra.Command {
-	post := &cobra.Command{
-		Use:   `post <url> --body <body>`,
-		Short: "HTTP POST request",
-		Long: `Make an HTTP POST request to the URL
-This command requires the --body flag, which can be a string content or a file.`,
-		Args: cobra.ExactArgs(1),
-		Run:  buildRequestRun(http.MethodPost, cfg),
-	}
-
-	post.Flags().StringP(bodyFlagName, "B", "", "Request body to use. Can be string content or a filename.")
-	addCommonFlags(post, cfg.headerOpt)
-	return post
-}
-
-func buildPatch(cfg *config) *cobra.Command {
-	patch := &cobra.Command{
-		Use:   `patch <url> --body <body>`,
-		Short: "HTTP PATCH request",
-		Long: `Make an HTTP PATCH request to the URL
-This command requires the --body flag, which can be a string content or a file.`,
-		Args: cobra.ExactArgs(1),
-		Run:  buildRequestRun(http.MethodPatch, cfg),
-	}
-
-	patch.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
-	addCommonFlags(patch, cfg.headerOpt)
-	return patch
-}
-
-func buildPut(cfg *config) *cobra.Command {
-	put := &cobra.Command{
-		Use:   `put <url> --body <body>`,
-		Short: "HTTP PUT request",
-		Long: `Make an HTTP PUT request to the URL
-This command requires the --body flag, which can be a string content or a file.`,
-		Args: cobra.ExactArgs(1),
-		Run:  buildRequestRun(http.MethodPut, cfg),
-	}
-
-	put.Flags().String("body", "", "Request body to use. Can be string content or a filename.")
-	addCommonFlags(put, cfg.headerOpt)
-	return put
-}
-
-func buildDelete(cfg *config) *cobra.Command {
-	del := &cobra.Command{
-		Use:   `delete <url>`,
-		Short: "HTTP DELETE request",
-		Args:  cobra.ExactArgs(1),
-		Run:   buildRequestRun(http.MethodDelete, cfg),
-	}
-
-	addCommonFlags(del, cfg.headerOpt)
-	return del
+	addCommonFlags(cmd, cfg.headerOpt)
+	configure(cmd)
+	return cmd
 }
 
 func buildAlias(cfg *config) *cobra.Command {

@@ -17,12 +17,13 @@ import (
 
 var (
 	supportedMethods = map[string]bool{
-		http.MethodGet:    true,
-		http.MethodHead:   true,
-		http.MethodPost:   true,
-		http.MethodPatch:  true,
-		http.MethodPut:    true,
-		http.MethodDelete: true,
+		http.MethodGet:     true,
+		http.MethodHead:    true,
+		http.MethodOptions: true,
+		http.MethodPost:    true,
+		http.MethodPatch:   true,
+		http.MethodPut:     true,
+		http.MethodDelete:  true,
 	}
 )
 
