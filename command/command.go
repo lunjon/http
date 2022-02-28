@@ -19,8 +19,8 @@ import (
 )
 
 type FailFunc func(status int)
-
 type RunFunc func(*cobra.Command, []string)
+type CheckRedirectFunc func(*http.Request, []*http.Request) error
 
 type execError struct {
 	err       error
@@ -112,6 +112,45 @@ This command requires the --body flag, which can be a string content or a file.`
 	return root
 }
 
+func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
+	timeout, _ := cmd.Flags().GetDuration(timeoutFlagName)
+
+	var tlsConfig tls.Config
+	certPub, _ := cmd.Flags().GetString(certpubFlagName)
+	certKey, _ := cmd.Flags().GetString(certkeyFlagName)
+	if certPub != "" && certKey == "" {
+		return nil, errCertFlags
+	} else if certPub == "" && certKey != "" {
+		return nil, errCertFlags
+	} else if certPub != "" && certKey != "" {
+		cert, err := tls.LoadX509KeyPair(certPub, certKey)
+		if err != nil {
+			return nil, err
+		}
+
+		tlsConfig = tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}
+	}
+
+	noFollowRedirects, _ := cmd.Flags().GetBool(noFollowRedirectsFlagName)
+	var redirect CheckRedirectFunc
+	if noFollowRedirects {
+		redirect = func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	}
+
+	return &http.Client{
+		Timeout:       timeout,
+		CheckRedirect: redirect,
+		Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
+			TLSClientConfig: &tlsConfig,
+		},
+	}, nil
+}
+
 // Returns a run function that handles a request for the given HTTP method
 // and respects the config.
 func buildRequestRun(method string, cfg *config) RunFunc {
@@ -125,31 +164,8 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 			logger.SetOutput(ioutil.Discard)
 		}
 
-		timeout, _ := cmd.Flags().GetDuration(timeoutFlagName)
-
-		var tlsConfig tls.Config
-		certPub, _ := cmd.Flags().GetString(certpubFlagName)
-		certKey, _ := cmd.Flags().GetString(certkeyFlagName)
-		if certPub != "" && certKey == "" {
-			checkInitError(errCertFlags, cmd)
-		} else if certPub == "" && certKey != "" {
-			checkInitError(errCertFlags, cmd)
-		} else if certPub != "" && certKey != "" {
-			cert, err := tls.LoadX509KeyPair(certPub, certKey)
-			checkInitError(err, cmd)
-
-			tlsConfig = tls.Config{
-				Certificates: []tls.Certificate{cert},
-			}
-		}
-
-		httpClient := &http.Client{
-			Timeout: timeout,
-			Transport: &http.Transport{
-				Proxy:           http.ProxyFromEnvironment,
-				TLSClientConfig: &tlsConfig,
-			},
-		}
+		httpClient, err := buildHTTPClient(cmd)
+		checkInitError(err, cmd)
 
 		traceLogger := logging.NewLogger()
 		trace, _ := cmd.Flags().GetBool(traceFlagName)
@@ -206,7 +222,7 @@ func buildRequestRun(method string, cfg *config) RunFunc {
 
 		url := args[0]
 		bodyFlag, _ := cmd.Flags().GetString(bodyFlagName)
-		err := handler.handleRequest(method, url, bodyFlag)
+		err = handler.handleRequest(method, url, bodyFlag)
 		if err != nil {
 			fmt.Fprintf(cfg.errs, "error: %s\n", err)
 			var execErr *execError
@@ -310,6 +326,7 @@ in environment variables.
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 	cmd.Flags().String(certpubFlagName, "", "Use as client certificate public key  (requires --cert-key-file flag).")
 	cmd.Flags().String(certkeyFlagName, "", "Use as client certificate private key (requires --cert-pub-file flag).")
+	cmd.Flags().Bool(noFollowRedirectsFlagName, true, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 }
 
 func checkErr(err error) {
