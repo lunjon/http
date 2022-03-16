@@ -19,8 +19,8 @@ import (
 )
 
 type FailFunc func(status int)
-type RunFunc func(*cobra.Command, []string)
-type CheckRedirectFunc func(*http.Request, []*http.Request) error
+type runFunc func(*cobra.Command, []string)
+type checkRedirectFunc func(*http.Request, []*http.Request) error
 
 type execError struct {
 	err       error
@@ -135,8 +135,9 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 	}
 
 	noFollowRedirects, _ := cmd.Flags().GetBool(noFollowRedirectsFlagName)
-	var redirect CheckRedirectFunc
+	var redirect checkRedirectFunc = nil
 	if noFollowRedirects {
+		fmt.Println("Setting custom redirect")
 		redirect = func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
@@ -154,7 +155,7 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 
 // Returns a run function that handles a request for the given HTTP method
 // and respects the config.
-func buildRequestRun(method string, cfg *config) RunFunc {
+func buildRequestRun(method string, cfg *config) runFunc {
 	return func(cmd *cobra.Command, args []string) {
 		logger := logging.NewLogger()
 
@@ -325,9 +326,9 @@ in environment variables.
 	cmd.Flags().Bool(briefFlagName, false, "Output brief summary of the request.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
-	cmd.Flags().String(certpubFlagName, "", "Use as client certificate public key  (requires --cert-key-file flag).")
-	cmd.Flags().String(certkeyFlagName, "", "Use as client certificate private key (requires --cert-pub-file flag).")
-	cmd.Flags().Bool(noFollowRedirectsFlagName, true, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
+	cmd.Flags().String(certpubFlagName, "", "Use as client certificate. Requires the --key flag.")
+	cmd.Flags().String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
+	cmd.Flags().Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 }
 
 func checkErr(err error) {
