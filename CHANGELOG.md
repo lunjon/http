@@ -11,6 +11,9 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Fixed
 - Missing output on error
 
+### Changed
+- Renamed client certificate flags to `--cert` and `--key`
+
 ## [0.11.0] - 2021-09-24
 
 ### Added

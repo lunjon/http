@@ -13,7 +13,7 @@ const (
 	timeoutFlagName           = "timeout"
 	verboseFlagName           = "verbose"
 	traceFlagName             = "trace"
-	certpubFlagName           = "cert-pub-file"
-	certkeyFlagName           = "cert-key-file"
+	certpubFlagName           = "cert"
+	certkeyFlagName           = "key"
 	noFollowRedirectsFlagName = "no-follow-redirects"
 )

@@ -20,7 +20,7 @@ import (
 
 var (
 	newline           = []byte("\n")
-	errCertFlags      = errors.New("--cert-pub-file requires --cert-key-file and vice versa")
+	errCertFlags      = errors.New("--cert must be used with --key")
 	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
 	emptyRequestBody  = requestBody{mime: client.MIMETypeUnknown}
 )

@@ -118,6 +118,7 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 	var tlsConfig tls.Config
 	certPub, _ := cmd.Flags().GetString(certpubFlagName)
 	certKey, _ := cmd.Flags().GetString(certkeyFlagName)
+
 	if certPub != "" && certKey == "" {
 		return nil, errCertFlags
 	} else if certPub == "" && certKey != "" {
