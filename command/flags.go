@@ -8,7 +8,6 @@ const (
 	bodyFlagName              = "body"
 	silentFlagName            = "silent"
 	failFlagName              = "fail"
-	briefFlagName             = "brief"
 	detailsFlagName           = "details"
 	timeoutFlagName           = "timeout"
 	verboseFlagName           = "verbose"

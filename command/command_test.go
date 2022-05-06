@@ -108,14 +108,6 @@ func TestRequestCommandGet(t *testing.T) {
 	require.NotEmpty(t, fixture.infos)
 }
 
-func TestRequestCommandWithBrief(t *testing.T) {
-	fixture := setupCommandTest("get", server.URL, "--brief")
-
-	err := fixture.cmd.Execute()
-	require.NoError(t, err)
-	require.NotEmpty(t, fixture.infos)
-}
-
 func TestRequestCommandWithSilent(t *testing.T) {
 	fixture := setupCommandTest("get", server.URL, "--silent")
 

@@ -179,19 +179,11 @@ func buildRequestRun(method string, cfg *config) runFunc {
 
 		cl := client.NewClient(httpClient, logger, traceLogger)
 
-		brief, _ := cmd.Flags().GetBool(briefFlagName)
 		silent, _ := cmd.Flags().GetBool(silentFlagName)
-
-		if brief && silent {
-			checkInitError(errBriefAndSilent, cmd)
-		}
 
 		var formatter Formatter = DefaultFormatter{}
 		if silent {
 			formatter = NullFormatter{}
-		}
-		if brief {
-			formatter = BriefFormatter{}
 		}
 
 		var signer client.RequestSigner
@@ -323,7 +315,6 @@ in environment variables.
 
 	cmd.Flags().BoolP(silentFlagName, "s", false, "Suppress output of response body.")
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
-	cmd.Flags().Bool(briefFlagName, false, "Output brief summary of the request.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 	cmd.Flags().String(certpubFlagName, "", "Use as client certificate. Requires the --key flag.")

@@ -25,10 +25,8 @@ $ http post :1234/api/test --body '{"field":"value"}'
 ...
 
 # GET https://api.example/resources/abbccc-122333, using header X-User with value donald
-$ http get --brief api.example/resources/abbccc-122333 --header x-user=donald
-GET      https://api.example/resources/abbccc-122333
-Status   403 Forbidden
-Elapsed  102.97 ms
+$ http get api.example/resources/abbccc-122333 --header x-user=donald
+...
 ```
 
 ### Default headers

@@ -19,10 +19,9 @@ import (
 )
 
 var (
-	newline           = []byte("\n")
-	errCertFlags      = errors.New("--cert must be used with --key")
-	errBriefAndSilent = errors.New("cannot specify both --brief and --silent")
-	emptyRequestBody  = requestBody{mime: client.MIMETypeUnknown}
+	newline          = []byte("\n")
+	errCertFlags     = errors.New("--cert must be used with --key")
+	emptyRequestBody = requestBody{mime: client.MIMETypeUnknown}
 )
 
 const (
