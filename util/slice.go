@@ -1,12 +1,12 @@
 package util
 
 // Map slice a using f.
-func Map(a []string, f func(string) string) []string {
+func Map[T any](a []T, f func(T) T) []T {
 	if len(a) == 0 {
-		return []string{}
+		return []T{}
 	}
 
-	s := make([]string, len(a))
+	s := make([]T, len(a))
 	for i, v := range a {
 		s[i] = f(v)
 	}
@@ -26,4 +26,13 @@ func Filter(a []string, f func(string) bool) []string {
 		}
 	}
 	return s
+}
+
+func Contains(a []string, b string) bool {
+	for _, v := range a {
+		if v == b {
+			return true
+		}
+	}
+	return false
 }

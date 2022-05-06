@@ -7,12 +7,14 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Added
 - "User-Agent" header (does not override any specified by user)
 - `--no-follow-redirects` flag for disabling redirects in HTTP client
+- Display flag: `--display=...`
 
 ### Fixed
 - Missing output on error
 
 ### Removed
 - Brief output: `--brief`
+- Silent flag: `--silent`
 
 ### Changed
 - Renamed client certificate flags to `--cert` and `--key`

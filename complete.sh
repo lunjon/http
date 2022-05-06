@@ -15,11 +15,11 @@ _http_complete() {
             return
             ;;
         -*)
-            COMPREPLY+=($(compgen -W '-v --verbose -f --fail -s --silent \
+            COMPREPLY+=($(compgen -W '-v --verbose -f --fail -s \
                                       -T --timeout --key --cert' -- $cur))
             ;;
         *)
-            COMPREPLY+=($(compgen -W '-v --verbose -f --fail -s --silent \
+            COMPREPLY+=($(compgen -W '-v --verbose -f --fail -s \
                                       -T --timeout --key --cert' -- $cur))
 
             has_url=0

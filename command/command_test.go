@@ -108,14 +108,6 @@ func TestRequestCommandGet(t *testing.T) {
 	require.NotEmpty(t, fixture.infos)
 }
 
-func TestRequestCommandWithSilent(t *testing.T) {
-	fixture := setupCommandTest("get", server.URL, "--silent")
-
-	err := fixture.cmd.Execute()
-	require.NoError(t, err)
-	require.Empty(t, fixture.infos)
-}
-
 func TestRequestGetSigned(t *testing.T) {
 	os.Setenv("AWS_ACCESS_KEY_ID", "AKIAKIAKAI")
 	os.Setenv("AWS_SECRET_ACCESS_KEY", "abcd//efgh/ijklmnopq//bca")

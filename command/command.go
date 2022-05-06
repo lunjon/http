@@ -15,6 +15,7 @@ import (
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/logging"
+	"github.com/lunjon/http/util"
 	"github.com/spf13/cobra"
 )
 
@@ -179,11 +180,19 @@ func buildRequestRun(method string, cfg *config) runFunc {
 
 		cl := client.NewClient(httpClient, logger, traceLogger)
 
-		silent, _ := cmd.Flags().GetBool(silentFlagName)
+		display, _ := cmd.Flags().GetString(displayFlagName)
 
-		var formatter Formatter = DefaultFormatter{}
-		if silent {
-			formatter = NullFormatter{}
+		var formatter Formatter
+		switch display {
+		case "all":
+			formatter, _ = NewDefaultFormatter(true, FormatComponents)
+		case "", "none":
+			formatter, _ = NewDefaultFormatter(true, []string{})
+		default:
+			components := strings.Split(strings.TrimSpace(display), ",")
+			components = util.Map(components, strings.TrimSpace)
+			formatter, err = NewDefaultFormatter(true, components)
+			checkErr(err)
 		}
 
 		var signer client.RequestSigner
@@ -313,7 +322,14 @@ in environment variables.
 		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 
-	cmd.Flags().BoolP(silentFlagName, "s", false, "Suppress output of response body.")
+	cmd.Flags().String(displayFlagName, "body", `Comma (,) separated list of response items to display.
+Possible values:
+  all:    all response information
+  none:   no output
+  status: response status code
+  header: response headers
+  body:   response body`)
+	cmd.Flags().Bool(noColorFlagName, false, "Do not use colored output.")
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
