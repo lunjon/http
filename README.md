@@ -55,3 +55,12 @@ Can be specified as:
 - string: `http post http://example.com/api --body '{"name":"meow"}'`
 - file: `http post http://example.com/api --body r.json`
 - stdin: `cat file | http post http://example.com/api`
+
+## Shell completion (WIP)
+
+If using bash, zsh or any other bash-like shell you can use the [shell completion
+script](./complete.sh):
+
+```sh
+$ source complete.sh
+```
