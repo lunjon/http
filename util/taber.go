@@ -29,7 +29,7 @@ func NewTaber(linePrefix string) *Taber {
 
 // Writef bypasses the tabwriter and writes to the
 // underlying buffer. Useful for setting e.g. a heading.
-func (t *Taber) Writef(fmts string, args ...interface{}) {
+func (t *Taber) Writef(fmts string, args ...any) {
 	fmt.Fprintf(t.buf, fmts, args...)
 }
 
