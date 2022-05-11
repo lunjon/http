@@ -227,7 +227,7 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		bodyFlag, _ := cmd.Flags().GetString(bodyFlagName)
 		err = handler.handleRequest(method, url, bodyFlag)
 		if err != nil {
-			fmt.Fprintf(cfg.errs, "error: %s\n", err)
+			fmt.Fprintf(cfg.errs, "%s\n", err)
 			var execErr *execError
 			if errors.As(err, &execErr) && execErr.showUsage {
 				cmd.Usage()
@@ -269,11 +269,7 @@ The name must match the pattern: ^[a-zA-Z_]\w*$, in other words
 it must begin with _, a small or capital letter followed by zero
 or more _, letters or numbers (max size of name is 20).`,
 		Run: func(cmd *cobra.Command, args []string) {
-			handler := AliasHandler{
-				manager: newAliasLoader(cfg.aliasFilepath),
-				infos:   cfg.infos,
-				errors:  cfg.errs,
-			}
+			handler := NewAliasHandler(newAliasLoader(cfg.aliasFilepath), cfg.infos, cfg.errs)
 
 			var err error
 			switch len(args) {
@@ -290,7 +286,7 @@ or more _, letters or numbers (max size of name is 20).`,
 			}
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
 		},
@@ -324,11 +320,12 @@ in environment variables.
 
 	cmd.Flags().String(displayFlagName, "body", `Comma (,) separated list of response items to display.
 Possible values:
-  all:    all response information
-  none:   no output
-  status: response status code
-  header: response headers
-  body:   response body`)
+  none:       no output
+  all:        all information
+  status:     response status code text
+  statuscode: response status code number
+  headers:    response headers
+  body:       response body`)
 	cmd.Flags().Bool(noColorFlagName, false, "Do not use colored output.")
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
@@ -342,7 +339,7 @@ func checkErr(err error) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	fmt.Fprintf(os.Stderr, "%v\n", err)
 	os.Exit(1)
 }
 
@@ -350,7 +347,7 @@ func checkInitError(err error, cmd *cobra.Command) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "error: %v\n\n", err)
+	fmt.Fprintf(os.Stderr, "%v\n\n", err)
 	cmd.Usage()
 	os.Exit(1)
 }

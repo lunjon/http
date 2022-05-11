@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/lunjon/http/client"
+	"github.com/lunjon/http/style"
 	"github.com/lunjon/http/util"
 )
 
@@ -41,6 +42,16 @@ type AliasHandler struct {
 	infos io.Writer
 	// Output of errors
 	errors io.Writer
+	bold   style.StyleFunc
+}
+
+func NewAliasHandler(m AliasManager, infos, errors io.Writer) *AliasHandler {
+	return &AliasHandler{
+		manager: m,
+		infos:   infos,
+		errors:  errors,
+		bold:    style.NewBuilder().Bold(true).Build(),
+	}
 }
 
 func (handler *AliasHandler) listAlias() error {
@@ -57,8 +68,9 @@ func (handler *AliasHandler) listAlias() error {
 	sort.Strings(names)
 
 	taber := util.NewTaber("")
+	taber.WriteLine(handler.bold("Name\t"), handler.bold("URL"))
 	for _, name := range names {
-		taber.WriteLine(name+":", aliases[name])
+		taber.WriteLine(name, aliases[name])
 	}
 	fmt.Fprintln(handler.infos, taber.String())
 	return nil

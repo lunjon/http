@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/lunjon/http/style"
 	"github.com/lunjon/http/util"
 )
 
-var FormatComponents = []string{"status", "header", "body"}
+var FormatComponents = []string{"status", "statuscode", "headers", "body"}
 
 type Formatter interface {
 	Format(*http.Response) ([]byte, error)
@@ -19,10 +20,11 @@ type Formatter interface {
 type DefaultFormatter struct {
 	components []string
 	color      bool
+	bold       style.StyleFunc
 }
 
 func NewDefaultFormatter(color bool, components []string) (*DefaultFormatter, error) {
-	if len(components) > 3 {
+	if len(components) > len(FormatComponents) {
 		return nil, fmt.Errorf("invalid format specifiers: too many")
 	}
 
@@ -36,6 +38,7 @@ func NewDefaultFormatter(color bool, components []string) (*DefaultFormatter, er
 	return &DefaultFormatter{
 		color:      color,
 		components: parsed,
+		bold:       style.NewBuilder().Bold(true).Build(),
 	}, nil
 }
 
@@ -44,9 +47,11 @@ func (f *DefaultFormatter) Format(r *http.Response) ([]byte, error) {
 	for _, comp := range f.components {
 		switch comp {
 		case "status":
-			f.addStatus(buf, r)
-		case "header":
-			f.addHeader(buf, r)
+			fmt.Fprintln(buf, r.Status)
+		case "statuscode":
+			fmt.Fprintln(buf, r.StatusCode)
+		case "headers":
+			f.addHeaders(buf, r)
 		case "body":
 			if err := f.addBody(buf, r); err != nil {
 				return nil, err
@@ -58,14 +63,14 @@ func (f *DefaultFormatter) Format(r *http.Response) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (f *DefaultFormatter) addStatus(w io.Writer, r *http.Response) {
-	fmt.Fprintln(w, r.Status)
-}
-
-func (f *DefaultFormatter) addHeader(w io.Writer, r *http.Response) {
+func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
+	taber := util.NewTaber("")
 	for name, value := range r.Header {
-		fmt.Fprintf(w, "%s: %s\n", name, value)
+		n := fmt.Sprintf("%s:", name)
+		v := fmt.Sprint(value)
+		taber.WriteLine(f.bold(n), v)
 	}
+	fmt.Fprint(w, taber.String())
 }
 
 func (f *DefaultFormatter) addBody(w io.Writer, r *http.Response) error {
@@ -75,5 +80,6 @@ func (f *DefaultFormatter) addBody(w io.Writer, r *http.Response) error {
 		return err
 	}
 	_, err = w.Write(b)
+	fmt.Fprintln(w, "")
 	return err
 }

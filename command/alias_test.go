@@ -42,12 +42,7 @@ func setupAliasHandlerTest(t *testing.T) *aliasTestFixture {
 	errors := &strings.Builder{}
 
 	m := newAliasManagerMock()
-
-	h := &AliasHandler{
-		manager: m,
-		infos:   infos,
-		errors:  errors,
-	}
+	h := NewAliasHandler(m, infos, errors)
 
 	return &aliasTestFixture{
 		handler: h,
