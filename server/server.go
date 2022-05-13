@@ -2,11 +2,15 @@ package server
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 )
 
 type Config struct {
-	Port uint
+	Port   uint
+	infos  io.Writer
+	errors io.Writer
 }
 
 func (c Config) addr() string {
@@ -14,19 +18,28 @@ func (c Config) addr() string {
 }
 
 type Server struct {
+	logger *log.Logger
 	server *http.Server
 	cfg    Config
+	infos  io.Writer
+	errors io.Writer
 }
 
-func New(cfg Config) *Server {
+func New(cfg Config, l *log.Logger, infos, errors io.Writer) *Server {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler)
+	mux.HandleFunc("/", createHandler(l))
 
 	s := &http.Server{
 		Addr:    cfg.addr(),
 		Handler: mux,
 	}
-	return &Server{s, cfg}
+	return &Server{
+		server: s,
+		cfg:    cfg,
+		logger: l,
+		infos:  infos,
+		errors: errors,
+	}
 }
 
 func (s *Server) Close() error {
@@ -37,4 +50,8 @@ func (s *Server) Serve() error {
 	return s.server.ListenAndServe()
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {}
+func createHandler(logger *log.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Printf("Incoming request: %s %s", r.Method, r.URL.Path)
+	}
+}

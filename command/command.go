@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -14,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/lunjon/http/client"
-	"github.com/lunjon/http/logging"
+	"github.com/lunjon/http/server"
+	"github.com/lunjon/http/style"
 	"github.com/lunjon/http/util"
 	"github.com/spf13/cobra"
 )
@@ -104,6 +104,10 @@ This command requires the --body flag, which can be a string content or a file.`
 	del := buildHTTPCommand(cfg, http.MethodDelete, "", noConfigure)
 	root.AddCommand(get, head, options, post, put, patch, del)
 
+	// Server
+	server := buildServer(cfg)
+	root.AddCommand(server)
+
 	// URL alias
 	alias := buildAlias(cfg)
 	root.AddCommand(alias)
@@ -158,28 +162,14 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 // and respects the config.
 func buildRequestRun(method string, cfg *config) runFunc {
 	return func(cmd *cobra.Command, args []string) {
-		logger := logging.NewLogger()
-
-		verbose, _ := cmd.Flags().GetBool(verboseFlagName)
-		if verbose {
-			logger.SetOutput(cfg.logs)
-		} else {
-			logger.SetOutput(ioutil.Discard)
-		}
+		cfg.updateFrom(cmd)
+		logger := cfg.getLogger()
+		traceLogger := cfg.getTraceLogger()
 
 		httpClient, err := buildHTTPClient(cmd)
 		checkInitError(err, cmd)
 
-		traceLogger := logging.NewLogger()
-		trace, _ := cmd.Flags().GetBool(traceFlagName)
-		if trace {
-			traceLogger.SetOutput(cfg.logs)
-		} else {
-			traceLogger.SetOutput(ioutil.Discard)
-		}
-
 		cl := client.NewClient(httpClient, logger, traceLogger)
-
 		display, _ := cmd.Flags().GetString(displayFlagName)
 
 		var formatter Formatter
@@ -205,11 +195,6 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		} else {
 			signer = client.DefaultSigner{}
 		}
-
-		fail, _ := cmd.Flags().GetBool(failFlagName)
-		cfg.setFail(fail)
-		repeat, _ := cmd.Flags().GetInt(repeatFlagName)
-		cfg.setRepeat(repeat)
 
 		aliasManager := newAliasLoader(cfg.aliasFilepath)
 
@@ -253,6 +238,36 @@ func buildHTTPCommand(
 	addCommonFlags(cmd, cfg.headerOpt)
 	configure(cmd)
 	return cmd
+}
+
+func buildServer(cfg *config) *cobra.Command {
+	c := &cobra.Command{
+		Use:   "server",
+		Short: "Starts an HTTP server on localhost.",
+		Long: `Starts an HTTP server on localhost.
+Useful for local testing and debugging.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.updateFrom(cmd)
+			port, _ := cmd.Flags().GetUint("port")
+			config := server.Config{Port: port}
+			server := server.New(config, cfg.getLogger(), cfg.infos, cfg.errs)
+
+			bold := style.NewBuilder().Bold(true).Build()
+
+			// TODO: trap exit signal for graceful shutdown
+			fmt.Printf("Starting server on :%s.\n", bold(fmt.Sprint(port)))
+			fmt.Printf("Press %s to exit.\n", bold("CTRL-C"))
+
+			err := server.Serve()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				os.Exit(1)
+			}
+		},
+	}
+
+	c.Flags().UintP("port", "p", 8080, "Port to listen on.")
+	return c
 }
 
 func buildAlias(cfg *config) *cobra.Command {

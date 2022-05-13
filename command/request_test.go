@@ -28,7 +28,7 @@ type fixture struct {
 func setupRequestTest(t *testing.T) *fixture {
 	logger := logging.NewLogger()
 	logger.SetOutput(io.Discard)
-	c := client.NewClient(server.Client(), logger, logger)
+	c := client.NewClient(testServer.Client(), logger, logger)
 
 	state := &state{}
 	failFunc := func(int) {
@@ -73,7 +73,7 @@ func setupRequestTest(t *testing.T) *fixture {
 func TestGet(t *testing.T) {
 	fixture := setupRequestTest(t)
 
-	err := fixture.handler.handleRequest("get", server.URL, "")
+	err := fixture.handler.handleRequest("get", testServer.URL, "")
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
@@ -83,7 +83,7 @@ func TestGetErrorWithFail(t *testing.T) {
 	fixture := setupRequestTest(t)
 	fixture.handler.fail = true
 
-	err := fixture.handler.handleRequest("get", server.URL+"/error", "")
+	err := fixture.handler.handleRequest("get", testServer.URL+"/error", "")
 	require.NoError(t, err)
 	require.True(t, fixture.state.failCalled)
 	require.Empty(t, fixture.infos.String())
@@ -94,7 +94,7 @@ func TestWithHeaders(t *testing.T) {
 	fixture := setupRequestTest(t)
 	os.Setenv("DEFAULT_HEADERS", "x-custom: value | authorization: bearer token")
 
-	err := fixture.handler.handleRequest("get", server.URL, "")
+	err := fixture.handler.handleRequest("get", testServer.URL, "")
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 }
@@ -108,7 +108,7 @@ func TestPost(t *testing.T) {
 	fixture := setupRequestTest(t)
 
 	for _, bodyflag := range bodies {
-		err := fixture.handler.handleRequest(http.MethodPost, server.URL, bodyflag)
+		err := fixture.handler.handleRequest(http.MethodPost, testServer.URL, bodyflag)
 		require.NoError(t, err)
 		require.NotEmpty(t, fixture.infos.String())
 		require.Empty(t, fixture.errors.String())

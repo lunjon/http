@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	server            *httptest.Server
+	testServer        *httptest.Server
 	testdir           = "test-http"
 	testAliasFilepath = path.Join(testdir, "aliases.json")
 )
@@ -51,14 +51,14 @@ func (s *serverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestMain(m *testing.M) {
-	server = httptest.NewServer(&serverHandler{})
+	testServer = httptest.NewServer(&serverHandler{})
 	if _, err := os.Stat(testdir); os.IsNotExist(err) {
 		err := os.MkdirAll(testdir, 0700)
 		checkErr(err)
 	}
 
 	status := m.Run()
-	server.Close()
+	testServer.Close()
 	os.RemoveAll(testdir)
 
 	os.Exit(status)
@@ -101,7 +101,7 @@ func TestDefaultBuild(t *testing.T) {
 }
 
 func TestRequestCommandGet(t *testing.T) {
-	fixture := setupCommandTest("get", server.URL)
+	fixture := setupCommandTest("get", testServer.URL)
 
 	err := fixture.cmd.Execute()
 	require.NoError(t, err)
@@ -112,7 +112,7 @@ func TestRequestGetSigned(t *testing.T) {
 	os.Setenv("AWS_ACCESS_KEY_ID", "AKIAKIAKAI")
 	os.Setenv("AWS_SECRET_ACCESS_KEY", "abcd//efgh/ijklmnopq//bca")
 	os.Setenv("AWS_SESSION_TOKEN", "9bd58de0-20ab-4f29-bbd9-dedc700152e3")
-	fixture := setupCommandTest("get", server.URL, "--aws-sigv4")
+	fixture := setupCommandTest("get", testServer.URL, "--aws-sigv4")
 
 	err := fixture.cmd.Execute()
 	require.NoError(t, err)
