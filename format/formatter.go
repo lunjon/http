@@ -1,4 +1,4 @@
-package command
+package format
 
 import (
 	"bytes"
@@ -7,13 +7,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lunjon/http/style"
 	"github.com/lunjon/http/util"
 )
 
 var FormatComponents = []string{"status", "statuscode", "headers", "body"}
 
-type Formatter interface {
+type ResponseFormatter interface {
 	Format(*http.Response) ([]byte, error)
 }
 
@@ -62,7 +61,7 @@ func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
 	for name, value := range r.Header {
 		n := fmt.Sprintf("%s:", name)
 		v := fmt.Sprint(value)
-		taber.WriteLine(style.WhiteB(n), v)
+		taber.WriteLine(WhiteB(n), v)
 	}
 	fmt.Fprint(w, taber.String())
 }

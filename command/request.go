@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/lunjon/http/client"
+	"github.com/lunjon/http/format"
 	"github.com/lunjon/http/util"
 )
 
@@ -33,7 +34,7 @@ const (
 type RequestHandler struct {
 	client         *client.Client
 	aliasManager   AliasManager
-	formatter      Formatter
+	formatter      format.ResponseFormatter
 	signer         client.RequestSigner
 	infos          io.Writer
 	errors         io.Writer
@@ -50,7 +51,7 @@ type RequestHandler struct {
 func newHandler(
 	client *client.Client,
 	aliasManager AliasManager,
-	formatter Formatter,
+	formatter format.ResponseFormatter,
 	signer client.RequestSigner,
 	logger *log.Logger,
 	failFunc FailFunc,

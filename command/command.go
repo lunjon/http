@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/lunjon/http/client"
+	"github.com/lunjon/http/format"
 	"github.com/lunjon/http/server"
-	"github.com/lunjon/http/style"
 	"github.com/lunjon/http/util"
 	"github.com/spf13/cobra"
 )
@@ -83,7 +83,7 @@ Examples:
  * :1234/index		->	http://localhost:1234/index`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if noColor, _ := cmd.Flags().GetBool(noColorFlagName); noColor {
-				style.Disable()
+				format.Disable()
 			}
 		},
 	}
@@ -178,16 +178,16 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		cl := client.NewClient(httpClient, logger, traceLogger)
 		display, _ := cmd.Flags().GetString(displayFlagName)
 
-		var formatter Formatter
+		var formatter format.ResponseFormatter
 		switch display {
 		case "all":
-			formatter, _ = NewDefaultFormatter(FormatComponents)
+			formatter, _ = format.NewDefaultFormatter(format.FormatComponents)
 		case "", "none":
-			formatter, _ = NewDefaultFormatter([]string{})
+			formatter, _ = format.NewDefaultFormatter([]string{})
 		default:
 			components := strings.Split(strings.TrimSpace(display), ",")
 			components = util.Map(components, strings.TrimSpace)
-			formatter, err = NewDefaultFormatter(components)
+			formatter, err = format.NewDefaultFormatter(components)
 			checkErr(err)
 		}
 
@@ -259,8 +259,8 @@ Useful for local testing and debugging.`,
 			server := server.New(config, cfg.getLogger(), cfg.infos, cfg.errs)
 
 			// TODO: trap exit signal for graceful shutdown
-			fmt.Printf("Starting server on :%s.\n", style.WhiteB(fmt.Sprint(port)))
-			fmt.Printf("Press %s to exit.\n", style.WhiteB("CTRL-C"))
+			fmt.Printf("Starting server on :%s.\n", format.WhiteB(fmt.Sprint(port)))
+			fmt.Printf("Press %s to exit.\n", format.WhiteB("CTRL-C"))
 
 			err := server.Serve()
 			if err != nil {

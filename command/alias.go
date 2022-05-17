@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/lunjon/http/client"
-	"github.com/lunjon/http/style"
+	"github.com/lunjon/http/format"
 	"github.com/lunjon/http/util"
 )
 
@@ -66,7 +66,7 @@ func (handler *AliasHandler) listAlias() error {
 	sort.Strings(names)
 
 	taber := util.NewTaber("")
-	taber.WriteLine(style.WhiteB("Name\t"), style.WhiteB("URL"))
+	taber.WriteLine(format.WhiteB("Name\t"), format.WhiteB("URL"))
 	for _, name := range names {
 		taber.WriteLine(name, aliases[name])
 	}
