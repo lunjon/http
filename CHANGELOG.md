@@ -9,6 +9,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - `--no-follow-redirects` flag for disabling redirects in HTTP client
 - Display flag: `--display=...`
 - Respect `--no-color` flag
+- `-o/--output` flag for writing output to file
 
 ### Fixed
 - Missing output on error

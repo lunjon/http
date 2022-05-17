@@ -351,6 +351,7 @@ Possible values:
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 	cmd.Flags().String(certpubFlagName, "", "Use as client certificate. Requires the --key flag.")
 	cmd.Flags().String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
+	cmd.Flags().StringP(outputFlagName, "o", "", "Write output to file instead of stdout.")
 	cmd.Flags().Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 }
 

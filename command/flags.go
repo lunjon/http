@@ -15,5 +15,6 @@ const (
 	traceFlagName             = "trace"
 	certpubFlagName           = "cert"
 	certkeyFlagName           = "key"
+	outputFlagName            = "output"
 	noFollowRedirectsFlagName = "no-follow-redirects"
 )

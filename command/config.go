@@ -19,6 +19,7 @@ type config struct {
 	repeat         int
 	defaultHeaders string
 	aliasFilepath  string
+	output         string
 	logs           io.Writer
 	infos          io.Writer
 	errs           io.Writer
@@ -41,31 +42,39 @@ func newDefaultConfig(version string) (*config, error) {
 }
 
 func (c *config) updateFrom(cmd *cobra.Command) error {
+	flags := cmd.Flags()
 	var err error
-	c.verbose, err = cmd.Flags().GetBool(verboseFlagName)
+	c.verbose, err = flags.GetBool(verboseFlagName)
 	if err != nil {
 		return err
 	}
 
-	noColor, err := cmd.Flags().GetBool(noColorFlagName)
+	noColor, err := flags.GetBool(noColorFlagName)
 	if err != nil {
 		return err
 	}
 	c.color = !noColor
 
-	c.trace, err = cmd.Flags().GetBool(traceFlagName)
+	c.trace, err = flags.GetBool(traceFlagName)
 	if err != nil {
 		return err
 	}
 
-	c.fail, err = cmd.Flags().GetBool(failFlagName)
+	c.fail, err = flags.GetBool(failFlagName)
 	if err != nil {
 		return err
 	}
-	c.repeat, err = cmd.Flags().GetInt(repeatFlagName)
+
+	c.repeat, err = flags.GetInt(repeatFlagName)
 	if err != nil {
 		return err
 	}
+
+	c.output, err = flags.GetString(outputFlagName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

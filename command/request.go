@@ -44,6 +44,7 @@ type RequestHandler struct {
 	defaultHeaders string
 	headerOpt      *HeaderOption
 	version        string
+	outputFile     string
 }
 
 func newHandler(
@@ -69,6 +70,7 @@ func newHandler(
 		failFunc:       failFunc,
 		repeat:         cfg.repeat,
 		version:        cfg.version,
+		outputFile:     cfg.output,
 	}
 }
 
@@ -103,6 +105,16 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		headers.Set(contentTypeHeader, body.mime.String())
 	}
 
+	var output io.Writer = handler.infos
+	if handler.outputFile != "" {
+		file, err := os.Create(handler.outputFile)
+		if err != nil {
+			return err
+		}
+		output = file
+		defer file.Close()
+	}
+
 	for i := 0; i < handler.repeat; i++ {
 		req, err := handler.buildRequest(method, u, body.bytes, headers)
 		if err != nil {
@@ -114,7 +126,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 			return err
 		}
 
-		err = handler.outputResults(res)
+		err = handler.outputResults(res, output)
 		if err != nil {
 			return err
 		}
@@ -138,19 +150,19 @@ func (handler *RequestHandler) buildRequest(
 	return req, err
 }
 
-func (handler *RequestHandler) outputResults(r *http.Response) error {
+func (handler *RequestHandler) outputResults(r *http.Response, w io.Writer) error {
 	b, err := handler.formatter.Format(r)
 	if err != nil {
 		return err
 	}
 
 	if len(b) > 0 {
-		_, err = handler.infos.Write(b)
+		_, err = w.Write(b)
 		if err != nil {
 			return err
 		}
 
-		_, err = handler.infos.Write(newline)
+		_, err = w.Write(newline)
 		if err != nil {
 			return err
 		}
@@ -163,6 +175,10 @@ func (handler *RequestHandler) outputResults(r *http.Response) error {
 	}
 
 	return nil
+}
+
+func output(w io.Writer) error {
+	panic("not implemented")
 }
 
 // Get request headers passed as parameters and defaultHeaders.
@@ -206,10 +222,12 @@ func (handler *RequestHandler) getRequestBody(bodyFlag string) (requestBody, err
 		stat, _ := os.Stdin.Stat()
 		if (stat.Mode() & os.ModeCharDevice) == 0 {
 			handler.logger.Print("Reading body from stdin")
+
 			b, err := io.ReadAll(os.Stdin)
 			if err != nil {
 				return emptyRequestBody, err
 			}
+
 			return requestBody{b, mime}, nil
 		}
 
