@@ -8,6 +8,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - "User-Agent" header (does not override any specified by user)
 - `--no-follow-redirects` flag for disabling redirects in HTTP client
 - Display flag: `--display=...`
+- Respect `--no-color` flag
 
 ### Fixed
 - Missing output on error
