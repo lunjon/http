@@ -42,7 +42,6 @@ type AliasHandler struct {
 	infos io.Writer
 	// Output of errors
 	errors io.Writer
-	bold   style.StyleFunc
 }
 
 func NewAliasHandler(m AliasManager, infos, errors io.Writer) *AliasHandler {
@@ -50,7 +49,6 @@ func NewAliasHandler(m AliasManager, infos, errors io.Writer) *AliasHandler {
 		manager: m,
 		infos:   infos,
 		errors:  errors,
-		bold:    style.NewBuilder().Bold(true).Build(),
 	}
 }
 
@@ -68,7 +66,7 @@ func (handler *AliasHandler) listAlias() error {
 	sort.Strings(names)
 
 	taber := util.NewTaber("")
-	taber.WriteLine(handler.bold("Name\t"), handler.bold("URL"))
+	taber.WriteLine(style.WhiteB("Name\t"), style.WhiteB("URL"))
 	for _, name := range names {
 		taber.WriteLine(name, aliases[name])
 	}

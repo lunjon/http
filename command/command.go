@@ -81,6 +81,11 @@ Protocol and host of the URL can be implicit if given like [host]:port/path...
 Examples:
  * localhost/path	->	http://localhost/path
  * :1234/index		->	http://localhost:1234/index`,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if noColor, _ := cmd.Flags().GetBool(noColorFlagName); noColor {
+				style.Disable()
+			}
+		},
 	}
 
 	root.AddCommand(&cobra.Command{
@@ -114,6 +119,7 @@ This command requires the --body flag, which can be a string content or a file.`
 
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
+	root.PersistentFlags().Bool(noColorFlagName, false, "Do not use colored output.")
 	return root
 }
 
@@ -175,13 +181,13 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		var formatter Formatter
 		switch display {
 		case "all":
-			formatter, _ = NewDefaultFormatter(true, FormatComponents)
+			formatter, _ = NewDefaultFormatter(FormatComponents)
 		case "", "none":
-			formatter, _ = NewDefaultFormatter(true, []string{})
+			formatter, _ = NewDefaultFormatter([]string{})
 		default:
 			components := strings.Split(strings.TrimSpace(display), ",")
 			components = util.Map(components, strings.TrimSpace)
-			formatter, err = NewDefaultFormatter(true, components)
+			formatter, err = NewDefaultFormatter(components)
 			checkErr(err)
 		}
 
@@ -252,11 +258,9 @@ Useful for local testing and debugging.`,
 			config := server.Config{Port: port}
 			server := server.New(config, cfg.getLogger(), cfg.infos, cfg.errs)
 
-			bold := style.NewBuilder().Bold(true).Build()
-
 			// TODO: trap exit signal for graceful shutdown
-			fmt.Printf("Starting server on :%s.\n", bold(fmt.Sprint(port)))
-			fmt.Printf("Press %s to exit.\n", bold("CTRL-C"))
+			fmt.Printf("Starting server on :%s.\n", style.WhiteB(fmt.Sprint(port)))
+			fmt.Printf("Press %s to exit.\n", style.WhiteB("CTRL-C"))
 
 			err := server.Serve()
 			if err != nil {
@@ -284,6 +288,7 @@ The name must match the pattern: ^[a-zA-Z_]\w*$, in other words
 it must begin with _, a small or capital letter followed by zero
 or more _, letters or numbers (max size of name is 20).`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cfg.updateFrom(cmd)
 			handler := NewAliasHandler(newAliasLoader(cfg.aliasFilepath), cfg.infos, cfg.errs)
 
 			var err error
@@ -341,7 +346,6 @@ Possible values:
   statuscode: response status code number
   headers:    response headers
   body:       response body`)
-	cmd.Flags().Bool(noColorFlagName, false, "Do not use colored output.")
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")

@@ -5,53 +5,80 @@ import (
 	"strings"
 )
 
+func init() {
+	WhiteB = newBuilder().bold(true).build()
+	Red = newBuilder().fg(ColorRed).build()
+	RedB = newBuilder().fg(ColorRed).bold(true).build()
+	Green = newBuilder().fg(ColorGreen).build()
+	GreenB = newBuilder().fg(ColorGreen).bold(true).build()
+	Blue = newBuilder().fg(ColorBlue).build()
+	BlueB = newBuilder().fg(ColorBlue).bold(true).build()
+	Cyan = newBuilder().fg(ColorCyan).build()
+	CyanB = newBuilder().fg(ColorCyan).bold(true).build()
+}
+
 type StyleFunc = func(string) string
 
 type Color uint8
 
 const (
-	Red     Color = 31
-	Green   Color = 32
-	Yellow  Color = 33
-	Blue    Color = 34
-	Magenta Color = 35
-	Cyan    Color = 36
+	ColorRed     Color = 31
+	ColorGreen   Color = 32
+	ColorYellow  Color = 33
+	ColorBlue    Color = 34
+	ColorMagenta Color = 35
+	ColorCyan    Color = 36
 )
 
-type Styler struct {
-	format string
+var (
+	unitFunc = func(s string) string { return s }
+	WhiteB   StyleFunc
+	Red      StyleFunc
+	RedB     StyleFunc
+	Green    StyleFunc
+	GreenB   StyleFunc
+	Blue     StyleFunc
+	BlueB    StyleFunc
+	Cyan     StyleFunc
+	CyanB    StyleFunc
+)
+
+func Disable() {
+	WhiteB = unitFunc
+	Red = unitFunc
+	RedB = unitFunc
+	Green = unitFunc
+	GreenB = unitFunc
+	Blue = unitFunc
+	BlueB = unitFunc
 }
 
-func (styler *Styler) Style(s string) string {
-	return fmt.Sprintf(styler.format, s)
+type builder struct {
+	fgColor Color
+	isBold  bool
 }
 
-type Builder struct {
-	fg   Color
-	bold bool
+func newBuilder() *builder {
+	return &builder{}
 }
 
-func NewBuilder() *Builder {
-	return &Builder{}
-}
-
-func (b *Builder) Fg(c Color) *Builder {
-	b.fg = c
+func (b *builder) fg(c Color) *builder {
+	b.fgColor = c
 	return b
 }
 
-func (b *Builder) Bold(v bool) *Builder {
-	b.bold = v
+func (b *builder) bold(v bool) *builder {
+	b.isBold = v
 	return b
 }
 
-func (b *Builder) Build() StyleFunc {
+func (b *builder) build() StyleFunc {
 	codes := []string{}
-	if b.fg > 0 {
-		codes = append(codes, fmt.Sprint(b.fg))
+	if b.fgColor > 0 {
+		codes = append(codes, fmt.Sprint(b.fgColor))
 	}
 
-	if b.bold {
+	if b.isBold {
 		codes = append(codes, "1")
 	}
 
