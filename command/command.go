@@ -117,6 +117,10 @@ This command requires the --body flag, which can be a string content or a file.`
 	alias := buildAlias(cfg)
 	root.AddCommand(alias)
 
+	// Gen completion scripts
+	gen := buildGen(cfg)
+	root.AddCommand(gen)
+
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
 	root.PersistentFlags().Bool(noColorFlagName, false, "Do not use colored output.")
@@ -307,7 +311,7 @@ or more _, letters or numbers (max size of name is 20).`,
 			}
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
+				fmt.Fprintf(cfg.errs, "%v\n", err)
 				os.Exit(1)
 			}
 		},
@@ -316,6 +320,36 @@ or more _, letters or numbers (max size of name is 20).`,
 	c.Flags().StringP("remove", "r", "", "Remove alias with this name.")
 	c.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
 
+	return c
+}
+
+func buildGen(cfg *config) *cobra.Command {
+	c := &cobra.Command{
+		Use:   "gen [--shell type]",
+		Short: "Generate shell compeletion scripts.",
+		Long: `Generate shell compeletion scripts.
+Supported shell types are bash (default), zsh, fish and powershell.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			shell, _ := cmd.Flags().GetString("shell")
+			shell = strings.TrimSpace(shell)
+
+			parent := cmd.Parent()
+			switch strings.ToLower(shell) {
+			case "bash":
+				parent.GenBashCompletionV2(cfg.infos, true)
+			case "zsh":
+				parent.GenZshCompletion(cfg.infos)
+			case "fish":
+				parent.GenFishCompletion(cfg.infos, true)
+			case "powershell", "ps":
+				parent.GenPowerShellCompletion(cfg.infos)
+			default:
+				fmt.Fprintf(cfg.errs, "invalid shell type: %s\n", shell)
+			}
+		},
+	}
+
+	c.Flags().StringP("shell", "s", "bash", "Shell to generate script for.")
 	return c
 }
 
