@@ -24,6 +24,7 @@ const (
 	certkeyFlagName           = "key"
 	outputFlagName            = "output"
 	noFollowRedirectsFlagName = "no-follow-redirects"
+	aliasHeadingFlagName      = "no-heading"
 )
 
 var (

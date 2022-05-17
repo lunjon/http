@@ -10,6 +10,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Display flag: `--display=...`
 - Respect `--no-color` flag
 - `-o/--output` flag for writing output to file
+- `-n/--no-heading` flag for hiding heading when listing aliases
 
 ### Fixed
 - Missing output on error

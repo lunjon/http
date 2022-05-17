@@ -52,7 +52,7 @@ func NewAliasHandler(m AliasManager, infos, errors io.Writer) *AliasHandler {
 	}
 }
 
-func (handler *AliasHandler) listAlias() error {
+func (handler *AliasHandler) listAlias(noHeading bool) error {
 	aliases, err := handler.manager.Load()
 	if err != nil {
 		return err
@@ -66,11 +66,16 @@ func (handler *AliasHandler) listAlias() error {
 	sort.Strings(names)
 
 	taber := util.NewTaber("")
-	taber.WriteLine(format.WhiteB("Name\t"), format.WhiteB("URL"))
+
+	if !noHeading {
+		taber.WriteLine(format.WhiteB("Name\t"), format.WhiteB("URL"))
+	}
+
 	for _, name := range names {
 		taber.WriteLine(name, aliases[name])
 	}
 	fmt.Fprintln(handler.infos, taber.String())
+
 	return nil
 }
 

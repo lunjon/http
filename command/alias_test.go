@@ -56,7 +56,7 @@ func TestAliasList(t *testing.T) {
 	err := fixture.handler.setAlias("local", "http://localhost")
 	require.NoError(t, err)
 
-	err = fixture.handler.listAlias()
+	err = fixture.handler.listAlias(true)
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())

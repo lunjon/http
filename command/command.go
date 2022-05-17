@@ -276,7 +276,7 @@ Useful for local testing and debugging.`,
 
 func buildAlias(cfg *config) *cobra.Command {
 	c := &cobra.Command{
-		Use:   "alias [<name> <url>]",
+		Use:   "alias [...]",
 		Short: "List, create or remove persistant URL aliases",
 		Long: `List, create or remove persistant URL aliases.
 Valid alias commands:
@@ -290,6 +290,7 @@ or more _, letters or numbers (max size of name is 20).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.updateFrom(cmd)
 			handler := NewAliasHandler(newAliasLoader(cfg.aliasFilepath), cfg.infos, cfg.errs)
+			noHeading, _ := cmd.Flags().GetBool(aliasHeadingFlagName)
 
 			var err error
 			switch len(args) {
@@ -297,7 +298,7 @@ or more _, letters or numbers (max size of name is 20).`,
 				if r, _ := cmd.Flags().GetString("remove"); r != "" {
 					err = handler.removeAlias(r)
 				} else {
-					err = handler.listAlias()
+					err = handler.listAlias(noHeading)
 				}
 			case 2:
 				err = handler.setAlias(args[0], args[1])
@@ -313,6 +314,8 @@ or more _, letters or numbers (max size of name is 20).`,
 	}
 
 	c.Flags().StringP("remove", "r", "", "Remove alias with this name.")
+	c.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
+
 	return c
 }
 
