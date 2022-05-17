@@ -92,7 +92,7 @@ Examples:
 		Use:   "version",
 		Short: "Print version",
 		Run: func(*cobra.Command, []string) {
-			fmt.Printf("http version: %s\n", version)
+			fmt.Printf("http version: %s\n", format.WhiteB(version))
 		},
 	})
 
