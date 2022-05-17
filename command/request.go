@@ -177,10 +177,6 @@ func (handler *RequestHandler) outputResults(r *http.Response, w io.Writer) erro
 	return nil
 }
 
-func output(w io.Writer) error {
-	panic("not implemented")
-}
-
 // Get request headers passed as parameters and defaultHeaders.
 // Also sets the User-Agent header if not set by the client.
 func (handler *RequestHandler) getHeaders() (http.Header, error) {
