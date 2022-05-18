@@ -74,16 +74,17 @@ func build(version string, cfg *config) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "http",
 		Short: "http <method> <url> [options]",
-		Long: `Executes an HTTP request. Supported HTTP methods are GET, HEAD, PUT, POST, PATCH and DELETE.
-URL parameter is always required and must match something like "[https?://]host[:port][/path][?query]"
+		Long: `Executes an HTTP request. Supported HTTP methods are GET, HEAD, OPTIONS, PUT, POST, PATCH and DELETE.
+URL parameter is always required and must be a valid URL.
 
 Protocol and host of the URL can be implicit if given like [host]:port/path...
 Examples:
  * localhost/path	->	http://localhost/path
- * :1234/index		->	http://localhost:1234/index`,
+ * :1234/index		->	http://localhost:1234/index
+ * domain.com		->	https://domain.com`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if noColor, _ := cmd.Flags().GetBool(noColorFlagName); noColor {
-				format.Disable()
+				format.DisableColors()
 			}
 		},
 	}
@@ -116,10 +117,6 @@ This command requires the --body flag, which can be a string content or a file.`
 	// URL alias
 	alias := buildAlias(cfg)
 	root.AddCommand(alias)
-
-	// Gen completion scripts
-	gen := buildGen(cfg)
-	root.AddCommand(gen)
 
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
@@ -320,36 +317,6 @@ or more _, letters or numbers (max size of name is 20).`,
 	c.Flags().StringP("remove", "r", "", "Remove alias with this name.")
 	c.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
 
-	return c
-}
-
-func buildGen(cfg *config) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "gen [--shell type]",
-		Short: "Generate shell compeletion scripts.",
-		Long: `Generate shell compeletion scripts.
-Supported shell types are bash (default), zsh, fish and powershell.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			shell, _ := cmd.Flags().GetString("shell")
-			shell = strings.TrimSpace(shell)
-
-			parent := cmd.Parent()
-			switch strings.ToLower(shell) {
-			case "bash":
-				parent.GenBashCompletionV2(cfg.infos, true)
-			case "zsh":
-				parent.GenZshCompletion(cfg.infos)
-			case "fish":
-				parent.GenFishCompletion(cfg.infos, true)
-			case "powershell", "ps":
-				parent.GenPowerShellCompletion(cfg.infos)
-			default:
-				fmt.Fprintf(cfg.errs, "invalid shell type: %s\n", shell)
-			}
-		},
-	}
-
-	c.Flags().StringP("shell", "s", "bash", "Shell to generate script for.")
 	return c
 }
 

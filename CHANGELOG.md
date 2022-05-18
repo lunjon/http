@@ -11,7 +11,6 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Respect `--no-color` flag
 - `-o/--output` flag for writing output to file
 - `-n/--no-heading` flag for hiding heading when listing aliases
-- Sub-command `gen` for generating completion script for various shells
 
 ### Fixed
 - Missing output on error

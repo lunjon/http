@@ -43,7 +43,7 @@ var (
 	CyanB    StyleFunc
 )
 
-func Disable() {
+func DisableColors() {
 	WhiteB = unitFunc
 	Red = unitFunc
 	RedB = unitFunc
