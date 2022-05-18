@@ -10,7 +10,7 @@ import (
 	"github.com/lunjon/http/util"
 )
 
-var FormatComponents = []string{"status", "statuscode", "headers", "body"}
+var ResponseComponents = []string{"status", "statuscode", "headers", "body"}
 
 type ResponseFormatter interface {
 	Format(*http.Response) ([]byte, error)
@@ -21,13 +21,13 @@ type DefaultFormatter struct {
 }
 
 func NewDefaultFormatter(components []string) (*DefaultFormatter, error) {
-	if len(components) > len(FormatComponents) {
+	if len(components) > len(ResponseComponents) {
 		return nil, fmt.Errorf("invalid format specifiers: too many")
 	}
 
 	parsed := util.Map(components, strings.ToLower)
 	for _, c := range parsed {
-		if !util.Contains(FormatComponents, c) {
+		if !util.Contains(ResponseComponents, c) {
 			return nil, fmt.Errorf("invalid format specifier: %s", c)
 		}
 	}

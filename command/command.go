@@ -182,7 +182,7 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		var formatter format.ResponseFormatter
 		switch display {
 		case "all":
-			formatter, _ = format.NewDefaultFormatter(format.FormatComponents)
+			formatter, _ = format.NewDefaultFormatter(format.ResponseComponents)
 		case "", "none":
 			formatter, _ = format.NewDefaultFormatter([]string{})
 		default:
