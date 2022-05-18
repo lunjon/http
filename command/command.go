@@ -81,7 +81,12 @@ Protocol and host of the URL can be implicit if given like [host]:port/path...
 Examples:
  * localhost/path	->	http://localhost/path
  * :1234/index		->	http://localhost:1234/index
- * domain.com		->	https://domain.com`,
+ * domain.com		->	https://domain.com
+
+A request body can be specified in three ways:
+ * stdin: pipe or IO redirection
+ * --body '...': request body from a string
+ * --body file: read content from a file`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if noColor, _ := cmd.Flags().GetBool(noColorFlagName); noColor {
 				format.DisableColors()
@@ -349,7 +354,8 @@ Possible values:
   status:     response status code text
   statuscode: response status code number
   headers:    response headers
-  body:       response body`)
+  body:       response body
+`)
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
