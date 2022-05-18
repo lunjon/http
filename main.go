@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lunjon/http/command"
+	"github.com/lunjon/http/cli"
 	"github.com/lunjon/http/format"
 )
 
