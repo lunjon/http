@@ -22,6 +22,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Changed
 - Renamed client certificate flags to `--cert` and `--key`
 - `http alias` output, use table header
+- Root command starts an interactive session
 
 ## [0.11.0] - 2021-09-24
 

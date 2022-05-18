@@ -1,4 +1,4 @@
-package command
+package cli
 
 import (
 	"crypto/tls"
@@ -15,6 +15,7 @@ import (
 	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/format"
 	"github.com/lunjon/http/server"
+	"github.com/lunjon/http/tui"
 	"github.com/lunjon/http/util"
 	"github.com/spf13/cobra"
 )
@@ -73,8 +74,10 @@ func Build(version string) (*cobra.Command, error) {
 func build(version string, cfg *config) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "http",
-		Short: "http <method> <url> [options]",
-		Long: `Executes an HTTP request. Supported HTTP methods are GET, HEAD, OPTIONS, PUT, POST, PATCH and DELETE.
+		Short: "Starts an interactive session.",
+		Long: `Sends HTTP requests - using either the TUI or CLI.
+
+Supported HTTP methods are GET, HEAD, OPTIONS, PUT, POST, PATCH and DELETE.
 URL parameter is always required and must be a valid URL.
 
 Protocol and host of the URL can be implicit if given like [host]:port/path...
@@ -90,6 +93,12 @@ A request body can be specified in three ways:
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if noColor, _ := cmd.Flags().GetBool(noColorFlagName); noColor {
 				format.DisableColors()
+			}
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := tui.Start(); err != nil {
+				fmt.Fprintf(cfg.errs, "%v\n", err)
+				os.Exit(1)
 			}
 		},
 	}
@@ -270,7 +279,7 @@ Useful for local testing and debugging.`,
 
 			err := server.Serve()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
+				fmt.Fprintf(cfg.errs, "%v\n", err)
 				os.Exit(1)
 			}
 		},
