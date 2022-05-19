@@ -2,9 +2,13 @@ package tui
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/lunjon/http/client"
+	"github.com/lunjon/http/logging"
 )
 
 type urlModel struct {
@@ -38,7 +42,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			url := m.input.Value()
-			fmt.Println(url)
+			send(m.method, url)
 			return m, tea.Quit
 		}
 	case error:
@@ -55,4 +59,25 @@ func (m urlModel) View() string {
 	s := fmt.Sprintf("Method: %s\n\n", m.method)
 	s += fmt.Sprintf("Enter URL%s\n", m.input.View())
 	return s + "\n\nPress q to quit.\n"
+}
+
+func send(method, url string) {
+	logger := logging.NewSilentLogger()
+	httpClient := client.NewClient(&http.Client{}, logger, logger)
+	u, err := client.ParseURL(url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req, err := httpClient.BuildRequest(method, u, nil, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := httpClient.Send(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(res.Status)
 }
