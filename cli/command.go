@@ -96,6 +96,8 @@ A request body can be specified in three ways:
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("%s This is highly experimental.\n\n", format.WhiteB("NOTE!"))
+
 			if err := tui.Start(); err != nil {
 				fmt.Fprintf(cfg.errs, "%v\n", err)
 				os.Exit(1)

@@ -8,12 +8,17 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/client"
+	"github.com/lunjon/http/complete"
 	"github.com/lunjon/http/logging"
 )
 
+var exampleURLs = []string{"http://localhost", "https://golang.org"}
+
 type urlModel struct {
-	method string
-	input  textinput.Model
+	method  string
+	input   textinput.Model
+	urls    []string
+	matches []string
 }
 
 func newURLModel(method string) urlModel {
@@ -24,8 +29,10 @@ func newURLModel(method string) urlModel {
 	input.Width = 50
 
 	return urlModel{
-		method: method,
-		input:  input,
+		method:  method,
+		input:   input,
+		urls:    exampleURLs,
+		matches: exampleURLs,
 	}
 }
 
@@ -40,6 +47,12 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
 
+		case "tab":
+			text, matches := complete.Complete(m.input.Value(), m.urls)
+			m.input.SetValue(text)
+			m.input.SetCursor(len(text))
+			m.matches = matches
+
 		case "enter":
 			url := m.input.Value()
 			send(m.method, url)
@@ -52,12 +65,18 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
+	m.matches = complete.Matches(m.input.Value(), m.urls)
+
 	return m, cmd
 }
 
 func (m urlModel) View() string {
 	s := fmt.Sprintf("Method: %s\n\n", m.method)
-	s += fmt.Sprintf("Enter URL%s\n", m.input.View())
+	s += fmt.Sprintf("URL%s\n", m.input.View())
+	for _, u := range m.matches {
+		s += fmt.Sprintf("  %s\n", u)
+	}
+
 	return s + "\n\nPress q to quit.\n"
 }
 

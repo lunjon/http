@@ -1,3 +1,29 @@
+/*
+tui -- module responsible for everything about the text user interface.
+
+Vision:
+ - intuitive interface for making requests
+ - steps
+
+How it works
+============
+The user is taken through a number of steps when creating a request:
+
+	Method  --->  URL  ---> [Headers] ---> [Body]
+
+Steps:
+	Method: select HTTP method from a list
+		todo:	* add text input field with search
+	URL: enter the URL
+		todo:	* allow auto completion from aliases
+	Headers: add headers
+		todo:	* auto completion for common/known headers
+				* auto-completion for the values as well
+
+At any point the user can pres <BUTTON> to select client options, such as:
+ - timeout
+ - certificate
+*/
 package tui
 
 import (
