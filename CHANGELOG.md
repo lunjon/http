@@ -14,6 +14,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Fixed
 - Missing output on error
+- Remove debug print when configuring redirects
 
 ### Removed
 - Brief output: `--brief`

@@ -163,7 +163,6 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 	noFollowRedirects, _ := cmd.Flags().GetBool(noFollowRedirectsFlagName)
 	var redirect checkRedirectFunc = nil
 	if noFollowRedirects {
-		fmt.Println("Setting custom redirect")
 		redirect = func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
