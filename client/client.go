@@ -15,15 +15,23 @@ import (
 	"github.com/lunjon/http/util"
 )
 
+func init() {
+	supportedMethods = make(map[string]bool)
+	for _, m := range SupportedMethods {
+		supportedMethods[m] = true
+	}
+}
+
 var (
-	supportedMethods = map[string]bool{
-		http.MethodGet:     true,
-		http.MethodHead:    true,
-		http.MethodOptions: true,
-		http.MethodPost:    true,
-		http.MethodPatch:   true,
-		http.MethodPut:     true,
-		http.MethodDelete:  true,
+	supportedMethods = map[string]bool{}
+	SupportedMethods = []string{
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPost,
+		http.MethodPatch,
+		http.MethodPut,
+		http.MethodDelete,
 	}
 )
 
