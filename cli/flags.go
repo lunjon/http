@@ -14,7 +14,6 @@ const (
 	awsRegionFlagName         = "aws-region"
 	bodyFlagName              = "body"
 	displayFlagName           = "display"
-	noColorFlagName           = "no-color"
 	failFlagName              = "fail"
 	detailsFlagName           = "details"
 	timeoutFlagName           = "timeout"

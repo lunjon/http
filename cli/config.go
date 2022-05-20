@@ -13,7 +13,6 @@ import (
 type config struct {
 	version        string
 	verbose        bool
-	color          bool
 	trace          bool
 	fail           bool
 	repeat         int
@@ -31,7 +30,6 @@ func newDefaultConfig(version string) (*config, error) {
 	return &config{
 		version:        version,
 		repeat:         1,
-		color:          true,
 		defaultHeaders: os.Getenv(defaultHeadersEnv),
 		aliasFilepath:  f,
 		infos:          os.Stdout,
@@ -48,12 +46,6 @@ func (c *config) updateFrom(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
-	noColor, err := flags.GetBool(noColorFlagName)
-	if err != nil {
-		return err
-	}
-	c.color = !noColor
 
 	c.trace, err = flags.GetBool(traceFlagName)
 	if err != nil {

@@ -127,7 +127,6 @@ A request body can be specified in three ways:
 
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
-	root.PersistentFlags().Bool(noColorFlagName, false, "Do not use colored output.")
 	return root
 }
 
