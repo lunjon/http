@@ -37,24 +37,41 @@ func (m urlModel) Init() tea.Cmd {
 }
 
 func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	m.input, cmd = m.input.Update(msg)
+
+	matches := complete.Matches(m.input.Value(), m.urls)
+
+	// If we have one match and it is equal to the input,
+	// render an empty suggestion list
+	if len(matches) == 1 && m.input.Value() == matches[0] {
+		m.matches = []string{}
+	} else {
+		m.matches = matches
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
-			text, matches := complete.Complete(m.input.Value(), m.urls)
+			var text string
+			matches := []string{}
+
+			if len(m.matches) == 1 {
+				// We have a single match, use that
+				text = m.matches[0]
+			} else {
+				text, matches = complete.Complete(m.input.Value(), m.urls)
+			}
+
 			m.input.SetValue(text)
 			m.input.SetCursor(len(text))
 			m.matches = matches
-
 		case "enter":
 			url := m.input.Value()
 			return initialRequestModel(m.method, url), nil
 		}
 	}
-
-	var cmd tea.Cmd
-	m.input, cmd = m.input.Update(msg)
-	m.matches = complete.Matches(m.input.Value(), m.urls)
 
 	return m, cmd
 }
