@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lunjon/http/format"
-	"github.com/lunjon/http/mock"
+	"github.com/lunjon/http/internal/format"
+	"github.com/lunjon/http/internal/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

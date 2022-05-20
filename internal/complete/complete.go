@@ -8,6 +8,11 @@ type match struct {
 }
 
 func Complete(text string, items []string) (string, []string) {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return text, items
+	}
+
 	matches := []string{}
 	textLower := strings.ToLower(text)
 

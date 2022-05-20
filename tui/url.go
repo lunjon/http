@@ -5,11 +5,11 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/lunjon/http/complete"
+	"github.com/lunjon/http/internal/complete"
 )
 
 const (
-	listLimit = 5
+	listLimit = 10
 )
 
 type urlModel struct {
@@ -71,7 +71,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.matches = matches
 		case "enter":
 			url := m.input.Value()
-			return initialRequestModel(m.method, url), nil
+			return initialHeadersModel(m.method, url), nil
 		}
 	}
 
@@ -79,7 +79,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m urlModel) View() string {
-	s := fmt.Sprintf("Method: %s\n\n", m.method)
+	s := fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method))
 	s += fmt.Sprintf("URL: %s\n", m.input.View())
 
 	// Only render top matches

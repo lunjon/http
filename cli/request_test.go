@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lunjon/http/client"
-	"github.com/lunjon/http/logging"
-	"github.com/lunjon/http/mock"
+	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/logging"
+	"github.com/lunjon/http/internal/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )

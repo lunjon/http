@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 	testServer = httptest.NewServer(&serverHandler{})
 	if _, err := os.Stat(testdir); os.IsNotExist(err) {
 		err := os.MkdirAll(testdir, 0700)
-		checkErr(err)
+		checkErr(err, os.Stderr)
 	}
 
 	status := m.Run()

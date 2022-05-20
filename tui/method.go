@@ -3,33 +3,21 @@ package tui
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/lunjon/http/client"
-	"github.com/lunjon/http/complete"
+	"github.com/lunjon/http/internal/client"
 )
 
 type methodModel struct {
 	cursor  int
 	methods []string
-	matches []string
 	method  Option[string]
-	input   textinput.Model
 	urls    []string
 }
 
 func initialMethodModel(urls []string) methodModel {
-	input := textinput.NewModel()
-	input.Prompt = ""
-	input.Focus()
-	input.CharLimit = 10
-	input.Width = 10
-
 	return methodModel{
 		methods: client.SupportedMethods,
-		matches: client.SupportedMethods,
 		method:  Option[string]{},
-		input:   input,
 		urls:    urls,
 	}
 }
@@ -42,42 +30,30 @@ func (m methodModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
 		case "up", "k":
 			if m.cursor > 0 {
 				m.cursor--
 			}
 		case "down", "j":
-			if m.cursor < len(m.matches)-1 {
+			if m.cursor < len(m.methods)-1 {
 				m.cursor++
 			}
 		case "enter", " ":
-			selectedMethod := m.matches[m.cursor]
+			selectedMethod := m.methods[m.cursor]
 			return initialURLModel(selectedMethod, m.urls), nil
 		}
 	}
-
-	var cmd tea.Cmd
-	m.input, cmd = m.input.Update(msg)
-
-	// Update list of matching methods
-	m.matches = complete.Matches(m.input.Value(), m.methods)
-	if m.cursor > len(m.matches)-1 {
-		m.cursor = len(m.matches) - 1
-	}
-
-	return m, cmd
+	return m, nil
 }
 
 func (m methodModel) View() string {
-	s := fmt.Sprintf("Method: %s\n\n", m.input.View())
+	s := "Method: \n"
 
-	for i, choice := range m.matches {
+	for i, choice := range m.methods {
 		cursor := " "
 		if m.cursor == i {
-			cursor = "*"
-			choice = styler.WhiteB(choice)
+			cursor = styler.CyanB(">")
+			choice = styler.CyanB(choice)
 		}
 
 		s += fmt.Sprintf("%s %s\n", cursor, choice)

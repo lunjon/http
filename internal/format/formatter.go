@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lunjon/http/util"
+	"github.com/lunjon/http/internal/util"
 )
 
 var ResponseComponents = []string{"status", "statuscode", "headers", "body"}

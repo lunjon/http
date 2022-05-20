@@ -3,22 +3,26 @@ package tui
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/lunjon/http/internal/util"
 )
 
 type response *http.Response
 
 type requestModel struct {
-	method string
-	url    string
-	res    response
+	method  string
+	url     string
+	headers http.Header
+	res     response
 }
 
-func initialRequestModel(method, url string) requestModel {
+func initialRequestModel(method, url string, headers http.Header) requestModel {
 	return requestModel{
-		method: method,
-		url:    url,
+		method:  method,
+		url:     url,
+		headers: headers,
 	}
 }
 
@@ -30,8 +34,6 @@ func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "q":
-			return m, tea.Quit
 		case "enter":
 			return m, tea.Quit // TODO: send request
 		}
@@ -44,12 +46,24 @@ func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m requestModel) View() string {
-	s := fmt.Sprintf("Method: %s\n", styler.WhiteB(m.method))
-	s += fmt.Sprintf("URL:    %s\n\n", styler.WhiteB(m.url))
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method)))
+	b.WriteString(fmt.Sprintf("URL:     %s\n", styler.WhiteB(m.url)))
 
-	if m.res == nil {
-		s += "Send request?"
+	if len(m.headers) > 0 {
+		b.WriteString("Headers:\n")
+		taber := util.NewTaber("  - ")
+		for name, values := range m.headers {
+			key := headerKeyStyle.Render(name + ":")
+			value := headerValueStyle.Render(strings.Join(values, "; "))
+			taber.WriteLine(key, value)
+		}
+		b.WriteString(taber.String())
+	} else {
+		b.WriteString("Headers: ")
+		b.WriteString(styler.WhiteB("[]"))
 	}
 
-	return s
+	b.WriteString("\nSend request?")
+	return b.String()
 }

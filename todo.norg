@@ -1,6 +1,7 @@
 * HTTP CLI
 ** General
    - [x] Use lipgloss for styling: github.com/charmbracelet/lipgloss
+   - [x] Restructure packages for better organization
    - [ ] Release v0.12.0
    - [ ] Request history
    - [ ] Configuration file? viper may be interesting: https://github.com/spf13/viper

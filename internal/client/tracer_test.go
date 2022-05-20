@@ -5,7 +5,7 @@ import (
 	"net/http/httptrace"
 	"testing"
 
-	"github.com/lunjon/http/logging"
+	"github.com/lunjon/http/internal/logging"
 	"github.com/stretchr/testify/require"
 )
 

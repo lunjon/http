@@ -1,0 +1,255 @@
+package tui
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/complete"
+	"github.com/lunjon/http/internal/util"
+)
+
+var (
+	focusedStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	blurredStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	cursorStyle      = focusedStyle.Copy()
+	noStyle          = lipgloss.NewStyle()
+	headerKeyStyle   = lipgloss.NewStyle().Bold(true)
+	headerValueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+)
+
+type suggestions struct {
+	indent string
+	values []string
+}
+
+type headersModel struct {
+	method string
+	url    string
+
+	buttonFocus bool
+	nameInput   textinput.Model
+	valueInput  textinput.Model
+	headers     http.Header
+	headerNames []string // Used to preserve order
+
+	suggest Option[suggestions]
+}
+
+func newInput(prompt string, limit int) textinput.Model {
+	input := textinput.New()
+	input.Prompt = prompt
+	input.CursorStyle = cursorStyle
+	input.CharLimit = limit
+	return input
+}
+
+func initialHeadersModel(method, url string) headersModel {
+	name := newInput("Name: ", 64)
+	name.Focus()
+	name.PromptStyle = focusedStyle
+	name.TextStyle = focusedStyle
+	name.Width = 24
+
+	value := newInput("Value: ", 128)
+
+	return headersModel{
+		method:     method,
+		url:        url,
+		nameInput:  name,
+		valueInput: value,
+		headers:    http.Header{},
+		suggest:    Option[suggestions]{},
+	}
+}
+
+func (m headersModel) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+func (m *headersModel) addHeader(name, value string) {
+	if v := m.headers.Get(name); v == "" {
+		k := http.CanonicalHeaderKey(name)
+		m.headerNames = append(m.headerNames, k)
+	}
+	m.headers.Add(name, value)
+}
+
+func (m *headersModel) focusNameInput() tea.Cmd {
+	cmd := m.nameInput.Focus()
+	m.nameInput.PromptStyle = focusedStyle
+	m.nameInput.TextStyle = focusedStyle
+
+	m.valueInput.Blur()
+	m.valueInput.PromptStyle = noStyle
+	m.valueInput.TextStyle = noStyle
+	return cmd
+}
+
+func (m *headersModel) focusValueInput() tea.Cmd {
+	m.nameInput.Blur()
+	m.nameInput.PromptStyle = noStyle
+	m.nameInput.TextStyle = noStyle
+
+	cmd := m.valueInput.Focus()
+	m.valueInput.PromptStyle = focusedStyle
+	m.valueInput.TextStyle = focusedStyle
+	return cmd
+}
+
+func (m *headersModel) focusButton() {
+	m.nameInput.Blur()
+	m.nameInput.PromptStyle = noStyle
+	m.nameInput.TextStyle = noStyle
+
+	m.valueInput.Blur()
+	m.valueInput.PromptStyle = noStyle
+	m.valueInput.TextStyle = noStyle
+
+	m.buttonFocus = true
+}
+
+func (m *headersModel) setSuggestions(indent string, values []string) {
+	opt := Option[suggestions]{}
+	m.suggest = opt.Set(suggestions{indent, values})
+}
+
+func (m *headersModel) unsetSuggestions() {
+	m.suggest = Option[suggestions]{}
+}
+
+func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "tab":
+			if m.nameInput.Focused() {
+				knownHeaderNames := []string{}
+				for n := range client.KnownHTTPHeaders {
+					knownHeaderNames = append(knownHeaderNames, n)
+				}
+
+				prefix, matches := complete.Complete(m.nameInput.Value(), knownHeaderNames)
+				if prefix != "" && len(matches) > 0 {
+					if len(matches) > 1 {
+						indent := strings.Repeat(" ", len(" Name: "))
+						m.setSuggestions(indent, matches)
+					} else {
+						m.unsetSuggestions()
+					}
+					m.nameInput.SetValue(prefix)
+					m.nameInput.SetCursor(len(prefix))
+				}
+			} else if m.valueInput.Focused() {
+				headerName := strings.TrimSpace(m.nameInput.Value())
+				if knownValues, ok := client.KnownHTTPHeaders[headerName]; ok {
+					prefix, matches := complete.Complete(m.valueInput.Value(), knownValues)
+					if prefix != "" && len(matches) > 0 {
+						if len(matches) > 1 {
+							indent := strings.Repeat(" ", len(" Name: ")+m.nameInput.Width)
+							m.setSuggestions(indent, matches)
+						} else {
+							m.unsetSuggestions()
+						}
+						m.valueInput.SetValue(prefix)
+						m.valueInput.SetCursor(len(prefix))
+					}
+				}
+			}
+		case "enter":
+			if m.valueInput.Focused() {
+				name := m.nameInput.Value()
+				value := m.valueInput.Value()
+				name = strings.TrimSpace(name)
+				value = strings.TrimSpace(value)
+				if name != "" && value != "" {
+					m.unsetSuggestions()
+					m.addHeader(name, value)
+					m.nameInput.SetValue("")
+					m.valueInput.SetValue("")
+
+					cmd := m.focusNameInput()
+					return m, cmd
+				}
+			} else if m.buttonFocus {
+				// Switch to next model
+				return initialRequestModel(m.method, m.url, m.headers), nil
+			}
+
+		case "up":
+			if m.buttonFocus {
+				cmd := m.focusNameInput()
+				m.buttonFocus = false
+				return m, cmd
+			}
+		case "down":
+			if !m.buttonFocus {
+				m.unsetSuggestions()
+				m.focusButton()
+				return m, nil
+			}
+		case "right":
+			if m.nameInput.Focused() {
+				m.unsetSuggestions()
+				cmd := m.focusValueInput()
+				return m, cmd
+			}
+		case "left":
+			if m.valueInput.Focused() {
+				m.unsetSuggestions()
+				cmd := m.focusNameInput()
+				return m, cmd
+			}
+		}
+	}
+
+	var cmd1, cmd2 tea.Cmd
+
+	// Handle character input and blinking
+	m.nameInput, cmd1 = m.nameInput.Update(msg)
+	m.valueInput, cmd2 = m.valueInput.Update(msg)
+	return m, tea.Batch(cmd1, cmd2)
+}
+
+func (m headersModel) View() string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method)))
+	b.WriteString(fmt.Sprintf("URL:     %s\n", styler.WhiteB(m.url)))
+	b.WriteString("Headers:\n")
+
+	b.WriteString(" ")
+	b.WriteString(m.nameInput.View())
+	b.WriteString(m.valueInput.View())
+	b.WriteString("\n\n")
+
+	taber := util.NewTaber("  - ")
+	for _, name := range m.headerNames {
+		key := headerKeyStyle.Render(name + ":")
+		value := headerValueStyle.Render(strings.Join(m.headers.Values(name), "; "))
+		taber.WriteLine(key, value)
+	}
+	tabs := strings.TrimSpace(taber.String())
+	b.WriteString(tabs)
+
+	if m.suggest.IsSome() {
+		sugg := m.suggest.Value()
+		for _, v := range sugg.values {
+			fmt.Fprintf(&b, "%s%s\n", sugg.indent, v)
+		}
+	}
+
+	b.WriteString("\n\n")
+
+	button := " [ done ]"
+	if m.buttonFocus {
+		button = focusedStyle.Render(button)
+	}
+
+	b.WriteString(button)
+	b.WriteString("\n")
+	return b.String()
+}

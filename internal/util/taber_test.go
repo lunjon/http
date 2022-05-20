@@ -1,15 +1,14 @@
-package util_test
+package util
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/lunjon/http/util"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTaber(t *testing.T) {
-	taber := util.NewTaber("")
+	taber := NewTaber("")
 	taber.Writef("%s:\n", "header")
 	taber.WriteLine("one", "two")
 

@@ -10,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lunjon/http/client"
-	"github.com/lunjon/http/format"
-	"github.com/lunjon/http/util"
+	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/format"
+	"github.com/lunjon/http/internal/util"
 )
 
 var (

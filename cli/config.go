@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/lunjon/http/logging"
+	"github.com/lunjon/http/internal/logging"
 	"github.com/spf13/cobra"
 )
 

@@ -12,7 +12,7 @@ import (
 	"net/http/httptrace"
 	"strings"
 
-	"github.com/lunjon/http/util"
+	"github.com/lunjon/http/internal/util"
 )
 
 func init() {
@@ -26,12 +26,12 @@ var (
 	supportedMethods = map[string]bool{}
 	SupportedMethods = []string{
 		http.MethodGet,
-		http.MethodHead,
-		http.MethodOptions,
 		http.MethodPost,
-		http.MethodPatch,
 		http.MethodPut,
 		http.MethodDelete,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPatch,
 	}
 )
 

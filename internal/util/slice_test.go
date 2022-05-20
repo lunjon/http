@@ -1,10 +1,9 @@
-package util_test
+package util
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/lunjon/http/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +21,7 @@ func TestMap(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run("", func(t *testing.T) {
-			actual := util.Map(test.in, test.f)
+			actual := Map(test.in, test.f)
 			require.Equal(t, actual, test.out)
 		})
 	}
@@ -40,7 +39,7 @@ func TestFilter(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run("", func(t *testing.T) {
-			actual := util.Filter(test.in, test.f)
+			actual := Filter(test.in, test.f)
 			require.Equal(t, actual, test.out)
 		})
 	}

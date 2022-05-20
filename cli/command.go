@@ -2,8 +2,8 @@ package cli
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -12,38 +12,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/lunjon/http/alias"
-	"github.com/lunjon/http/client"
-	"github.com/lunjon/http/format"
-	"github.com/lunjon/http/server"
+	"github.com/lunjon/http/internal/alias"
+	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/format"
+	"github.com/lunjon/http/internal/server"
+	"github.com/lunjon/http/internal/util"
 	"github.com/lunjon/http/tui"
-	"github.com/lunjon/http/util"
 	"github.com/spf13/cobra"
 )
 
 type FailFunc func(status int)
 type runFunc func(*cobra.Command, []string)
 type checkRedirectFunc func(*http.Request, []*http.Request) error
-
-type execError struct {
-	err       error
-	showUsage bool
-}
-
-func newUserError(err error) *execError {
-	return &execError{
-		err:       err,
-		showUsage: true,
-	}
-}
-
-func (e *execError) Error() string {
-	return e.err.Error()
-}
-
-func (e *execError) Unwrap() error {
-	return e.err
-}
 
 var (
 	noConfigure   = func(*cobra.Command) {}
@@ -55,6 +35,7 @@ var (
 			"Request body to use. Can be string content or a filename.",
 		)
 	}
+	styler = format.NewStyler()
 )
 
 const (
@@ -94,20 +75,15 @@ A request body can be specified in three ways:
 		Run: func(cmd *cobra.Command, args []string) {
 			manager := alias.NewManager(cfg.aliasFilepath)
 			aliases, err := manager.Load()
-			if err != nil {
-				fmt.Fprintf(cfg.errs, "%v\n", err)
-				os.Exit(1)
-			}
+			checkErr(err, cfg.errs)
 
 			urls := []string{}
 			for _, url := range aliases {
 				urls = append(urls, url)
 			}
 
-			if err := tui.Start(urls); err != nil {
-				fmt.Fprintf(cfg.errs, "%v\n", err)
-				os.Exit(1)
-			}
+			err = tui.Start(urls)
+			checkErr(err, cfg.errs)
 		},
 	}
 
@@ -192,7 +168,7 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		traceLogger := cfg.getTraceLogger()
 
 		httpClient, err := buildHTTPClient(cmd)
-		checkInitError(err, cmd)
+		checkErr(err, cfg.errs)
 
 		cl := client.NewClient(httpClient, logger, traceLogger)
 		display, _ := cmd.Flags().GetString(displayFlagName)
@@ -207,7 +183,7 @@ func buildRequestRun(method string, cfg *config) runFunc {
 			components := strings.Split(strings.TrimSpace(display), ",")
 			components = util.Map(components, strings.TrimSpace)
 			formatter, err = format.NewResponseFormatter(format.NewStyler(), components)
-			checkErr(err)
+			checkErr(err, cfg.errs)
 		}
 
 		var signer client.RequestSigner
@@ -238,10 +214,6 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		err = handler.handleRequest(method, url, bodyFlag)
 		if err != nil {
 			fmt.Fprintf(cfg.errs, "%s\n", err)
-			var execErr *execError
-			if errors.As(err, &execErr) && execErr.showUsage {
-				cmd.Usage()
-			}
 			os.Exit(1)
 		}
 	}
@@ -378,11 +350,11 @@ Possible values:
 	cmd.Flags().Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 }
 
-func checkErr(err error) {
+func checkErr(err error, output io.Writer) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "%v\n", err)
+	fmt.Fprintf(output, "%s: %v\n", styler.RedB("error"), err)
 	os.Exit(1)
 }
 
@@ -390,7 +362,7 @@ func checkInitError(err error, cmd *cobra.Command) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "%v\n\n", err)
+	fmt.Fprintf(os.Stderr, "%s: %v\n\n", styler.RedB("error"), err)
 	cmd.Usage()
 	os.Exit(1)
 }

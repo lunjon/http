@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/lunjon/http/cli"
-	"github.com/lunjon/http/format"
+	"github.com/lunjon/http/internal/format"
 )
 
 func main() {

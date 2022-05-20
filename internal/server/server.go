@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lunjon/http/format"
+	"github.com/lunjon/http/internal/format"
 )
 
 type Server struct {

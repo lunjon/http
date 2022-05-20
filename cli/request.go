@@ -14,10 +14,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/lunjon/http/alias"
-	"github.com/lunjon/http/client"
-	"github.com/lunjon/http/format"
-	"github.com/lunjon/http/util"
+	"github.com/lunjon/http/internal/alias"
+	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/format"
+	"github.com/lunjon/http/internal/util"
 )
 
 var (
@@ -93,12 +93,12 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 
 	u, err := client.ParseURL(url, alias)
 	if err != nil {
-		return newUserError(err)
+		return err
 	}
 
 	headers, err := handler.getHeaders()
 	if err != nil {
-		return newUserError(err)
+		return err
 	}
 
 	setContentType := headers.Get(contentTypeHeader) == "" && body.mime != client.MIMETypeUnknown
@@ -120,7 +120,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 	for i := 0; i < handler.repeat; i++ {
 		req, err := handler.buildRequest(method, u, body.bytes, headers)
 		if err != nil {
-			return newUserError(err)
+			return err
 		}
 
 		res, err := handler.client.Send(req)
