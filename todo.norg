@@ -6,7 +6,7 @@
    - [ ] Configuration file? viper may be interesting: https://github.com/spf13/viper
 
 ** TUI
-   - [ ] URL suggestions from alias file
+   - [x] URL suggestions from alias file
    - [ ] Headers
    - [ ] Body
    - [ ] Options

@@ -9,6 +9,7 @@ import (
 
 	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/logging"
+	"github.com/lunjon/http/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +55,7 @@ func setupRequestTest(t *testing.T) *fixture {
 
 	handler := newHandler(
 		c,
-		newAliasManagerMock(),
+		mock.NewManagerMock(),
 		fm,
 		sm,
 		logger,

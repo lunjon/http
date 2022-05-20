@@ -62,13 +62,13 @@ func (o Option[T]) Set(value T) Option[T] {
 	}
 }
 
-func Start() error {
-	p := tea.NewProgram(initialModel())
+func Start(urls []string) error {
+	p := tea.NewProgram(initialModel(urls))
 	return p.Start()
 }
 
-func initialModel() root {
-	inner := initialMethodModel()
+func initialModel(urls []string) root {
+	inner := initialMethodModel(urls)
 	return root{
 		inner: inner,
 	}

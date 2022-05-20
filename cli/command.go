@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/lunjon/http/alias"
 	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/format"
 	"github.com/lunjon/http/server"
@@ -91,7 +92,19 @@ A request body can be specified in three ways:
  * --body '...': request body from a string
  * --body file: read content from a file`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := tui.Start(); err != nil {
+			manager := alias.NewManager(cfg.aliasFilepath)
+			aliases, err := manager.Load()
+			if err != nil {
+				fmt.Fprintf(cfg.errs, "%v\n", err)
+				os.Exit(1)
+			}
+
+			urls := []string{}
+			for _, url := range aliases {
+				urls = append(urls, url)
+			}
+
+			if err := tui.Start(urls); err != nil {
 				fmt.Fprintf(cfg.errs, "%v\n", err)
 				os.Exit(1)
 			}
@@ -208,7 +221,7 @@ func buildRequestRun(method string, cfg *config) runFunc {
 			signer = client.DefaultSigner{}
 		}
 
-		aliasManager := newAliasLoader(cfg.aliasFilepath)
+		aliasManager := alias.NewManager(cfg.aliasFilepath)
 
 		handler := newHandler(
 			cl,
@@ -295,19 +308,19 @@ it must begin with _, a small or capital letter followed by zero
 or more _, letters or numbers (max size of name is 20).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.updateFrom(cmd)
-			handler := NewAliasHandler(newAliasLoader(cfg.aliasFilepath), format.NewStyler(), cfg.infos, cfg.errs)
+			handler := alias.NewHandler(alias.NewManager(cfg.aliasFilepath), format.NewStyler(), cfg.infos, cfg.errs)
 			noHeading, _ := cmd.Flags().GetBool(aliasHeadingFlagName)
 
 			var err error
 			switch len(args) {
 			case 0:
 				if r, _ := cmd.Flags().GetString("remove"); r != "" {
-					err = handler.removeAlias(r)
+					err = handler.Remove(r)
 				} else {
-					err = handler.listAlias(noHeading)
+					err = handler.List(noHeading)
 				}
 			case 2:
-				err = handler.setAlias(args[0], args[1])
+				err = handler.Set(args[0], args[1])
 			default:
 				err = fmt.Errorf("unknown number of arguments")
 			}

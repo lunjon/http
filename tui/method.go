@@ -15,9 +15,10 @@ type methodModel struct {
 	matches []string
 	method  Option[string]
 	input   textinput.Model
+	urls    []string
 }
 
-func initialMethodModel() methodModel {
+func initialMethodModel(urls []string) methodModel {
 	input := textinput.NewModel()
 	input.Prompt = ""
 	input.Focus()
@@ -29,6 +30,7 @@ func initialMethodModel() methodModel {
 		matches: client.SupportedMethods,
 		method:  Option[string]{},
 		input:   input,
+		urls:    urls,
 	}
 }
 
@@ -52,7 +54,7 @@ func (m methodModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter", " ":
 			selectedMethod := m.matches[m.cursor]
-			return initialURLModel(selectedMethod), nil
+			return initialURLModel(selectedMethod, m.urls), nil
 		}
 	}
 

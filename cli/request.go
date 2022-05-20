@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/lunjon/http/alias"
 	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/format"
 	"github.com/lunjon/http/util"
@@ -33,7 +34,7 @@ const (
 // RequestHandler handles all commands.
 type RequestHandler struct {
 	client         *client.Client
-	aliasManager   AliasManager
+	aliasManager   alias.Manager
 	formatter      format.ResponseFormatter
 	signer         client.RequestSigner
 	infos          io.Writer
@@ -50,7 +51,7 @@ type RequestHandler struct {
 
 func newHandler(
 	client *client.Client,
-	aliasManager AliasManager,
+	aliasManager alias.Manager,
 	formatter format.ResponseFormatter,
 	signer client.RequestSigner,
 	logger *log.Logger,

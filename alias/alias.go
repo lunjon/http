@@ -1,4 +1,4 @@
-package cli
+package alias
 
 import (
 	"encoding/json"
@@ -19,25 +19,19 @@ var (
 	aliasPattern = regexp.MustCompile(`^[a-zA-Z_]\w{0,19}$`)
 )
 
-type AliasManager interface {
+type Manager interface {
 	Load() (map[string]string, error)
 	Save(map[string]string) error
 }
 
-// An implementation of AliasLoader that loads from the configured filepath.
-type fileAliasManager struct {
-	aliases  map[string]string
-	filepath string
-}
-
-func newAliasLoader(filepath string) *fileAliasManager {
+func NewManager(filepath string) *fileAliasManager {
 	return &fileAliasManager{
 		filepath: filepath,
 	}
 }
 
-type AliasHandler struct {
-	manager AliasManager
+type Handler struct {
+	manager Manager
 	// Output of infos
 	infos io.Writer
 	// Output of errors
@@ -45,15 +39,15 @@ type AliasHandler struct {
 	styler *format.Styler
 }
 
-func NewAliasHandler(m AliasManager, styler *format.Styler, infos, errors io.Writer) *AliasHandler {
-	return &AliasHandler{
+func NewHandler(m Manager, styler *format.Styler, infos, errors io.Writer) *Handler {
+	return &Handler{
 		manager: m,
 		infos:   infos,
 		errors:  errors,
 	}
 }
 
-func (handler *AliasHandler) listAlias(noHeading bool) error {
+func (handler *Handler) List(noHeading bool) error {
 	aliases, err := handler.manager.Load()
 	if err != nil {
 		return err
@@ -80,7 +74,7 @@ func (handler *AliasHandler) listAlias(noHeading bool) error {
 	return nil
 }
 
-func (handler *AliasHandler) removeAlias(name string) error {
+func (handler *Handler) Remove(name string) error {
 	name = strings.TrimSpace(name)
 	if !aliasPattern.MatchString(name) {
 		return fmt.Errorf("impossible alias name: %s", name)
@@ -105,7 +99,7 @@ func (handler *AliasHandler) removeAlias(name string) error {
 	return nil
 }
 
-func (handler *AliasHandler) setAlias(alias, url string) error {
+func (handler *Handler) Set(alias, url string) error {
 	if !aliasPattern.MatchString(alias) {
 		return fmt.Errorf("invalid alias name: %s", alias)
 	}
@@ -122,6 +116,12 @@ func (handler *AliasHandler) setAlias(alias, url string) error {
 
 	aliases[alias] = u.String()
 	return handler.manager.Save(aliases)
+}
+
+// An implementation of AliasLoader that loads from the configured filepath.
+type fileAliasManager struct {
+	aliases  map[string]string
+	filepath string
 }
 
 func (f *fileAliasManager) Load() (map[string]string, error) {

@@ -1,39 +1,38 @@
-package cli
+package alias
 
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"strings"
 	"testing"
 
 	"github.com/lunjon/http/format"
+	"github.com/lunjon/http/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-type aliasManagerMock struct {
-	aliases map[string]string
-}
+var (
+	testdir           = "test-http"
+	testAliasFilepath = path.Join(testdir, "aliases.json")
+)
 
-func newAliasManagerMock() *aliasManagerMock {
-	return &aliasManagerMock{make(map[string]string)}
-}
+func TestMain(m *testing.M) {
+	if _, err := os.Stat(testdir); os.IsNotExist(err) {
+		err := os.MkdirAll(testdir, 0700)
+		if err != nil {
+			panic(err)
+		}
+	}
 
-func (m *aliasManagerMock) set(name, value string) {
-	m.aliases[name] = value
-}
-
-func (m *aliasManagerMock) Load() (map[string]string, error) {
-	return m.aliases, nil
-}
-
-func (m *aliasManagerMock) Save(aliases map[string]string) error {
-	m.aliases = aliases
-	return nil
+	status := m.Run()
+	os.RemoveAll(testdir)
+	os.Exit(status)
 }
 
 type aliasTestFixture struct {
-	handler *AliasHandler
+	handler *Handler
 	infos   *strings.Builder
 	errors  *strings.Builder
 }
@@ -42,8 +41,8 @@ func setupAliasHandlerTest(t *testing.T) *aliasTestFixture {
 	infos := &strings.Builder{}
 	errors := &strings.Builder{}
 
-	m := newAliasManagerMock()
-	h := NewAliasHandler(m, format.NewStyler(), infos, errors)
+	m := mock.NewManagerMock()
+	h := NewHandler(m, format.NewStyler(), infos, errors)
 
 	return &aliasTestFixture{
 		handler: h,
@@ -54,10 +53,10 @@ func setupAliasHandlerTest(t *testing.T) *aliasTestFixture {
 
 func TestAliasList(t *testing.T) {
 	fixture := setupAliasHandlerTest(t)
-	err := fixture.handler.setAlias("local", "http://localhost")
+	err := fixture.handler.Set("local", "http://localhost")
 	require.NoError(t, err)
 
-	err = fixture.handler.listAlias(true)
+	err = fixture.handler.List(true)
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
@@ -65,7 +64,7 @@ func TestAliasList(t *testing.T) {
 
 func TestAliasRemove(t *testing.T) {
 	fixture := setupAliasHandlerTest(t)
-	err := fixture.handler.setAlias("local", "http://localhost")
+	err := fixture.handler.Set("local", "http://localhost")
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -80,7 +79,7 @@ func TestAliasRemove(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := fixture.handler.removeAlias(test.name)
+			err := fixture.handler.Remove(test.name)
 			if test.wantErr {
 				require.Error(t, err)
 			} else {
@@ -92,7 +91,7 @@ func TestAliasRemove(t *testing.T) {
 
 func TestAliasSet(t *testing.T) {
 	fixture := setupAliasHandlerTest(t)
-	err := fixture.handler.setAlias("local", "http://localhost")
+	err := fixture.handler.Set("local", "http://localhost")
 	require.NoError(t, err)
 	require.Empty(t, fixture.errors.String())
 }
@@ -108,7 +107,7 @@ func TestAliasSetInvalid(t *testing.T) {
 
 	fixture := setupAliasHandlerTest(t)
 	for _, name := range names {
-		err := fixture.handler.setAlias(name, "http://localhost")
+		err := fixture.handler.Set(name, "http://localhost")
 		require.Error(t, err)
 	}
 }
@@ -127,10 +126,10 @@ func setupAliasManagerTest(t *testing.T, aliases map[string]string) *fileAliasMa
 	t.Cleanup(func() {
 		os.Remove(testAliasFilepath)
 	})
-	return newAliasLoader(testAliasFilepath)
+	return NewManager(testAliasFilepath)
 }
 
-func TestFileAliasaManagerLoad(t *testing.T) {
+func TestFileAliasManagerLoad(t *testing.T) {
 	m := setupAliasManagerTest(t, nil)
 
 	aliases, err := m.Load()
@@ -138,7 +137,7 @@ func TestFileAliasaManagerLoad(t *testing.T) {
 	assert.Empty(t, aliases)
 }
 
-func TestFileAliasaManagerLoadWithData(t *testing.T) {
+func TestFileAliasManagerLoadWithData(t *testing.T) {
 	m := setupAliasManagerTest(t, map[string]string{
 		"test": "http://localhost/path",
 	})
@@ -148,7 +147,7 @@ func TestFileAliasaManagerLoadWithData(t *testing.T) {
 	assert.Len(t, aliases, 1)
 }
 
-func TestFileAliasaManagerSave(t *testing.T) {
+func TestFileAliasManagerSave(t *testing.T) {
 	m := setupAliasManagerTest(t, nil)
 	err := m.Save(map[string]string{
 		"test": "http://localhost/path",

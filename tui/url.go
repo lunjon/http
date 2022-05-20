@@ -8,7 +8,9 @@ import (
 	"github.com/lunjon/http/complete"
 )
 
-var exampleURLs = []string{"http://localhost", "https://golang.org"}
+const (
+	listLimit = 5
+)
 
 type urlModel struct {
 	input   textinput.Model
@@ -17,7 +19,7 @@ type urlModel struct {
 	matches []string
 }
 
-func initialURLModel(method string) urlModel {
+func initialURLModel(method string, urls []string) urlModel {
 	input := textinput.NewModel()
 	input.Prompt = ""
 	input.Focus()
@@ -27,8 +29,8 @@ func initialURLModel(method string) urlModel {
 	return urlModel{
 		method:  method,
 		input:   input,
-		urls:    exampleURLs,
-		matches: exampleURLs,
+		urls:    urls,
+		matches: urls,
 	}
 }
 
@@ -80,7 +82,13 @@ func (m urlModel) View() string {
 	s := fmt.Sprintf("Method: %s\n\n", m.method)
 	s += fmt.Sprintf("URL: %s\n", m.input.View())
 
-	for _, u := range m.matches {
+	// Only render top matches
+	limit := listLimit
+	if len(m.matches) < limit {
+		limit = len(m.matches)
+	}
+
+	for _, u := range m.matches[:limit] {
 		s += fmt.Sprintf("  %s\n", u)
 	}
 
