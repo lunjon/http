@@ -18,9 +18,10 @@ type ResponseFormatter interface {
 
 type DefaultFormatter struct {
 	components []string
+	styler     *Styler
 }
 
-func NewDefaultFormatter(components []string) (*DefaultFormatter, error) {
+func NewResponseFormatter(styler *Styler, components []string) (*DefaultFormatter, error) {
 	if len(components) > len(ResponseComponents) {
 		return nil, fmt.Errorf("invalid format specifiers: too many")
 	}
@@ -32,7 +33,7 @@ func NewDefaultFormatter(components []string) (*DefaultFormatter, error) {
 		}
 	}
 
-	return &DefaultFormatter{components: parsed}, nil
+	return &DefaultFormatter{components: parsed, styler: styler}, nil
 }
 
 func (f *DefaultFormatter) Format(r *http.Response) ([]byte, error) {
@@ -61,7 +62,7 @@ func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
 	for name, value := range r.Header {
 		n := fmt.Sprintf("%s:", name)
 		v := fmt.Sprint(value)
-		taber.WriteLine(WhiteB(n), v)
+		taber.WriteLine(f.styler.WhiteB(n), v)
 	}
 	fmt.Fprint(w, taber.String())
 }

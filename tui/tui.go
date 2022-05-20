@@ -29,6 +29,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/lunjon/http/format"
 )
 
 type Option[T any] struct {
@@ -64,7 +65,7 @@ func Start() error {
 }
 
 func initialModel() root {
-	inner := initialMethodModel()
+	inner := initialMethodModel(format.NewStyler())
 	return root{
 		inner: inner,
 	}

@@ -9,14 +9,15 @@ import (
 )
 
 func main() {
+	styler := format.NewStyler()
 	cmd, err := cli.Build("v0.11.0")
 	if err != nil {
-		fmt.Println(format.RedB("error:"), err)
+		fmt.Println(styler.RedB("error:"), err)
 		os.Exit(1)
 	}
 
 	if err = cmd.Execute(); err != nil {
-		fmt.Println(format.RedB("error:"), err)
+		fmt.Println(styler.RedB("error:"), err)
 		os.Exit(1)
 	}
 }

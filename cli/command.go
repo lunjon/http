@@ -90,14 +90,7 @@ A request body can be specified in three ways:
  * stdin: pipe or IO redirection
  * --body '...': request body from a string
  * --body file: read content from a file`,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if noColor, _ := cmd.Flags().GetBool(noColorFlagName); noColor {
-				format.DisableColors()
-			}
-		},
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("%s This is highly experimental.\n\n", format.WhiteB("NOTE!"))
-
 			if err := tui.Start(); err != nil {
 				fmt.Fprintf(cfg.errs, "%v\n", err)
 				os.Exit(1)
@@ -109,21 +102,19 @@ A request body can be specified in three ways:
 		Use:   "version",
 		Short: "Print version",
 		Run: func(*cobra.Command, []string) {
-			fmt.Printf("http version: %s\n", format.WhiteB(version))
+			styler := format.NewStyler()
+			fmt.Printf("http version: %s\n", styler.WhiteB(version))
 		},
 	})
 
 	// HTTP
-	get := buildHTTPCommand(cfg, http.MethodGet, "", noConfigure)
-	head := buildHTTPCommand(cfg, http.MethodHead, "", noConfigure)
-	options := buildHTTPCommand(cfg, http.MethodOptions, "", noConfigure)
-	post := buildHTTPCommand(cfg, http.MethodPost, `Make an HTTP POST request to the URL
-This command requires the --body flag, which can be a string content or a file.`, bodyConfigure)
-	put := buildHTTPCommand(cfg, http.MethodPut, `Make an HTTP PUT request to the URL
-This command requires the --body flag, which can be a string content or a file.`, bodyConfigure)
-	patch := buildHTTPCommand(cfg, http.MethodPatch, `Make an HTTP PATCH request to the URL
-This command requires the --body flag, which can be a string content or a file.`, bodyConfigure)
-	del := buildHTTPCommand(cfg, http.MethodDelete, "", noConfigure)
+	get := buildHTTPCommand(cfg, http.MethodGet, noConfigure)
+	head := buildHTTPCommand(cfg, http.MethodHead, noConfigure)
+	options := buildHTTPCommand(cfg, http.MethodOptions, noConfigure)
+	post := buildHTTPCommand(cfg, http.MethodPost, bodyConfigure)
+	put := buildHTTPCommand(cfg, http.MethodPut, bodyConfigure)
+	patch := buildHTTPCommand(cfg, http.MethodPatch, bodyConfigure)
+	del := buildHTTPCommand(cfg, http.MethodDelete, noConfigure)
 	root.AddCommand(get, head, options, post, put, patch, del)
 
 	// Server
@@ -197,13 +188,13 @@ func buildRequestRun(method string, cfg *config) runFunc {
 		var formatter format.ResponseFormatter
 		switch display {
 		case "all":
-			formatter, _ = format.NewDefaultFormatter(format.ResponseComponents)
+			formatter, _ = format.NewResponseFormatter(format.NewStyler(), format.ResponseComponents)
 		case "", "none":
-			formatter, _ = format.NewDefaultFormatter([]string{})
+			formatter, _ = format.NewResponseFormatter(format.NewStyler(), []string{})
 		default:
 			components := strings.Split(strings.TrimSpace(display), ",")
 			components = util.Map(components, strings.TrimSpace)
-			formatter, err = format.NewDefaultFormatter(components)
+			formatter, err = format.NewResponseFormatter(format.NewStyler(), components)
 			checkErr(err)
 		}
 
@@ -246,8 +237,7 @@ func buildRequestRun(method string, cfg *config) runFunc {
 
 func buildHTTPCommand(
 	cfg *config,
-	method,
-	long string,
+	method string,
 	configure func(*cobra.Command),
 ) *cobra.Command {
 	cmd := &cobra.Command{
@@ -271,13 +261,14 @@ Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.updateFrom(cmd)
 			port, _ := cmd.Flags().GetUint("port")
-			config := server.Config{Port: port}
-			server := server.New(config, cfg.getLogger(), cfg.infos, cfg.errs)
 
 			// TODO: trap exit signal for graceful shutdown
-			fmt.Printf("Starting server on :%s.\n", format.WhiteB(fmt.Sprint(port)))
-			fmt.Printf("Press %s to exit.\n", format.WhiteB("CTRL-C"))
 
+			styler := format.NewStyler()
+			fmt.Printf("Starting server on :%s.\n", styler.WhiteB(fmt.Sprint(port)))
+			fmt.Printf("Press %s to exit.\n", styler.WhiteB("CTRL-C"))
+
+			server := server.New(port, format.NewStyler())
 			err := server.Serve()
 			if err != nil {
 				fmt.Fprintf(cfg.errs, "%v\n", err)
@@ -305,7 +296,7 @@ it must begin with _, a small or capital letter followed by zero
 or more _, letters or numbers (max size of name is 20).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.updateFrom(cmd)
-			handler := NewAliasHandler(newAliasLoader(cfg.aliasFilepath), cfg.infos, cfg.errs)
+			handler := NewAliasHandler(newAliasLoader(cfg.aliasFilepath), format.NewStyler(), cfg.infos, cfg.errs)
 			noHeading, _ := cmd.Flags().GetBool(aliasHeadingFlagName)
 
 			var err error

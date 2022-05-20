@@ -42,9 +42,10 @@ type AliasHandler struct {
 	infos io.Writer
 	// Output of errors
 	errors io.Writer
+	styler *format.Styler
 }
 
-func NewAliasHandler(m AliasManager, infos, errors io.Writer) *AliasHandler {
+func NewAliasHandler(m AliasManager, styler *format.Styler, infos, errors io.Writer) *AliasHandler {
 	return &AliasHandler{
 		manager: m,
 		infos:   infos,
@@ -68,7 +69,7 @@ func (handler *AliasHandler) listAlias(noHeading bool) error {
 	taber := util.NewTaber("")
 
 	if !noHeading {
-		taber.WriteLine(format.WhiteB("Name\t"), format.WhiteB("URL"))
+		taber.WriteLine(handler.styler.WhiteB("Name\t"), handler.styler.WhiteB("URL"))
 	}
 
 	for _, name := range names {

@@ -2,46 +2,27 @@ package server
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/lunjon/http/format"
 )
 
-type Config struct {
-	Port   uint
-	infos  io.Writer
-	errors io.Writer
-}
-
-func (c Config) addr() string {
-	return fmt.Sprintf(":%d", c.Port)
-}
-
 type Server struct {
-	logger *log.Logger
+	styler *format.Styler
 	server *http.Server
-	cfg    Config
-	infos  io.Writer
-	errors io.Writer
 }
 
-func New(cfg Config, l *log.Logger, infos, errors io.Writer) *Server {
+func New(port uint, styler *format.Styler) *Server {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", createHandler(l))
+	mux.HandleFunc("/", createHandler(styler))
 
 	s := &http.Server{
-		Addr:    cfg.addr(),
+		Addr:    fmt.Sprintf(":%d", port),
 		Handler: mux,
 	}
 	return &Server{
 		server: s,
-		cfg:    cfg,
-		logger: l,
-		infos:  infos,
-		errors: errors,
 	}
 }
 
@@ -53,17 +34,17 @@ func (s *Server) Serve() error {
 	return s.server.ListenAndServe()
 }
 
-func createHandler(logger *log.Logger) http.HandlerFunc {
+func createHandler(styler *format.Styler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Incoming request:")
-		fmt.Printf("  Method:  %s\n", format.GreenB(r.Method))
-		fmt.Printf("  Path:    %s\n", format.GreenB(r.URL.Path))
+		fmt.Printf("  Method:  %s\n", styler.GreenB(r.Method))
+		fmt.Printf("  Path:    %s\n", styler.GreenB(r.URL.Path))
 		if len(r.Header) > 0 {
 			fmt.Println("  Headers:")
 			for name, values := range r.Header {
-				v := strings.Join(values, format.Cyan("; "))
-				v = fmt.Sprintf("%s %s %s", format.CyanB("["), v, format.CyanB("]"))
-				fmt.Printf("    %s: %s\n", format.WhiteB(name), v)
+				v := strings.Join(values, styler.Cyan("; "))
+				v = fmt.Sprintf("%s %s %s", styler.CyanB("["), v, styler.CyanB("]"))
+				fmt.Printf("    %s: %s\n", styler.WhiteB(name), v)
 			}
 		}
 	}

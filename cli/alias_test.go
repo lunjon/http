@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lunjon/http/format"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +43,7 @@ func setupAliasHandlerTest(t *testing.T) *aliasTestFixture {
 	errors := &strings.Builder{}
 
 	m := newAliasManagerMock()
-	h := NewAliasHandler(m, infos, errors)
+	h := NewAliasHandler(m, format.NewStyler(), infos, errors)
 
 	return &aliasTestFixture{
 		handler: h,

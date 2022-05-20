@@ -77,7 +77,7 @@ func (m urlModel) View() string {
 	for _, u := range m.matches {
 		s += fmt.Sprintf("  %s\n", u)
 	}
-	
+
 	return s
 }
 

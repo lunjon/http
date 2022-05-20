@@ -11,6 +11,7 @@ import (
 )
 
 type methodModel struct {
+	styler  *format.Styler
 	cursor  int
 	methods []string
 	matches []string
@@ -18,7 +19,7 @@ type methodModel struct {
 	input   textinput.Model
 }
 
-func initialMethodModel() methodModel {
+func initialMethodModel(styler *format.Styler) methodModel {
 	input := textinput.NewModel()
 	input.Prompt = ": "
 	input.Focus()
@@ -30,6 +31,7 @@ func initialMethodModel() methodModel {
 		matches: client.SupportedMethods,
 		method:  Option[string]{},
 		input:   input,
+		styler:  styler,
 	}
 }
 
@@ -79,7 +81,7 @@ func (m methodModel) View() string {
 		cursor := " " // no cursor
 		if m.cursor == i {
 			cursor = "*" // cursor!
-			ch = format.WhiteB(ch)
+			ch = m.styler.WhiteB(ch)
 		}
 
 		s += fmt.Sprintf("%s %s\n", cursor, ch)

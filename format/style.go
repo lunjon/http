@@ -1,23 +1,8 @@
 package format
 
 import (
-	"fmt"
-	"strings"
+	"github.com/charmbracelet/lipgloss"
 )
-
-func init() {
-	WhiteB = newBuilder().bold(true).build()
-	Red = newBuilder().fg(ColorRed).build()
-	RedB = newBuilder().fg(ColorRed).bold(true).build()
-	Green = newBuilder().fg(ColorGreen).build()
-	GreenB = newBuilder().fg(ColorGreen).bold(true).build()
-	Blue = newBuilder().fg(ColorBlue).build()
-	BlueB = newBuilder().fg(ColorBlue).bold(true).build()
-	Cyan = newBuilder().fg(ColorCyan).build()
-	CyanB = newBuilder().fg(ColorCyan).bold(true).build()
-}
-
-type StyleFunc = func(string) string
 
 type Color uint8
 
@@ -30,60 +15,70 @@ const (
 	ColorCyan    Color = 36
 )
 
-var (
-	unitFunc = func(s string) string { return s }
-	WhiteB   StyleFunc
-	Red      StyleFunc
-	RedB     StyleFunc
-	Green    StyleFunc
-	GreenB   StyleFunc
-	Blue     StyleFunc
-	BlueB    StyleFunc
-	Cyan     StyleFunc
-	CyanB    StyleFunc
-)
-
-func DisableColors() {
-	WhiteB = unitFunc
-	Red = unitFunc
-	RedB = unitFunc
-	Green = unitFunc
-	GreenB = unitFunc
-	Blue = unitFunc
-	BlueB = unitFunc
+type Styler struct {
+	unit   lipgloss.Style
+	whiteB lipgloss.Style
+	red    lipgloss.Style
+	redB   lipgloss.Style
+	green  lipgloss.Style
+	greenB lipgloss.Style
+	blue   lipgloss.Style
+	blueB  lipgloss.Style
+	cyan   lipgloss.Style
+	cyanB  lipgloss.Style
 }
 
-type builder struct {
-	fgColor Color
-	isBold  bool
-}
-
-func newBuilder() *builder {
-	return &builder{}
-}
-
-func (b *builder) fg(c Color) *builder {
-	b.fgColor = c
-	return b
-}
-
-func (b *builder) bold(v bool) *builder {
-	b.isBold = v
-	return b
-}
-
-func (b *builder) build() StyleFunc {
-	codes := []string{}
-	if b.fgColor > 0 {
-		codes = append(codes, fmt.Sprint(b.fgColor))
+func NewStyler() *Styler {
+	return &Styler{
+		unit:   lipgloss.NewStyle(),
+		whiteB: lipgloss.NewStyle().Bold(true),
+		red:    lipgloss.NewStyle().Foreground(lipgloss.Color("31")),
+		redB:   lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("31")),
+		green:  lipgloss.NewStyle().Foreground(lipgloss.Color("32")),
+		greenB: lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("32")),
+		blue:   lipgloss.NewStyle().Foreground(lipgloss.Color("34")),
+		blueB:  lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("34")),
+		cyan:   lipgloss.NewStyle().Foreground(lipgloss.Color("36")),
+		cyanB:  lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("36")),
 	}
+}
 
-	if b.isBold {
-		codes = append(codes, "1")
-	}
+func (s *Styler) Render() string {
+	return ""
+}
 
-	format := "\x1b[" + strings.Join(codes, ";") + "m%s\x1b[0m"
-	return func(s string) string {
-		return fmt.Sprintf(format, s)
-	}
+func (styler *Styler) WhiteB(s string) string {
+	return styler.whiteB.Render(s)
+}
+
+func (styler *Styler) Red(s string) string {
+	return styler.red.Render(s)
+}
+
+func (styler *Styler) RedB(s string) string {
+	return styler.redB.Render(s)
+}
+
+func (styler *Styler) Green(s string) string {
+	return styler.green.Render(s)
+}
+
+func (styler *Styler) GreenB(s string) string {
+	return styler.greenB.Render(s)
+}
+
+func (styler *Styler) Blue(s string) string {
+	return styler.blue.Render(s)
+}
+
+func (styler *Styler) BlueB(s string) string {
+	return styler.blueB.Render(s)
+}
+
+func (styler *Styler) Cyan(s string) string {
+	return styler.cyan.Render(s)
+}
+
+func (styler *Styler) CyanB(s string) string {
+	return styler.cyanB.Render(s)
 }
