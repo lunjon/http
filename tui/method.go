@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/complete"
+	"github.com/lunjon/http/format"
 )
 
 type methodModel struct {
@@ -19,7 +20,7 @@ type methodModel struct {
 
 func initialModel() methodModel {
 	input := textinput.NewModel()
-	input.Placeholder = "https://"
+	input.Prompt = ": "
 	input.Focus()
 	input.CharLimit = 150
 	input.Width = 50
@@ -71,15 +72,17 @@ func (m methodModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m methodModel) View() string {
-	s := fmt.Sprintf("Select method %s\n\n", m.input.View())
+	s := fmt.Sprintf("Select method%s\n\n", m.input.View())
 
 	for i, choice := range m.matches {
+		ch := choice
 		cursor := " " // no cursor
 		if m.cursor == i {
-			cursor = ">" // cursor!
+			cursor = "*" // cursor!
+			ch = format.WhiteB(ch)
 		}
 
-		s += fmt.Sprintf("%s %s\n", cursor, choice)
+		s += fmt.Sprintf("%s %s\n", cursor, ch)
 	}
 
 	return s + "\nPress q to quit.\n"

@@ -1,12 +1,8 @@
 /*
 tui -- module responsible for everything about the text user interface.
 
-Vision:
- - intuitive interface for making requests
- - steps
-
-How it works
-============
+Vision
+======
 The user is taken through a number of steps when creating a request:
 
 	Method  --->  URL  ---> [Headers] ---> [Body]
@@ -23,6 +19,11 @@ Steps:
 At any point the user can pres <BUTTON> to select client options, such as:
  - timeout
  - certificate
+
+TODO
+====
+ - Use lipgloss for styling
+
 */
 package tui
 
