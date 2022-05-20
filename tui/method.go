@@ -18,7 +18,7 @@ type methodModel struct {
 	input   textinput.Model
 }
 
-func initialModel() methodModel {
+func initialMethodModel() methodModel {
 	input := textinput.NewModel()
 	input.Prompt = ": "
 	input.Focus()
@@ -85,5 +85,5 @@ func (m methodModel) View() string {
 		s += fmt.Sprintf("%s %s\n", cursor, ch)
 	}
 
-	return s + "\nPress q to quit.\n"
+	return s
 }

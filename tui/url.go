@@ -73,11 +73,12 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m urlModel) View() string {
 	s := fmt.Sprintf("Method: %s\n\n", m.method)
 	s += fmt.Sprintf("URL%s\n", m.input.View())
+
 	for _, u := range m.matches {
 		s += fmt.Sprintf("  %s\n", u)
 	}
-
-	return s + "\n\nPress q to quit.\n"
+	
+	return s
 }
 
 func send(method, url string) {

@@ -62,3 +62,37 @@ func Start() error {
 	p := tea.NewProgram(initialModel())
 	return p.Start()
 }
+
+func initialModel() root {
+	inner := initialMethodModel()
+	return root{
+		inner: inner,
+	}
+}
+
+type root struct {
+	inner tea.Model
+}
+
+func (r root) Init() tea.Cmd {
+	return nil
+}
+
+func (m root) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		}
+	}
+
+	var cmd tea.Cmd
+	m.inner, cmd = m.inner.Update(msg)
+	return m, cmd
+}
+func (m root) View() string {
+	s := "<header>\n\n"
+	s += m.inner.View()
+	return s + "\n\nPress ctrl+c to quit."
+}
