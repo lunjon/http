@@ -1,0 +1,12 @@
+* HTTP CLI
+** General
+   - [ ] Use lipgloss for styling: github.com/charmbracelet/lipgloss
+   - [ ] Request history
+
+** TUI
+   - [ ] Headers
+   - [ ] Body
+   - [ ] Options
+   -- [ ] Interface/window/popup for managing options
+   -- [ ] Timeout
+   -- [ ] Certificate
