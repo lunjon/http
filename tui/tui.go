@@ -19,17 +19,20 @@ Steps:
 At any point the user can pres <BUTTON> to select client options, such as:
  - timeout
  - certificate
-
-TODO
-====
- - Use lipgloss for styling
-
 */
 package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/format"
+)
+
+func init() {
+	styler = format.NewStyler()
+}
+
+var (
+	styler *format.Styler
 )
 
 type Option[T any] struct {
@@ -65,7 +68,7 @@ func Start() error {
 }
 
 func initialModel() root {
-	inner := initialMethodModel(format.NewStyler())
+	inner := initialMethodModel()
 	return root{
 		inner: inner,
 	}

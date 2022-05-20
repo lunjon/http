@@ -2,28 +2,24 @@ package tui
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/lunjon/http/client"
 	"github.com/lunjon/http/complete"
-	"github.com/lunjon/http/logging"
 )
 
 var exampleURLs = []string{"http://localhost", "https://golang.org"}
 
 type urlModel struct {
-	method  string
 	input   textinput.Model
+	method  string
 	urls    []string
 	matches []string
 }
 
-func newURLModel(method string) urlModel {
+func initialURLModel(method string) urlModel {
 	input := textinput.NewModel()
-	input.Placeholder = "https://"
+	input.Prompt = ""
 	input.Focus()
 	input.CharLimit = 150
 	input.Width = 50
@@ -44,9 +40,6 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q", "esc":
-			return m, tea.Quit
-
 		case "tab":
 			text, matches := complete.Complete(m.input.Value(), m.urls)
 			m.input.SetValue(text)
@@ -55,12 +48,8 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			url := m.input.Value()
-			send(m.method, url)
-			return m, tea.Quit
+			return initialRequestModel(m.method, url), nil
 		}
-	case error:
-		fmt.Println("Error:", msg.Error())
-		return m, tea.Quit
 	}
 
 	var cmd tea.Cmd
@@ -72,32 +61,11 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m urlModel) View() string {
 	s := fmt.Sprintf("Method: %s\n\n", m.method)
-	s += fmt.Sprintf("URL%s\n", m.input.View())
+	s += fmt.Sprintf("URL: %s\n", m.input.View())
 
 	for _, u := range m.matches {
 		s += fmt.Sprintf("  %s\n", u)
 	}
 
 	return s
-}
-
-func send(method, url string) {
-	logger := logging.NewSilentLogger()
-	httpClient := client.NewClient(&http.Client{}, logger, logger)
-	u, err := client.ParseURL(url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	req, err := httpClient.BuildRequest(method, u, nil, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res, err := httpClient.Send(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(res.Status)
 }
