@@ -4,25 +4,36 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/lunjon/http/internal/util"
+	"github.com/lunjon/http/internal/types"
 )
 
-type response *http.Response
+type result struct {
+	res *http.Response
+	err error
+}
 
 type requestModel struct {
 	method  string
 	url     string
 	headers http.Header
-	res     response
+	client  *http.Client
+	result  types.Option[result]
 }
 
 func initialRequestModel(method, url string, headers http.Header) requestModel {
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+
 	return requestModel{
 		method:  method,
 		url:     url,
 		headers: headers,
+		client:  client,
+		result:  types.Option[result]{},
 	}
 }
 
@@ -35,11 +46,11 @@ func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m, tea.Quit // TODO: send request
+			return m, m.sendRequest
 		}
-	case response:
-		m.res = msg
-
+	case result:
+		m.result = m.result.Set(msg)
+		return m, tea.Quit
 	}
 
 	return m, nil
@@ -47,23 +58,56 @@ func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m requestModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method)))
-	b.WriteString(fmt.Sprintf("URL:     %s\n", styler.WhiteB(m.url)))
 
-	if len(m.headers) > 0 {
-		b.WriteString("Headers:\n")
-		taber := util.NewTaber("  - ")
-		for name, values := range m.headers {
-			key := headerKeyStyle.Render(name + ":")
-			value := headerValueStyle.Render(strings.Join(values, "; "))
-			taber.WriteLine(key, value)
+	if m.result.IsSome() {
+		result := m.result.Value()
+		if result.err != nil {
+			b.WriteString(styler.RedB("Error: ") + result.err.Error())
+		} else {
+			var status string
+			if result.res.StatusCode >= 500 {
+				status = styler.RedB(result.res.Status)
+			} else if result.res.StatusCode >= 400 {
+				status = styler.YellowB(result.res.Status)
+			} else {
+				status = styler.GreenB(result.res.Status)
+			}
+			b.WriteString("Status: " + status)
 		}
-		b.WriteString(taber.String())
+
+		b.WriteString("\n")
 	} else {
-		b.WriteString("Headers: ")
-		b.WriteString(styler.WhiteB("[]"))
+		b.WriteString(fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method)))
+		b.WriteString(fmt.Sprintf("URL:     %s\n", styler.WhiteB(m.url)))
+
+		if len(m.headers) > 0 {
+			b.WriteString("Headers:\n")
+			taber := types.NewTaber("  - ")
+			for name, values := range m.headers {
+				key := headerKeyStyle.Render(name + ":")
+				value := headerValueStyle.Render(strings.Join(values, "; "))
+				taber.WriteLine(key, value)
+			}
+			b.WriteString(taber.String())
+		} else {
+			b.WriteString("Headers: ")
+			b.WriteString(styler.WhiteB("[]"))
+		}
+
+		b.WriteString("\n\n")
+		b.WriteString(focusedStyle.Render(" Send request?\n"))
 	}
 
-	b.WriteString("\nSend request?")
 	return b.String()
+}
+
+func (m requestModel) sendRequest() tea.Msg {
+	req, err := http.NewRequest(m.method, m.url, nil)
+	if err != nil {
+		return result{err: err}
+	}
+	req.Header = m.headers
+
+	res, err := m.client.Do(req)
+	return result{res: res, err: err}
 }

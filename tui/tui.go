@@ -5,7 +5,7 @@ Vision
 ======
 The user is taken through a number of steps when creating a request:
 
-	Method  --->  URL  ---> [Headers] ---> [Body]
+	Method  --->  URL  ---> [Headers] ---> [Body] ---> Request
 
 Steps:
 	Method: select HTTP method from a list
@@ -25,6 +25,7 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/lunjon/http/internal/format"
 )
 
@@ -33,39 +34,15 @@ func init() {
 }
 
 var (
+	noStyle        = lipgloss.NewStyle()
+	focusedStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205"))
+	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	styler         *format.Styler
 	quitKeyBinding = key.NewBinding(
 		key.WithKeys("esc", "ctrl+c"),
 		key.WithHelp("ctrl+c", "quit"),
 	)
 )
-
-type Option[T any] struct {
-	some  bool
-	value T
-}
-
-func (o Option[T]) IsSome() bool {
-	return o.some
-}
-
-func (o Option[T]) IsNone() bool {
-	return !o.IsSome()
-}
-
-func (o Option[T]) Value() T {
-	if !o.some {
-		panic("No value")
-	}
-	return o.value
-}
-
-func (o Option[T]) Set(value T) Option[T] {
-	return Option[T]{
-		some:  true,
-		value: value,
-	}
-}
 
 func Start(urls []string) error {
 	p := tea.NewProgram(initialModel(urls))
@@ -105,6 +82,7 @@ func (m root) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
+
 func (m root) View() string {
 	s := m.inner.View()
 	s += "\n"

@@ -15,6 +15,7 @@ type keyMap struct {
 	Right key.Binding
 	Help  key.Binding
 	Quit  key.Binding
+	Auto  key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
@@ -28,7 +29,7 @@ func (k keyMap) ShortHelp() []key.Binding {
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Left, k.Right}, // first column
-		{k.Help, k.Quit},                // second column
+		{k.Auto, k.Help, k.Quit},        // second column
 	}
 }
 
@@ -55,7 +56,11 @@ var defaultKeyMap = keyMap{
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("esc", "ctrl+c"),
-		key.WithHelp("ctrl+c", "quit"),
+		key.WithHelp("esc/ctrl+c", "quit"),
+	),
+	Auto: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "autocomplete"),
 	),
 }
 
@@ -94,12 +99,5 @@ func (m helpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m helpModel) View() string {
-	// if m.quitting {
-	// 	return "Bye!\n"
-	// }
-
 	return m.help.View(m.keys)
-
-	// height := 8 - strings.Count(status, "\n") - strings.Count(helpView, "\n")
-	// return "\n" + status + strings.Repeat("\n", height) + helpView
 }

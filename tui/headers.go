@@ -10,14 +10,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/complete"
-	"github.com/lunjon/http/internal/util"
+	"github.com/lunjon/http/internal/types"
 )
 
 var (
-	focusedStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	blurredStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	cursorStyle      = focusedStyle.Copy()
-	noStyle          = lipgloss.NewStyle()
 	headerKeyStyle   = lipgloss.NewStyle().Bold(true)
 	headerValueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 )
@@ -37,7 +34,9 @@ type headersModel struct {
 	headers     http.Header
 	headerNames []string // Used to preserve order
 
-	suggest Option[suggestions]
+	suggest            types.Option[suggestions]
+	nameSuggestIndent  string
+	valueSuggestIndent string
 }
 
 func newInput(prompt string, limit int) textinput.Model {
@@ -58,12 +57,14 @@ func initialHeadersModel(method, url string) headersModel {
 	value := newInput("Value: ", 128)
 
 	return headersModel{
-		method:     method,
-		url:        url,
-		nameInput:  name,
-		valueInput: value,
-		headers:    http.Header{},
-		suggest:    Option[suggestions]{},
+		method:             method,
+		url:                url,
+		nameInput:          name,
+		valueInput:         value,
+		headers:            http.Header{},
+		suggest:            types.Option[suggestions]{},
+		nameSuggestIndent:  strings.Repeat(" ", len(" Name: ")),
+		valueSuggestIndent: strings.Repeat(" ", len(" Value: ")+len(" Name: ")+name.Width),
 	}
 }
 
@@ -79,47 +80,50 @@ func (m *headersModel) addHeader(name, value string) {
 	m.headers.Add(name, value)
 }
 
-func (m *headersModel) focusNameInput() tea.Cmd {
-	cmd := m.nameInput.Focus()
-	m.nameInput.PromptStyle = focusedStyle
-	m.nameInput.TextStyle = focusedStyle
+func (m *headersModel) setFocus(name, value, button bool) tea.Cmd {
+	var cmd tea.Cmd
+	if name {
+		cmd = m.nameInput.Focus()
+		m.nameInput.PromptStyle = focusedStyle
+		m.nameInput.TextStyle = focusedStyle
 
-	m.valueInput.Blur()
-	m.valueInput.PromptStyle = noStyle
-	m.valueInput.TextStyle = noStyle
+		m.valueInput.Blur()
+		m.valueInput.PromptStyle = noStyle
+		m.valueInput.TextStyle = noStyle
+		m.buttonFocus = false
+
+	} else if value {
+		m.nameInput.Blur()
+		m.nameInput.PromptStyle = noStyle
+		m.nameInput.TextStyle = noStyle
+
+		cmd = m.valueInput.Focus()
+		m.valueInput.PromptStyle = focusedStyle
+		m.valueInput.TextStyle = focusedStyle
+		m.buttonFocus = false
+	} else if button {
+		m.nameInput.Blur()
+		m.nameInput.PromptStyle = noStyle
+		m.nameInput.TextStyle = noStyle
+
+		m.valueInput.Blur()
+		m.valueInput.PromptStyle = noStyle
+		m.valueInput.TextStyle = noStyle
+
+		m.buttonFocus = true
+	}
+
+	m.unsetSuggestions()
 	return cmd
-}
-
-func (m *headersModel) focusValueInput() tea.Cmd {
-	m.nameInput.Blur()
-	m.nameInput.PromptStyle = noStyle
-	m.nameInput.TextStyle = noStyle
-
-	cmd := m.valueInput.Focus()
-	m.valueInput.PromptStyle = focusedStyle
-	m.valueInput.TextStyle = focusedStyle
-	return cmd
-}
-
-func (m *headersModel) focusButton() {
-	m.nameInput.Blur()
-	m.nameInput.PromptStyle = noStyle
-	m.nameInput.TextStyle = noStyle
-
-	m.valueInput.Blur()
-	m.valueInput.PromptStyle = noStyle
-	m.valueInput.TextStyle = noStyle
-
-	m.buttonFocus = true
 }
 
 func (m *headersModel) setSuggestions(indent string, values []string) {
-	opt := Option[suggestions]{}
+	opt := types.Option[suggestions]{}
 	m.suggest = opt.Set(suggestions{indent, values})
 }
 
 func (m *headersModel) unsetSuggestions() {
-	m.suggest = Option[suggestions]{}
+	m.suggest = types.Option[suggestions]{}
 }
 
 func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -136,8 +140,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				prefix, matches := complete.Complete(m.nameInput.Value(), knownHeaderNames)
 				if prefix != "" && len(matches) > 0 {
 					if len(matches) > 1 {
-						indent := strings.Repeat(" ", len(" Name: "))
-						m.setSuggestions(indent, matches)
+						m.setSuggestions(m.nameSuggestIndent, matches)
 					} else {
 						m.unsetSuggestions()
 					}
@@ -150,8 +153,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					prefix, matches := complete.Complete(m.valueInput.Value(), knownValues)
 					if prefix != "" && len(matches) > 0 {
 						if len(matches) > 1 {
-							indent := strings.Repeat(" ", len(" Name: ")+m.nameInput.Width)
-							m.setSuggestions(indent, matches)
+							m.setSuggestions(m.valueSuggestIndent, matches)
 						} else {
 							m.unsetSuggestions()
 						}
@@ -172,7 +174,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.nameInput.SetValue("")
 					m.valueInput.SetValue("")
 
-					cmd := m.focusNameInput()
+					cmd := m.setFocus(true, false, false)
 					return m, cmd
 				}
 			} else if m.buttonFocus {
@@ -182,26 +184,23 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "up":
 			if m.buttonFocus {
-				cmd := m.focusNameInput()
+				cmd := m.setFocus(true, false, false)
 				m.buttonFocus = false
 				return m, cmd
 			}
 		case "down":
 			if !m.buttonFocus {
-				m.unsetSuggestions()
-				m.focusButton()
+				m.setFocus(false, false, true)
 				return m, nil
 			}
 		case "right":
 			if m.nameInput.Focused() {
-				m.unsetSuggestions()
-				cmd := m.focusValueInput()
+				cmd := m.setFocus(false, true, false)
 				return m, cmd
 			}
 		case "left":
 			if m.valueInput.Focused() {
-				m.unsetSuggestions()
-				cmd := m.focusNameInput()
+				cmd := m.setFocus(true, false, false)
 				return m, cmd
 			}
 		}
@@ -224,16 +223,7 @@ func (m headersModel) View() string {
 	b.WriteString(" ")
 	b.WriteString(m.nameInput.View())
 	b.WriteString(m.valueInput.View())
-	b.WriteString("\n\n")
-
-	taber := util.NewTaber("  - ")
-	for _, name := range m.headerNames {
-		key := headerKeyStyle.Render(name + ":")
-		value := headerValueStyle.Render(strings.Join(m.headers.Values(name), "; "))
-		taber.WriteLine(key, value)
-	}
-	tabs := strings.TrimSpace(taber.String())
-	b.WriteString(tabs)
+	b.WriteString("\n")
 
 	if m.suggest.IsSome() {
 		sugg := m.suggest.Value()
@@ -242,7 +232,15 @@ func (m headersModel) View() string {
 		}
 	}
 
-	b.WriteString("\n\n")
+	taber := types.NewTaber("  - ")
+	for _, name := range m.headerNames {
+		key := headerKeyStyle.Render(name + ":")
+		value := headerValueStyle.Render(strings.Join(m.headers.Values(name), "; "))
+		taber.WriteLine(key, value)
+	}
+	b.WriteString(taber.String())
+
+	b.WriteString("\n")
 
 	button := " [ done ]"
 	if m.buttonFocus {

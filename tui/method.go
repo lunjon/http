@@ -5,19 +5,20 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/types"
 )
 
 type methodModel struct {
 	cursor  int
 	methods []string
-	method  Option[string]
+	method  types.Option[string]
 	urls    []string
 }
 
 func initialMethodModel(urls []string) methodModel {
 	return methodModel{
 		methods: client.SupportedMethods,
-		method:  Option[string]{},
+		method:  types.Option[string]{},
 		urls:    urls,
 	}
 }
@@ -52,11 +53,11 @@ func (m methodModel) View() string {
 	for i, choice := range m.methods {
 		cursor := " "
 		if m.cursor == i {
-			cursor = styler.CyanB(">")
-			choice = styler.CyanB(choice)
+			cursor = focusedStyle.Render(">")
+			choice = focusedStyle.Render(choice)
 		}
 
-		s += fmt.Sprintf("%s %s\n", cursor, choice)
+		s += fmt.Sprintf("  %s %s\n", cursor, choice)
 	}
 
 	return s

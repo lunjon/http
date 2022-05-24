@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/lunjon/http/internal/types"
 	"github.com/lunjon/http/internal/util"
 )
 
@@ -58,7 +59,7 @@ func (f *DefaultFormatter) Format(r *http.Response) ([]byte, error) {
 }
 
 func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
-	taber := util.NewTaber("")
+	taber := types.NewTaber("")
 	for name, value := range r.Header {
 		n := fmt.Sprintf("%s:", name)
 		v := fmt.Sprint(value)

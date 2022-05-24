@@ -12,7 +12,7 @@ import (
 
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/format"
-	"github.com/lunjon/http/internal/util"
+	"github.com/lunjon/http/internal/types"
 )
 
 var (
@@ -60,7 +60,7 @@ func (handler *Handler) List(noHeading bool) error {
 	}
 	sort.Strings(names)
 
-	taber := util.NewTaber("")
+	taber := types.NewTaber("")
 
 	if !noHeading {
 		taber.WriteLine(handler.styler.WhiteB("Name\t"), handler.styler.WhiteB("URL"))

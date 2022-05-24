@@ -12,7 +12,7 @@ import (
 	"net/http/httptrace"
 	"strings"
 
-	"github.com/lunjon/http/internal/util"
+	"github.com/lunjon/http/internal/types"
 )
 
 func init() {
@@ -99,7 +99,7 @@ func (client *Client) Send(req *http.Request) (*http.Response, error) {
 
 	client.clientLogger.Printf("Sending request: %s %s", req.Method, req.URL.String())
 	if len(req.Header) > 0 {
-		taber := util.NewTaber("  ")
+		taber := types.NewTaber("  ")
 		taber.Writef("Request headers:\n")
 		for name, value := range req.Header {
 			line := []string{name + ":"}
@@ -122,7 +122,7 @@ func (client *Client) Send(req *http.Request) (*http.Response, error) {
 	client.tracer.Report(elapsed)
 
 	if len(res.Header) > 0 {
-		taber := util.NewTaber("  ")
+		taber := types.NewTaber("  ")
 		taber.Writef("Response headers:\n")
 		for name, value := range res.Header {
 			line := []string{name + ":"}
