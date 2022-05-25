@@ -79,8 +79,8 @@ func (m requestModel) View() string {
 	} else {
 		// Render request parameters
 
-		b.WriteString(fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method)))
-		b.WriteString(fmt.Sprintf("URL:     %s\n", styler.WhiteB(m.url)))
+		b.WriteString(fmt.Sprintf("Method:  %s\n", confirmedStyle.Render(m.method)))
+		b.WriteString(fmt.Sprintf("URL:     %s\n", confirmedStyle.Render(m.url)))
 
 		if len(m.headers) > 0 {
 			b.WriteString("Headers:\n")
@@ -93,7 +93,7 @@ func (m requestModel) View() string {
 			b.WriteString(taber.String())
 		} else {
 			b.WriteString("Headers: ")
-			b.WriteString(styler.WhiteB("[]"))
+			b.WriteString(confirmedStyle.Render("[]"))
 		}
 
 		b.WriteString("\n\n")

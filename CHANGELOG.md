@@ -4,6 +4,9 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Fixed
+- Wrong confirm color in TUI request model
+
 ## [0.12.0] - 2022-05-25
 
 ### Added
