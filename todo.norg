@@ -1,7 +1,4 @@
 * HTTP CLI
-** Release
-   - [ ] v0.12.0
-
 ** General
    - [-] Config sub-commands
    -- [ ] Init
