@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -11,7 +12,6 @@ const defaultConfig = `
 # Valid root options and default values
 # timeout = "30s"
 # verbose = false
-# trace = false
 # fail = false
 
 [aliases] # Section for you URL aliases
@@ -45,25 +45,55 @@ func (cfg Config) UseFail(b bool) Config {
 
 // ReadTOML loads the Config from a TOML formatted byte slice.
 func ReadTOML(data []byte) (Config, error) {
-	var cfg Config
+	var cfg fileConfig
 	err := toml.Unmarshal(data, &cfg)
+	if err != nil {
+		return New(), err
+	}
 
 	// Correction of zero values
-	if cfg.Timeout == 0 {
-		cfg.Timeout = time.Second * 30
+	if cfg.Timeout.value == 0 {
+		cfg.Timeout.value = time.Second * 30
 	}
 
 	if cfg.Aliases == nil {
 		cfg.Aliases = make(map[string]string)
 	}
-
-	return cfg, err
+	return cfg.convert(), err
 }
 
 func Load(filepath string) (Config, error) {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
-		return Config{}, err
+		return New(), err
 	}
 	return ReadTOML(data)
+}
+
+type fileConfig struct {
+	Timeout duration
+	Verbose bool
+	Fail    bool
+	Aliases map[string]string
+}
+
+func (cfg fileConfig) convert() Config {
+	return Config{
+		Timeout: cfg.Timeout.value,
+		Verbose: cfg.Verbose,
+		Fail:    cfg.Fail,
+		Aliases: cfg.Aliases,
+	}
+}
+
+type duration struct {
+	value time.Duration
+}
+
+func (d *duration) UnmarshalText(b []byte) error {
+	fmt.Println("YES")
+	fmt.Println(string(b))
+	var err error
+	d.value, err = time.ParseDuration(string(b))
+	return err
 }
