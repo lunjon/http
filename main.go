@@ -10,7 +10,7 @@ import (
 
 func main() {
 	styler := format.NewStyler()
-	cmd, err := cli.Build("v0.12.0")
+	cmd, err := cli.Build("v0.12.1")
 	if err != nil {
 		fmt.Println(styler.RedB("error:"), err)
 		os.Exit(1)
