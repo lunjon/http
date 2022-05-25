@@ -32,3 +32,9 @@ local = "https://localhost/path"`
 	assert.Len(t, cfg.Aliases, 1)
 	assert.Equal(t, "https://localhost/path", cfg.Aliases["local"])
 }
+
+func TestString(t *testing.T) {
+	cfg, err := ReadTOML([]byte(defaultConfig))
+	assert.NoError(t, err)
+	assert.NotZero(t, cfg.String())
+}

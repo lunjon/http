@@ -3,9 +3,11 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/charmbracelet/lipgloss"
 )
 
 const defaultConfig = `
@@ -17,6 +19,14 @@ const defaultConfig = `
 [aliases] # Section for you URL aliases
 # local = http://localhost
 `
+
+var (
+	noStyle       = lipgloss.NewStyle()
+	nameStyle     = lipgloss.NewStyle().Bold(true)
+	boolStyle     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4"))
+	durationStyle = lipgloss.NewStyle()
+	sectionStyle  = nameStyle.Copy().Foreground(lipgloss.Color("2"))
+)
 
 type Config struct {
 	Timeout time.Duration
@@ -41,6 +51,49 @@ func (cfg Config) UseVerbose(b bool) Config {
 func (cfg Config) UseFail(b bool) Config {
 	cfg.Fail = b
 	return cfg
+}
+
+func (cfg Config) String() string {
+	var b strings.Builder
+
+	// Root values
+	roots := []struct {
+		key   string
+		value any
+	}{
+		{"timeout", cfg.Timeout},
+		{"verbose", cfg.Verbose},
+		{"fail", cfg.Fail},
+	}
+
+	for _, item := range roots {
+		key := nameStyle.Render(item.key)
+		var val string
+		switch value := item.value.(type) {
+		case string:
+			val = noStyle.Render(fmt.Sprintf(`"%s"`, value))
+		case bool:
+			val = boolStyle.Render(fmt.Sprint(value))
+		case time.Duration:
+			val = durationStyle.Render(fmt.Sprint(value))
+
+		}
+		b.WriteString(fmt.Sprintf("%s = %v\n", key, val))
+	}
+
+	if len(cfg.Aliases) > 0 {
+		b.WriteString(fmt.Sprintf(
+			"\n[%s]\n",
+			sectionStyle.Render("aliases"),
+		))
+
+		for k, v := range cfg.Aliases {
+			line := fmt.Sprintf(` %s = "%s"`, nameStyle.Render(k), v)
+			b.WriteString(line + "\n")
+		}
+	}
+
+	return b.String()
 }
 
 // ReadTOML loads the Config from a TOML formatted byte slice.

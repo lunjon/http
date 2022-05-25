@@ -11,6 +11,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - `-o/--output` flag for writing output to file
 - `-n/--no-heading` flag for hiding heading when listing aliases
 - Configuration file in TOML format
+- `config` sub-command for listing configuration
 
 ### Fixed
 - Missing output on error

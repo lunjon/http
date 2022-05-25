@@ -92,9 +92,13 @@ A request body can be specified in three ways:
 	server := buildServer(cfg, outputs)
 	root.AddCommand(server)
 
-	// URL alias
+	// Alias
 	alias := buildAlias(cfg, outputs)
 	root.AddCommand(alias)
+
+	// Config
+	conf := buildConfig(cfg, outputs)
+	root.AddCommand(conf)
 
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
@@ -335,6 +339,19 @@ func buildAlias(cfg config.Config, outputs outputs) *cobra.Command {
 
 	c.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
 	return c
+}
+
+func buildConfig(cfg config.Config, outputs outputs) *cobra.Command {
+	root := &cobra.Command{
+		Use:   "config [...]",
+		Short: "Configuration commands.",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Fprintln(outputs.infos, cfg.String())
+		},
+	}
+
+	root.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
+	return root
 }
 
 func addCommonFlags(cmd *cobra.Command, h *HeaderOption) {
