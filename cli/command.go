@@ -306,6 +306,12 @@ func buildAlias(cfg config.Config, outputs outputs) *cobra.Command {
 		Short: "List aliases.",
 		Run: func(cmd *cobra.Command, args []string) {
 			styler := format.NewStyler()
+			if len(cfg.Aliases) == 0 {
+				fmt.Fprintln(outputs.infos, "No aliases defined.")
+				return
+			}
+
+			cfg = updateConfig(cmd, cfg)
 			noHeading, _ := cmd.Flags().GetBool(aliasHeadingFlagName)
 
 			// Sort by name
@@ -327,9 +333,7 @@ func buildAlias(cfg config.Config, outputs outputs) *cobra.Command {
 		},
 	}
 
-	c.Flags().StringP("remove", "r", "", "Remove alias with this name.")
 	c.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
-
 	return c
 }
 
