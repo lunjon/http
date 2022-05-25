@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -30,7 +31,7 @@ func initialURLModel(method string, urls []string) urlModel {
 		method:  method,
 		input:   input,
 		urls:    urls,
-		matches: urls,
+		matches: []string{},
 	}
 }
 
@@ -40,16 +41,21 @@ func (m urlModel) Init() tea.Cmd {
 
 func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+
 	m.input, cmd = m.input.Update(msg)
 
-	matches := complete.Matches(m.input.Value(), m.urls)
-
-	// If we have one match and it is equal to the input,
-	// render an empty suggestion list
-	if len(matches) == 1 && m.input.Value() == matches[0] {
-		m.matches = []string{}
+	input := strings.TrimSpace(m.input.Value())
+	if input != "" {
+		_, matches := complete.Complete(m.input.Value(), m.urls)
+		// If we have one match and it is equal to the input,
+		// render an empty suggestion list
+		if len(matches) == 1 && m.input.Value() == matches[0] {
+			m.matches = []string{}
+		} else {
+			m.matches = matches
+		}
 	} else {
-		m.matches = matches
+		m.matches = []string{}
 	}
 
 	switch msg := msg.(type) {
@@ -79,7 +85,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m urlModel) View() string {
-	s := fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method))
+	s := fmt.Sprintf("Method:  %s\n", confirmedStyle.Render(m.method))
 	s += fmt.Sprintf("URL: %s\n", m.input.View())
 
 	// Only render top matches

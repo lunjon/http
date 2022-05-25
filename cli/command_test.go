@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lunjon/http/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
@@ -76,16 +77,15 @@ func setupCommandTest(args ...string) *commandTestFixture {
 	infos := &strings.Builder{}
 	errs := &strings.Builder{}
 
-	cfg := config{
-		logs:          logs,
-		infos:         infos,
-		errs:          errs,
-		aliasFilepath: testAliasFilepath,
-		headerOpt:     newHeaderOption(),
+	outputs := outputs{
+		logs:   logs,
+		infos:  infos,
+		errors: errs,
 	}
 
-	cmd := build("test", &cfg)
+	cmd := build("test", config.New(), outputs)
 	cmd.SetArgs(args)
+
 	return &commandTestFixture{
 		logs:  logs,
 		infos: infos,

@@ -40,6 +40,10 @@ func newHeaderOption() *HeaderOption {
 	}
 }
 
+func (h *HeaderOption) Header() http.Header {
+	return h.values
+}
+
 // Append adds the provided value as a header if it is valid
 func (h *HeaderOption) Set(s string) error {
 	key, value, err := parseHeader(s)

@@ -7,13 +7,13 @@ import (
 )
 
 func NewLogger() *log.Logger {
-	return newLogger(os.Stdout)
+	return New(os.Stdout)
 }
 
 func NewSilentLogger() *log.Logger {
-	return newLogger(io.Discard)
+	return New(io.Discard)
 }
 
-func newLogger(w io.Writer) *log.Logger {
+func New(w io.Writer) *log.Logger {
 	return log.New(w, "", log.Ldate|log.Ltime)
 }

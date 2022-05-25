@@ -60,6 +60,8 @@ func (m requestModel) View() string {
 	var b strings.Builder
 
 	if m.result.IsSome() {
+		// Render response
+
 		result := m.result.Value()
 		if result.err != nil {
 			b.WriteString(styler.RedB("Error: ") + result.err.Error())
@@ -74,9 +76,9 @@ func (m requestModel) View() string {
 			}
 			b.WriteString("Status: " + status)
 		}
-
-		b.WriteString("\n")
 	} else {
+		// Render request parameters
+
 		b.WriteString(fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method)))
 		b.WriteString(fmt.Sprintf("URL:     %s\n", styler.WhiteB(m.url)))
 
@@ -95,9 +97,10 @@ func (m requestModel) View() string {
 		}
 
 		b.WriteString("\n\n")
-		b.WriteString(focusedStyle.Render(" Send request?\n"))
+		b.WriteString(focusedStyle.Render(confirmButtonText))
 	}
 
+	b.WriteString("\n")
 	return b.String()
 }
 

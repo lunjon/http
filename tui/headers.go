@@ -14,9 +14,8 @@ import (
 )
 
 var (
-	cursorStyle      = focusedStyle.Copy()
 	headerKeyStyle   = lipgloss.NewStyle().Bold(true)
-	headerValueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	headerValueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("250"))
 )
 
 type suggestions struct {
@@ -34,6 +33,7 @@ type headersModel struct {
 	headers     http.Header
 	headerNames []string // Used to preserve order
 
+	knownHeaderNames   []string
 	suggest            types.Option[suggestions]
 	nameSuggestIndent  string
 	valueSuggestIndent string
@@ -42,7 +42,6 @@ type headersModel struct {
 func newInput(prompt string, limit int) textinput.Model {
 	input := textinput.New()
 	input.Prompt = prompt
-	input.CursorStyle = cursorStyle
 	input.CharLimit = limit
 	return input
 }
@@ -51,10 +50,14 @@ func initialHeadersModel(method, url string) headersModel {
 	name := newInput("Name: ", 64)
 	name.Focus()
 	name.PromptStyle = focusedStyle
-	name.TextStyle = focusedStyle
 	name.Width = 24
 
 	value := newInput("Value: ", 128)
+
+	knownHeaderNames := []string{}
+	for n := range client.KnownHTTPHeaders {
+		knownHeaderNames = append(knownHeaderNames, n)
+	}
 
 	return headersModel{
 		method:             method,
@@ -62,6 +65,7 @@ func initialHeadersModel(method, url string) headersModel {
 		nameInput:          name,
 		valueInput:         value,
 		headers:            http.Header{},
+		knownHeaderNames:   knownHeaderNames,
 		suggest:            types.Option[suggestions]{},
 		nameSuggestIndent:  strings.Repeat(" ", len(" Name: ")),
 		valueSuggestIndent: strings.Repeat(" ", len(" Value: ")+len(" Name: ")+name.Width),
@@ -85,30 +89,26 @@ func (m *headersModel) setFocus(name, value, button bool) tea.Cmd {
 	if name {
 		cmd = m.nameInput.Focus()
 		m.nameInput.PromptStyle = focusedStyle
-		m.nameInput.TextStyle = focusedStyle
 
 		m.valueInput.Blur()
 		m.valueInput.PromptStyle = noStyle
-		m.valueInput.TextStyle = noStyle
+
 		m.buttonFocus = false
 
 	} else if value {
 		m.nameInput.Blur()
 		m.nameInput.PromptStyle = noStyle
-		m.nameInput.TextStyle = noStyle
 
 		cmd = m.valueInput.Focus()
 		m.valueInput.PromptStyle = focusedStyle
-		m.valueInput.TextStyle = focusedStyle
+
 		m.buttonFocus = false
 	} else if button {
 		m.nameInput.Blur()
 		m.nameInput.PromptStyle = noStyle
-		m.nameInput.TextStyle = noStyle
 
 		m.valueInput.Blur()
 		m.valueInput.PromptStyle = noStyle
-		m.valueInput.TextStyle = noStyle
 
 		m.buttonFocus = true
 	}
@@ -132,12 +132,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "tab":
 			if m.nameInput.Focused() {
-				knownHeaderNames := []string{}
-				for n := range client.KnownHTTPHeaders {
-					knownHeaderNames = append(knownHeaderNames, n)
-				}
-
-				prefix, matches := complete.Complete(m.nameInput.Value(), knownHeaderNames)
+				prefix, matches := complete.Complete(m.nameInput.Value(), m.knownHeaderNames)
 				if prefix != "" && len(matches) > 0 {
 					if len(matches) > 1 {
 						m.setSuggestions(m.nameSuggestIndent, matches)
@@ -163,7 +158,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "enter":
-			if m.valueInput.Focused() {
+			if m.nameInput.Focused() || m.valueInput.Focused() {
 				name := m.nameInput.Value()
 				value := m.valueInput.Value()
 				name = strings.TrimSpace(name)
@@ -216,8 +211,8 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m headersModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("Method:  %s\n", styler.WhiteB(m.method)))
-	b.WriteString(fmt.Sprintf("URL:     %s\n", styler.WhiteB(m.url)))
+	b.WriteString(fmt.Sprintf("Method:  %s\n", confirmedStyle.Render(m.method)))
+	b.WriteString(fmt.Sprintf("URL:     %s\n", confirmedStyle.Render(m.url)))
 	b.WriteString("Headers:\n")
 
 	b.WriteString(" ")
@@ -232,22 +227,29 @@ func (m headersModel) View() string {
 		}
 	}
 
-	taber := types.NewTaber("  - ")
-	for _, name := range m.headerNames {
-		key := headerKeyStyle.Render(name + ":")
-		value := headerValueStyle.Render(strings.Join(m.headers.Values(name), "; "))
-		taber.WriteLine(key, value)
+	if len(m.headerNames) > 0 {
+		b.WriteString("\n")
+		taber := types.NewTaber("  - ")
+		for _, name := range m.headerNames {
+			key := headerKeyStyle.Render(name + ":")
+			values := strings.Join(m.headers.Values(name), "; ")
+			values = headerValueStyle.Render(values)
+
+			taber.WriteLine(key, values)
+		}
+		b.WriteString(taber.String())
 	}
-	b.WriteString(taber.String())
 
 	b.WriteString("\n")
 
-	button := " [ done ]"
+	confirm := confirmButtonText
 	if m.buttonFocus {
-		button = focusedStyle.Render(button)
+		confirm = focusedStyle.Render(confirm)
+	} else {
+		confirm = blurredStyle.Render(confirm)
 	}
 
-	b.WriteString(button)
+	b.WriteString(confirm)
 	b.WriteString("\n")
 	return b.String()
 }

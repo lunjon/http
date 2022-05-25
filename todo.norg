@@ -1,16 +1,30 @@
 * HTTP CLI
+** Release
+   - [ ] v0.12.0
+
 ** General
    - [x] Use lipgloss for styling: github.com/charmbracelet/lipgloss
    - [x] Restructure packages for better organization
-   - [ ] Release v0.12.0
    - [ ] Request history
-   - [ ] Configuration file
+   -- [ ] Write to file
+   -- [ ] Truncate to x entries
+
+** Configuration
+   - [x] Format: toml?
+   - [ ] Timeout
+   - [-] Sections
+   -- [x] aliases
+   -- [ ] history (for config, not actual history)
 
 ** TUI
    - [x] URL suggestions from alias file
    - [x] Headers
    - [ ] Body
+   - [ ] Resend request
    - [ ] Options
-   -- [ ] Interface/window/popup for managing options
    -- [ ] Timeout
    -- [ ] Certificate
+   - [ ] Splash screen
+   -- [ ] New request
+   -- [ ] History
+

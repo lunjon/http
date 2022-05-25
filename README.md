@@ -29,12 +29,6 @@ $ http get api.example/resources/abbccc-122333 --header x-user=donald
 ...
 ```
 
-### Default headers
-
-Default headers can be set by using an environment variable: `DEFAULT_HEADERS`.
-The string should contain headers in the same format specified using the
-`--header` flag, and multiple headers should be separated by a `|`.
-
 ### URL alias
 
 The `alias` is used to list, create and remove URL aliases:

@@ -10,6 +10,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Display flag: `--display=...`
 - `-o/--output` flag for writing output to file
 - `-n/--no-heading` flag for hiding heading when listing aliases
+- Configuration file in TOML format
 
 ### Fixed
 - Missing output on error
@@ -18,6 +19,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Removed
 - Brief output: `--brief`
 - Silent flag: `--silent`
+- `DEFAULT_HEADERS` support
+- alias sub-commands. Only list is supported.
 
 ### Changed
 - Renamed client certificate flags to `--cert` and `--key`

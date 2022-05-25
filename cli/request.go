@@ -14,10 +14,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/lunjon/http/internal/alias"
 	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/config"
 	"github.com/lunjon/http/internal/format"
-	"github.com/lunjon/http/internal/util"
 )
 
 var (
@@ -33,46 +32,42 @@ const (
 
 // RequestHandler handles all commands.
 type RequestHandler struct {
-	client         *client.Client
-	aliasManager   alias.Manager
-	formatter      format.ResponseFormatter
-	signer         client.RequestSigner
-	infos          io.Writer
-	errors         io.Writer
-	logger         *log.Logger
-	fail           bool
-	failFunc       FailFunc
-	repeat         int
-	defaultHeaders string
-	headerOpt      *HeaderOption
-	version        string
-	outputFile     string
+	cfg        config.Config
+	client     *client.Client
+	headers    http.Header
+	aliases    map[string]string
+	formatter  format.ResponseFormatter
+	signer     client.RequestSigner
+	output     io.Writer
+	logger     *log.Logger
+	failFunc   FailFunc
+	headerOpt  *HeaderOption
+	outputFile string
 }
 
 func newHandler(
 	client *client.Client,
-	aliasManager alias.Manager,
+	aliases map[string]string,
 	formatter format.ResponseFormatter,
 	signer client.RequestSigner,
 	logger *log.Logger,
+	cfg config.Config,
+	headers http.Header,
+	output io.Writer,
+	outputFile string,
 	failFunc FailFunc,
-	cfg *config,
 ) *RequestHandler {
 	return &RequestHandler{
-		client:         client,
-		aliasManager:   aliasManager,
-		defaultHeaders: cfg.defaultHeaders,
-		headerOpt:      cfg.headerOpt,
-		logger:         logger,
-		infos:          cfg.infos,
-		errors:         cfg.errs,
-		signer:         signer,
-		formatter:      formatter,
-		fail:           cfg.fail,
-		failFunc:       failFunc,
-		repeat:         cfg.repeat,
-		version:        cfg.version,
-		outputFile:     cfg.output,
+		cfg:        cfg,
+		client:     client,
+		output:     output,
+		aliases:    aliases,
+		headers:    headers,
+		logger:     logger,
+		signer:     signer,
+		formatter:  formatter,
+		failFunc:   failFunc,
+		outputFile: outputFile,
 	}
 }
 
@@ -86,12 +81,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		body = b
 	}
 
-	alias, err := handler.aliasManager.Load()
-	if err != nil {
-		return err
-	}
-
-	u, err := client.ParseURL(url, alias)
+	u, err := client.ParseURL(url, handler.aliases)
 	if err != nil {
 		return err
 	}
@@ -107,17 +97,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		headers.Set(contentTypeHeader, body.mime.String())
 	}
 
-	var output io.Writer = handler.infos
-	if handler.outputFile != "" {
-		file, err := os.Create(handler.outputFile)
-		if err != nil {
-			return err
-		}
-		output = file
-		defer file.Close()
-	}
-
-	for i := 0; i < handler.repeat; i++ {
+	for i := 0; i < handler.cfg.Repeat+1; i++ {
 		req, err := handler.buildRequest(method, u, body.bytes, headers)
 		if err != nil {
 			return err
@@ -128,7 +108,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 			return err
 		}
 
-		err = handler.outputResults(res, output)
+		err = handler.outputResults(res)
 		if err != nil {
 			return err
 		}
@@ -152,25 +132,25 @@ func (handler *RequestHandler) buildRequest(
 	return req, err
 }
 
-func (handler *RequestHandler) outputResults(r *http.Response, w io.Writer) error {
+func (handler *RequestHandler) outputResults(r *http.Response) error {
 	b, err := handler.formatter.Format(r)
 	if err != nil {
 		return err
 	}
 
 	if len(b) > 0 {
-		_, err = w.Write(b)
+		_, err = handler.output.Write(b)
 		if err != nil {
 			return err
 		}
 
-		_, err = w.Write(newline)
+		_, err = handler.output.Write(newline)
 		if err != nil {
 			return err
 		}
 	}
 
-	doFail := handler.fail && r.StatusCode >= 400
+	doFail := handler.cfg.Fail && r.StatusCode >= 400
 	if doFail {
 		handler.logger.Printf("Request failed with status %s", r.Status)
 		handler.failFunc(1)
@@ -182,28 +162,11 @@ func (handler *RequestHandler) outputResults(r *http.Response, w io.Writer) erro
 // Get request headers passed as parameters and defaultHeaders.
 // Also sets the User-Agent header if not set by the client.
 func (handler *RequestHandler) getHeaders() (http.Header, error) {
-	headers := handler.headerOpt.values
-
-	// handler.defaultHeaders must be a string containing headers separated by |
-	values := strings.Split(handler.defaultHeaders, "|") // Split by |
-	values = util.Map(values, strings.TrimSpace)         // Remove whitespace
-	values = util.Filter(values, func(s string) bool {   // Filter empty
-		return len(s) > 0
-	})
-	for _, h := range values {
-		key, value, err := parseHeader(h)
-		if err != nil {
-			return headers, fmt.Errorf("invalid header format in %s: %w", defaultHeadersEnv, err)
-		}
-		headers.Add(key, value)
+	if handler.headers.Get(userAgentHeader) == "" {
+		s := fmt.Sprintf("go-http-cli (%s; %s)", runtime.GOOS, runtime.GOARCH)
+		handler.headers.Set(userAgentHeader, s)
 	}
-
-	if headers.Get(userAgentHeader) == "" {
-		s := fmt.Sprintf("go-http-cli/%s (%s; %s)", handler.version, runtime.GOOS, runtime.GOARCH)
-		headers.Set(userAgentHeader, s)
-	}
-
-	return headers, nil
+	return handler.headers, nil
 }
 
 type requestBody struct {

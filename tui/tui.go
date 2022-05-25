@@ -29,15 +29,18 @@ import (
 	"github.com/lunjon/http/internal/format"
 )
 
-func init() {
-	styler = format.NewStyler()
-}
+const (
+	confirmButtonText = " [ confirm ] "
+)
 
 var (
 	noStyle        = lipgloss.NewStyle()
-	focusedStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205"))
-	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	styler         *format.Styler
+	confirmedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10"))
+	focusedStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("14"))
+	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+
+	styler = format.NewStyler()
+
 	quitKeyBinding = key.NewBinding(
 		key.WithKeys("esc", "ctrl+c"),
 		key.WithHelp("ctrl+c", "quit"),
