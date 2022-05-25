@@ -13,7 +13,6 @@ const defaultConfig = `
 # verbose = false
 # trace = false
 # fail = false
-# repeat = 0
 
 [aliases] # Section for you URL aliases
 # local = http://localhost
@@ -22,18 +21,14 @@ const defaultConfig = `
 type Config struct {
 	Timeout time.Duration
 	Verbose bool
-	Trace   bool
 	Fail    bool
-	Repeat  int
 	Aliases map[string]string
 }
 
 func New() Config {
 	return Config{
 		Verbose: false,
-		Trace:   false,
 		Fail:    false,
-		Repeat:  1,
 		Aliases: make(map[string]string),
 	}
 }
@@ -43,18 +38,8 @@ func (cfg Config) UseVerbose(b bool) Config {
 	return cfg
 }
 
-func (cfg Config) UseTrace(b bool) Config {
-	cfg.Trace = b
-	return cfg
-}
-
 func (cfg Config) UseFail(b bool) Config {
 	cfg.Fail = b
-	return cfg
-}
-
-func (cfg Config) UseRepeat(n int) Config {
-	cfg.Repeat = n
 	return cfg
 }
 

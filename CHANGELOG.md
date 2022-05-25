@@ -19,6 +19,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Removed
 - Brief output: `--brief`
 - Silent flag: `--silent`
+- Repeat flag: `--repeat`
 - `DEFAULT_HEADERS` support
 - alias sub-commands. Only list is supported.
 

@@ -181,8 +181,10 @@ func buildRequestRun(
 		if cfg.Verbose {
 			logger.SetOutput(outputs.logs)
 		}
+
 		traceLogger := logging.New(io.Discard)
-		if cfg.Trace {
+		trace, _ := flags.GetBool(traceFlagName)
+		if trace {
 			traceLogger.SetOutput(outputs.logs)
 		}
 
@@ -336,8 +338,6 @@ func addCommonFlags(cmd *cobra.Command, h *HeaderOption) {
 The value must conform to the format "name: value". "name" and "value" can
 be separated by either a colon ":" or an equal sign "=", and the space
 between is optional.`)
-
-	cmd.Flags().IntP(repeatFlagName, "r", 0, "Repeat the request.")
 
 	cmd.Flags().BoolP(
 		awsSigV4FlagName,

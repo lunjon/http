@@ -97,21 +97,19 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		headers.Set(contentTypeHeader, body.mime.String())
 	}
 
-	for i := 0; i < handler.cfg.Repeat+1; i++ {
-		req, err := handler.buildRequest(method, u, body.bytes, headers)
-		if err != nil {
-			return err
-		}
+	req, err := handler.buildRequest(method, u, body.bytes, headers)
+	if err != nil {
+		return err
+	}
 
-		res, err := handler.client.Send(req)
-		if err != nil {
-			return err
-		}
+	res, err := handler.client.Send(req)
+	if err != nil {
+		return err
+	}
 
-		err = handler.outputResults(res)
-		if err != nil {
-			return err
-		}
+	err = handler.outputResults(res)
+	if err != nil {
+		return err
 	}
 
 	return nil

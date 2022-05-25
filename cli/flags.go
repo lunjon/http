@@ -9,7 +9,6 @@ import (
 
 const (
 	headerFlagName            = "header"
-	repeatFlagName            = "repeat"
 	awsSigV4FlagName          = "aws-sigv4"
 	awsRegionFlagName         = "aws-region"
 	bodyFlagName              = "body"
