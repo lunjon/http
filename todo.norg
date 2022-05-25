@@ -3,9 +3,9 @@
    - [ ] v0.12.0
 
 ** General
-   - [ ] Config sub-commands
+   - [-] Config sub-commands
    -- [ ] Init
-   -- [ ] List
+   -- [x] List
    -- [ ] Edit
    - [ ] Request history
    -- [ ] Write to file
@@ -13,7 +13,7 @@
 
 ** Configuration
    - [x] Format: toml?
-   - [ ] Timeout
+   - [x] Timeout
    - [-] Sections
    -- [x] aliases
    -- [ ] history (for config, not actual history)
