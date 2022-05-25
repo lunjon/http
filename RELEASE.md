@@ -1,31 +1,27 @@
 # Release process
 
-Follow these steps to create a new release.
-
-## 1. Set version
-
-Open [main.go](./main.go) and set the version.
-
-## 2. Update the changelog
-
-Open [CHANGELOG.md](./CHANGELOG.md) and add a new release heading for the version.
-
-## 3. Commit, tag and push
-
-Run the commands below to commit, tag, and push
+Follow these steps to create a new release for version `vX.Y.Z`.
 
 **NOTE!** Include `v` in version.
 
+## 1. Set version
+Open [main.go](./main.go) and set the version.
+
+## 2. Update the changelog
+Open [CHANGELOG.md](./CHANGELOG.md) and add a new release heading for the version.
+
+## 3. Commit and push
 ```shell
-$ version="vX.Y.Z"
-$ git add .
-$ git commit -m "Release $version"
-$ git tag -a "$version" -m "Release $version"
-$ git push --follow-tags
+$ git commit -am "Release vX.Y.Z"
+$ git push
 ```
 
-## 4. Create GitHub release
+## 3. Create assets
+```shell
+$ ./build.sh
+```
 
-1. Create executables: `./build.sh`.
-1. Head over to https://github.com/lunjon/http/releases and create a new release.
-1. Attach the executables.
+## 4. Use GitHub CLI in order to create release
+```shell
+$ gh release create vX.Y.Z bin/*
+```

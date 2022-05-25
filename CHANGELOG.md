@@ -4,6 +4,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.12.0] - 2022-05-25
+
 ### Added
 - "User-Agent" header (does not override any specified by user)
 - `--no-follow-redirects` flag for disabling redirects in HTTP client
