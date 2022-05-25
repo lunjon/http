@@ -3,6 +3,7 @@ module github.com/lunjon/http
 go 1.18
 
 require (
+	github.com/BurntSushi/toml v1.1.0
 	github.com/aws/aws-sdk-go v1.44.8
 	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.20.0
@@ -12,7 +13,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
