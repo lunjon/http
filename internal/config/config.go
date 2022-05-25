@@ -9,7 +9,7 @@ import (
 )
 
 const defaultConfig = `
-# Valid root options and default values
+# Valid options and default values
 # timeout = "30s"
 # verbose = false
 # fail = false

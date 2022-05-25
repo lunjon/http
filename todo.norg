@@ -3,8 +3,10 @@
    - [ ] v0.12.0
 
 ** General
-   - [x] Use lipgloss for styling: github.com/charmbracelet/lipgloss
-   - [x] Restructure packages for better organization
+   - [ ] Config sub-commands
+   -- [ ] Init
+   -- [ ] List
+   -- [ ] Edit
    - [ ] Request history
    -- [ ] Write to file
    -- [ ] Truncate to x entries

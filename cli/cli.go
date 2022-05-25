@@ -41,7 +41,7 @@ func Build(version string) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	configPath := path.Join(homedir, ".gohttp", "config.yml")
+	configPath := path.Join(homedir, ".config", "httpcli", "config.toml")
 	cfg, err := config.Load(configPath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
