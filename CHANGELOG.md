@@ -22,7 +22,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Silent flag: `--silent`
 - Repeat flag: `--repeat`
 - `DEFAULT_HEADERS` support
-- alias sub-commands. Only list is supported.
+- alias sub-commands. Use `config` instead.
 
 ### Changed
 - Renamed client certificate flags to `--cert` and `--key`

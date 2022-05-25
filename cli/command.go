@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -17,7 +16,6 @@ import (
 	"github.com/lunjon/http/internal/format"
 	"github.com/lunjon/http/internal/logging"
 	"github.com/lunjon/http/internal/server"
-	"github.com/lunjon/http/internal/types"
 	"github.com/lunjon/http/internal/util"
 	"github.com/lunjon/http/tui"
 	"github.com/spf13/cobra"
@@ -91,10 +89,6 @@ A request body can be specified in three ways:
 	// Server
 	server := buildServer(cfg, outputs)
 	root.AddCommand(server)
-
-	// Alias
-	alias := buildAlias(cfg, outputs)
-	root.AddCommand(alias)
 
 	// Config
 	conf := buildConfig(cfg, outputs)
@@ -301,43 +295,6 @@ Useful for local testing and debugging.`,
 	}
 
 	c.Flags().UintP("port", "p", 8080, "Port to listen on.")
-	return c
-}
-
-func buildAlias(cfg config.Config, outputs outputs) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "alias",
-		Short: "List aliases.",
-		Run: func(cmd *cobra.Command, args []string) {
-			styler := format.NewStyler()
-			if len(cfg.Aliases) == 0 {
-				fmt.Fprintln(outputs.infos, "No aliases defined.")
-				return
-			}
-
-			cfg = updateConfig(cmd, cfg)
-			noHeading, _ := cmd.Flags().GetBool(aliasHeadingFlagName)
-
-			// Sort by name
-			names := []string{}
-			for name := range cfg.Aliases {
-				names = append(names, name)
-			}
-			sort.Strings(names)
-
-			taber := types.NewTaber("")
-			if !noHeading {
-				taber.WriteLine(styler.WhiteB("Name\t"), styler.WhiteB("URL"))
-			}
-
-			for _, name := range names {
-				taber.WriteLine(name, cfg.Aliases[name])
-			}
-			fmt.Fprintln(outputs.infos, taber.String())
-		},
-	}
-
-	c.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
 	return c
 }
 
