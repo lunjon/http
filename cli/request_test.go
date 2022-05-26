@@ -50,7 +50,7 @@ func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
 		cfg = cfgs[0]
 	}
 
-	handler := newHandler(
+	handler := newRequestHandler(
 		c,
 		make(map[string]string),
 		formatter,

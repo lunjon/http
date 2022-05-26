@@ -45,7 +45,7 @@ type RequestHandler struct {
 	outputFile string
 }
 
-func newHandler(
+func newRequestHandler(
 	client *client.Client,
 	aliases map[string]string,
 	formatter format.ResponseFormatter,

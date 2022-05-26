@@ -233,7 +233,7 @@ func buildRequestRun(
 			failFunc = os.Exit
 		}
 
-		handler := newHandler(
+		handler := newRequestHandler(
 			cl,
 			cfg.Aliases,
 			formatter,
