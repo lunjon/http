@@ -9,10 +9,6 @@ import (
 	"github.com/lunjon/http/internal/config"
 )
 
-var ()
-
-const ()
-
 type ConfigHandler struct {
 	configPath string
 	output     io.Writer

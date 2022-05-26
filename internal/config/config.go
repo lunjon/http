@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -51,6 +52,11 @@ func (cfg Config) UseVerbose(b bool) Config {
 func (cfg Config) UseFail(b bool) Config {
 	cfg.Fail = b
 	return cfg
+}
+
+func (cfg Config) Write(w io.Writer) error {
+	encoder := toml.NewEncoder(w)
+	return encoder.Encode(cfg)
 }
 
 func (cfg Config) String() string {

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lunjon/http/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
@@ -56,6 +57,13 @@ func TestMain(m *testing.M) {
 		err := os.MkdirAll(testdir, 0700)
 		checkErr(err, os.Stderr)
 	}
+
+	file, err := os.Create(testConfigPath)
+	checkErr(err, os.Stderr)
+
+	appConfig := config.New()
+	err = appConfig.Write(file)
+	checkErr(err, os.Stderr)
 
 	status := m.Run()
 	testServer.Close()

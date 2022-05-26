@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +16,15 @@ func TestDefault(t *testing.T) {
 	assert.False(t, cfg.Verbose)
 	assert.False(t, cfg.Fail)
 	assert.Len(t, cfg.Aliases, 0)
+}
+
+func TestWrite(t *testing.T) {
+	cfg := New()
+
+	w := strings.Builder{}
+	err := cfg.Write(&w)
+	assert.NoError(t, err)
+	assert.NotZero(t, w.String())
 }
 
 func TestTimeout(t *testing.T) {
