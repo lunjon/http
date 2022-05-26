@@ -9,15 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lunjon/http/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	testServer        *httptest.Server
-	testdir           = "test-http"
-	testAliasFilepath = path.Join(testdir, "aliases.json")
+	testServer     *httptest.Server
+	testdir        = "test-http"
+	testConfigPath = path.Join(testdir, "config.toml")
 )
 
 type signerMock struct {
@@ -77,13 +76,14 @@ func setupCommandTest(args ...string) *commandTestFixture {
 	infos := &strings.Builder{}
 	errs := &strings.Builder{}
 
-	outputs := outputs{
-		logs:   logs,
-		infos:  infos,
-		errors: errs,
+	cliconf := cliConfig{
+		configPath: testConfigPath,
+		logs:       logs,
+		infos:      infos,
+		errors:     errs,
 	}
 
-	cmd := build("test", config.New(), outputs)
+	cmd := build("test", cliconf)
 	cmd.SetArgs(args)
 
 	return &commandTestFixture{

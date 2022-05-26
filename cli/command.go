@@ -35,8 +35,7 @@ var (
 
 func build(
 	version string,
-	cfg config.Config,
-	outputs outputs,
+	cfg cliConfig,
 ) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "http",
@@ -57,13 +56,16 @@ A request body can be specified in three ways:
  * --body '...': request body from a string
  * --body file: read content from a file`,
 		Run: func(cmd *cobra.Command, args []string) {
+			appConfig, err := cfg.getAppConfig()
+			checkErr(err, cfg.errors)
+
 			urls := []string{}
-			for _, url := range cfg.Aliases {
+			for _, url := range appConfig.Aliases {
 				urls = append(urls, url)
 			}
 
-			err := tui.Start(urls)
-			checkErr(err, outputs.errors)
+			err = tui.Start(urls)
+			checkErr(err, cfg.errors)
 		},
 	}
 
@@ -77,34 +79,36 @@ A request body can be specified in three ways:
 	})
 
 	// HTTP
-	get := buildHTTPCommand(cfg, outputs, http.MethodGet, noConfigure)
-	head := buildHTTPCommand(cfg, outputs, http.MethodHead, noConfigure)
-	options := buildHTTPCommand(cfg, outputs, http.MethodOptions, noConfigure)
-	post := buildHTTPCommand(cfg, outputs, http.MethodPost, bodyConfigure)
-	put := buildHTTPCommand(cfg, outputs, http.MethodPut, bodyConfigure)
-	patch := buildHTTPCommand(cfg, outputs, http.MethodPatch, bodyConfigure)
-	del := buildHTTPCommand(cfg, outputs, http.MethodDelete, noConfigure)
-	root.AddCommand(get, head, options, post, put, patch, del)
+	httpCommands := []struct {
+		method string
+		conf   func(*cobra.Command)
+	}{
+		{http.MethodGet, noConfigure},
+		{http.MethodHead, noConfigure},
+		{http.MethodOptions, noConfigure},
+		{http.MethodPost, bodyConfigure},
+		{http.MethodPut, bodyConfigure},
+		{http.MethodPatch, bodyConfigure},
+		{http.MethodDelete, noConfigure},
+	}
+	for _, cmd := range httpCommands {
+		root.AddCommand(buildHTTPCommand(cfg, cmd.method, cmd.conf))
+	}
 
-	// Server
-	server := buildServer(cfg, outputs)
-	root.AddCommand(server)
-
-	// Config
-	conf := buildConfig(cfg, outputs)
-	root.AddCommand(conf)
+	root.AddCommand(buildServer(cfg))
+	root.AddCommand(buildConfig(cfg))
 
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
 	return root
 }
 
-func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
-	timeout, _ := cmd.Flags().GetDuration(timeoutFlagName)
+func buildHTTPClient(cfg config.Config, cmd *cobra.Command) (*http.Client, error) {
+	flags := cmd.Flags()
 
 	var tlsConfig tls.Config
-	certPub, _ := cmd.Flags().GetString(certpubFlagName)
-	certKey, _ := cmd.Flags().GetString(certkeyFlagName)
+	certPub, _ := flags.GetString(certpubFlagName)
+	certKey, _ := flags.GetString(certkeyFlagName)
 
 	if certPub != "" && certKey == "" {
 		return nil, errCertFlags
@@ -121,7 +125,7 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 		}
 	}
 
-	noFollowRedirects, _ := cmd.Flags().GetBool(noFollowRedirectsFlagName)
+	noFollowRedirects, _ := flags.GetBool(noFollowRedirectsFlagName)
 	var redirect checkRedirectFunc = nil
 	if noFollowRedirects {
 		redirect = func(*http.Request, []*http.Request) error {
@@ -130,7 +134,7 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 	}
 
 	return &http.Client{
-		Timeout:       timeout,
+		Timeout:       cfg.Timeout,
 		CheckRedirect: redirect,
 		Transport: &http.Transport{
 			Proxy:           http.ProxyFromEnvironment,
@@ -141,7 +145,6 @@ func buildHTTPClient(cmd *cobra.Command) (*http.Client, error) {
 
 func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 	flags := cmd.Flags()
-
 	if flags.Changed(failFlagName) {
 		v, _ := flags.GetBool(failFlagName)
 		cfg = cfg.UseFail(v)
@@ -167,27 +170,29 @@ func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 // and respects the config.
 func buildRequestRun(
 	method string,
-	cfg config.Config,
-	outputs outputs,
+	cfg cliConfig,
 	headerOpt *HeaderOption,
 ) runFunc {
 	return func(cmd *cobra.Command, args []string) {
 		flags := cmd.Flags()
-		cfg = updateConfig(cmd, cfg)
+		appConfig, err := cfg.getAppConfig()
+		checkErr(err, cfg.errors)
+
+		appConfig = updateConfig(cmd, appConfig)
 
 		logger := logging.New(io.Discard)
-		if cfg.Verbose {
-			logger.SetOutput(outputs.logs)
+		if appConfig.Verbose {
+			logger.SetOutput(cfg.logs)
 		}
 
 		traceLogger := logging.New(io.Discard)
 		trace, _ := flags.GetBool(traceFlagName)
 		if trace {
-			traceLogger.SetOutput(outputs.logs)
+			traceLogger.SetOutput(cfg.logs)
 		}
 
-		httpClient, err := buildHTTPClient(cmd)
-		checkErr(err, outputs.errors)
+		httpClient, err := buildHTTPClient(appConfig, cmd)
+		checkErr(err, cfg.errors)
 
 		cl := client.NewClient(httpClient, logger, traceLogger)
 		display, _ := flags.GetString(displayFlagName)
@@ -202,7 +207,7 @@ func buildRequestRun(
 			components := strings.Split(strings.TrimSpace(display), ",")
 			components = util.Map(components, strings.TrimSpace)
 			formatter, err = format.NewResponseFormatter(format.NewStyler(), components)
-			checkErr(err, outputs.errors)
+			checkErr(err, cfg.errors)
 		}
 
 		var signer client.RequestSigner
@@ -216,11 +221,11 @@ func buildRequestRun(
 			signer = client.DefaultSigner{}
 		}
 
-		output := outputs.infos
+		output := cfg.infos
 		outputFile, _ := flags.GetString(outputFlagName)
 		if outputFile != "" {
 			file, err := os.Create(outputFile)
-			checkErr(err, outputs.errors)
+			checkErr(err, cfg.errors)
 
 			defer func() {
 				file.Close()
@@ -229,17 +234,16 @@ func buildRequestRun(
 		}
 
 		failFunc := defaultFailFunc
-		if cfg.Fail {
+		if appConfig.Fail {
 			failFunc = os.Exit
 		}
 
 		handler := newRequestHandler(
 			cl,
-			cfg.Aliases,
 			formatter,
 			signer,
 			logger,
-			cfg,
+			appConfig,
 			headerOpt.values,
 			output,
 			outputFile,
@@ -249,13 +253,12 @@ func buildRequestRun(
 		url := args[0]
 		bodyFlag, _ := flags.GetString(bodyFlagName)
 		err = handler.handleRequest(method, url, bodyFlag)
-		checkErr(err, outputs.errors)
+		checkErr(err, cfg.errors)
 	}
 }
 
 func buildHTTPCommand(
-	cfg config.Config,
-	outputs outputs,
+	cfg cliConfig,
 	method string,
 	configure func(*cobra.Command),
 ) *cobra.Command {
@@ -265,7 +268,7 @@ func buildHTTPCommand(
 		Use:   fmt.Sprintf("%s <url>", strings.ToLower(method)),
 		Short: fmt.Sprintf("HTTP %s request", strings.ToUpper(method)),
 		Args:  cobra.ExactArgs(1),
-		Run:   buildRequestRun(method, cfg, outputs, headerOption),
+		Run:   buildRequestRun(method, cfg, headerOption),
 	}
 
 	addCommonFlags(cmd, headerOption)
@@ -273,7 +276,7 @@ func buildHTTPCommand(
 	return cmd
 }
 
-func buildServer(cfg config.Config, outputs outputs) *cobra.Command {
+func buildServer(cfg cliConfig) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "server",
 		Short: "Starts an HTTP server on localhost.",
@@ -290,7 +293,7 @@ Useful for local testing and debugging.`,
 
 			server := server.New(port, styler)
 			err := server.Serve()
-			checkErr(err, outputs.errors)
+			checkErr(err, cfg.errors)
 		},
 	}
 
@@ -298,15 +301,37 @@ Useful for local testing and debugging.`,
 	return c
 }
 
-func buildConfig(cfg config.Config, outputs outputs) *cobra.Command {
+func buildConfig(cfg cliConfig) *cobra.Command {
+	handler := newConfigHandler(cfg.configPath, cfg.infos)
+
 	root := &cobra.Command{
-		Use:   "config [...]",
+		Use:   "config",
 		Short: "Configuration commands.",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintln(outputs.infos, cfg.String())
+		Run: func(cmd *cobra.Command, _ []string) {
+			err := handler.list()
+			checkErr(err, cfg.errors)
 		},
 	}
 
+	edit := &cobra.Command{
+		Use:   "edit",
+		Short: "Edit the configuration file.",
+		Run: func(cmd *cobra.Command, _ []string) {
+			err := handler.edit()
+			checkErr(err, cfg.errors)
+		},
+	}
+
+	init := &cobra.Command{
+		Use:   "init",
+		Short: "Initialize a new configuration file.",
+		Run: func(cmd *cobra.Command, _ []string) {
+			err := handler.init()
+			checkErr(err, cfg.errors)
+		},
+	}
+
+	root.AddCommand(edit, init)
 	root.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
 	return root
 }

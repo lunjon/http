@@ -35,7 +35,6 @@ type RequestHandler struct {
 	cfg        config.Config
 	client     *client.Client
 	headers    http.Header
-	aliases    map[string]string
 	formatter  format.ResponseFormatter
 	signer     client.RequestSigner
 	output     io.Writer
@@ -47,7 +46,6 @@ type RequestHandler struct {
 
 func newRequestHandler(
 	client *client.Client,
-	aliases map[string]string,
 	formatter format.ResponseFormatter,
 	signer client.RequestSigner,
 	logger *log.Logger,
@@ -61,7 +59,6 @@ func newRequestHandler(
 		cfg:        cfg,
 		client:     client,
 		output:     output,
-		aliases:    aliases,
 		headers:    headers,
 		logger:     logger,
 		signer:     signer,
@@ -81,7 +78,7 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		body = b
 	}
 
-	u, err := client.ParseURL(url, handler.aliases)
+	u, err := client.ParseURL(url, handler.cfg.Aliases)
 	if err != nil {
 		return err
 	}

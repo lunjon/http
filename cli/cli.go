@@ -18,10 +18,22 @@ type FailFunc func(status int)
 type runFunc func(*cobra.Command, []string)
 type checkRedirectFunc func(*http.Request, []*http.Request) error
 
-type outputs struct {
-	logs   io.Writer
-	infos  io.Writer
-	errors io.Writer
+type cliConfig struct {
+	logs       io.Writer
+	infos      io.Writer
+	errors     io.Writer
+	configPath string
+}
+
+func (cfg cliConfig) getAppConfig() (config.Config, error) {
+	c, err := config.Load(cfg.configPath)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return c, err
+		}
+		c = config.New()
+	}
+	return c, nil
 }
 
 const (
@@ -42,20 +54,13 @@ func Build(version string) (*cobra.Command, error) {
 	}
 
 	configPath := path.Join(homedir, ".config", "httpcli", "config.toml")
-	cfg, err := config.Load(configPath)
-	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		cfg = config.New()
+	cfg := cliConfig{
+		configPath: configPath,
+		infos:      os.Stdout,
+		logs:       os.Stderr,
+		errors:     os.Stderr,
 	}
-
-	outputs := outputs{
-		infos:  os.Stdout,
-		logs:   os.Stderr,
-		errors: os.Stderr,
-	}
-	return build(version, cfg, outputs), nil
+	return build(version, cfg), nil
 }
 
 func checkErr(err error, output io.Writer) {
