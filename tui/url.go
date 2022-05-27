@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/internal/complete"
+	"github.com/lunjon/http/internal/util"
 )
 
 const (
@@ -77,7 +78,10 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.matches = matches
 		case "enter":
 			url := m.input.Value()
-			return initialHeadersModel(m.method, url), nil
+			if !util.Contains([]string{"post", "put", "patch"}, strings.ToLower(m.method)) {
+				return initialHeadersModel(m.method, url), nil
+			}
+			return initialBodyModel(m.method, url), nil
 		}
 	}
 

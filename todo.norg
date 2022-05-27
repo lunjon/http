@@ -18,7 +18,10 @@
 ** TUI
    - [x] URL suggestions from alias file
    - [x] Headers
-   - [ ] Body
+   - [x] Body
+   -- [x] Implement skip
+   -- [ ] Implement editor
+   -- [ ] Implement file
    - [ ] Resend request
    - [ ] Options
    -- [ ] Timeout

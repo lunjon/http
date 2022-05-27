@@ -4,6 +4,11 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Added
+- `config init` sub-command
+- `config edit` sub-command
+- Body model/view to TUI
+
 ## [0.12.1] - 2022-05-25
 
 ### Fixed

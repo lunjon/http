@@ -35,6 +35,7 @@ const (
 
 var (
 	noStyle        = lipgloss.NewStyle()
+	boldStyle      = lipgloss.NewStyle().Bold(true)
 	confirmedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10"))
 	focusedStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("14"))
 	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
