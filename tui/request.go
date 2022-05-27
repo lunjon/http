@@ -26,9 +26,9 @@ type requestModel struct {
 
 func initialRequestModel(state state) requestModel {
 	keys := keyMap{
-		short: []key.Binding{configBinding, helpToggleBinding},
+		short: []key.Binding{confirmBinding, helpToggleBinding},
 		full: [][]key.Binding{
-			{configBinding},
+			{confirmBinding},
 			{helpToggleBinding, quitBinding},
 		},
 	}
@@ -54,7 +54,7 @@ func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, configBinding):
+		case key.Matches(msg, confirmBinding):
 			return m, m.sendRequest
 		}
 	case result:

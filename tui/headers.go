@@ -167,7 +167,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			}
-		case key.Matches(msg, configBinding):
+		case key.Matches(msg, confirmBinding):
 			if m.nameInput.Focused() || m.valueInput.Focused() {
 				name := m.nameInput.Value()
 				value := m.valueInput.Value()

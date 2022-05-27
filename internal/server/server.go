@@ -54,7 +54,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("  Headers:")
 		for name, values := range r.Header {
 			v := strings.Join(values, grey("; "))
-			v = fmt.Sprintf("%s %s %s", greenishB.Render("["), v, greenishB.Render("]"))
+			v = fmt.Sprintf("%s %s %s", greenB("["), v, greenB("]"))
 			fmt.Printf("    %s: %s\n", bold.Render(name), v)
 		}
 	}
@@ -63,10 +63,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Printf("  Body:    %s: %s\n", redB("error"), err)
 	} else if len(b) > 0 {
-		body := string(b)
-		if len(body) > 100 {
-			body = body[:90] + "..."
-		}
-		fmt.Printf("  Body:    %s\n", body)
+		s := fmt.Sprintf("%d bytes", len(b))
+		fmt.Printf("  Body:    %s\n", greenB(s))
 	}
 }

@@ -86,7 +86,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.input.SetValue(text)
 			m.input.SetCursor(len(text))
 			m.matches = matches
-		case key.Matches(msg, configBinding):
+		case key.Matches(msg, confirmBinding):
 			method := m.state.method.Value()
 			state := m.state.setURL(m.input.Value())
 			if !util.Contains([]string{"post", "put", "patch"}, strings.ToLower(method)) {

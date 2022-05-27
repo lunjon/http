@@ -86,7 +86,7 @@ func (m fileSearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, configBinding):
+		case key.Matches(msg, confirmBinding):
 			i := m.list.SelectedItem().(item)
 			b, err := os.ReadFile(string(i))
 			checkError(err)

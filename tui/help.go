@@ -15,12 +15,12 @@ var (
 		key.WithKeys("ctrl+c"),
 		key.WithHelp("ctrl+c", "quit"),
 	)
-	configBinding = key.NewBinding(
+	confirmBinding = key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("/enter", "confirm"),
 	)
 	upBinding = key.NewBinding(
-		key.WithKeys("up", "k"),
+		key.WithKeys("up"),
 		key.WithHelp("↑", "move up"),
 	)
 	upBindingV = key.NewBinding(
@@ -28,7 +28,7 @@ var (
 		key.WithHelp("↑/k", "move up"),
 	)
 	downBinding = key.NewBinding(
-		key.WithKeys("down", "j"),
+		key.WithKeys("down"),
 		key.WithHelp("↓", "move down"),
 	)
 	downBindingV = key.NewBinding(
@@ -36,16 +36,16 @@ var (
 		key.WithHelp("↓/j", "move down"),
 	)
 	leftBinding = key.NewBinding(
-		key.WithKeys("left", "h"),
-		key.WithHelp("←h", "move left"),
+		key.WithKeys("left"),
+		key.WithHelp("←", "move left"),
 	)
 	leftBindingV = key.NewBinding(
 		key.WithKeys("left", "h"),
 		key.WithHelp("←/h", "move left"),
 	)
 	rightbinding = key.NewBinding(
-		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "move right"),
+		key.WithKeys("right"),
+		key.WithHelp("→", "move right"),
 	)
 	rightbindingV = key.NewBinding(
 		key.WithKeys("right", "l"),

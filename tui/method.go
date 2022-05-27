@@ -41,15 +41,15 @@ func (m methodModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, upBinding):
+		case key.Matches(msg, upBindingV):
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case key.Matches(msg, downBinding):
+		case key.Matches(msg, downBindingV):
 			if m.cursor < len(m.methods)-1 {
 				m.cursor++
 			}
-		case key.Matches(msg, configBinding):
+		case key.Matches(msg, confirmBinding):
 			selectedMethod := m.methods[m.cursor]
 			state := m.state.setMethod(selectedMethod)
 			return initialURLModel(state, m.urls), nil

@@ -102,7 +102,7 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, choiceCmd(choiceFile)
 		case key.Matches(msg, skipBinding):
 			return m, choiceCmd(choiceSkip)
-		case key.Matches(msg, configBinding):
+		case key.Matches(msg, confirmBinding):
 			return m, choiceCmd(selection(m.cursor))
 		}
 	case selection:
