@@ -18,13 +18,13 @@ type methodModel struct {
 
 func initialMethodModel(state state, urls []string) methodModel {
 	keys := keyMap{
-		short: []key.Binding{defaultToggleBinding},
+		short: []key.Binding{helpToggleBinding},
 		full: [][]key.Binding{
 			{upBindingV, downBindingV},
-			{defaultToggleBinding, quitBinding},
+			{helpToggleBinding, quitBinding},
 		},
 	}
-	help := newHelp(defaultToggleBinding, keys)
+	help := newHelp(keys)
 	return methodModel{
 		help:    help,
 		state:   state,

@@ -18,7 +18,7 @@ type result struct {
 }
 
 type requestModel struct {
-	help tea.Model
+	help   tea.Model
 	state  state
 	client *http.Client
 	result types.Option[result]
@@ -26,19 +26,20 @@ type requestModel struct {
 
 func initialRequestModel(state state) requestModel {
 	keys := keyMap{
-		short: []key.Binding{configBinding, defaultToggleBinding},
+		short: []key.Binding{configBinding, helpToggleBinding},
 		full: [][]key.Binding{
-			{configBinding, defaultToggleBinding},
+			{configBinding},
+			{helpToggleBinding, quitBinding},
 		},
 	}
-	help := newHelp(defaultToggleBinding, keys)
+	help := newHelp(keys)
 
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
 
 	return requestModel{
-		help:    help,
+		help:   help,
 		state:  state,
 		client: client,
 		result: types.Option[result]{},
@@ -52,7 +53,7 @@ func (m requestModel) Init() tea.Cmd {
 func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch  {
+		switch {
 		case key.Matches(msg, quitBinding):
 			return m, tea.Quit
 		case key.Matches(msg, configBinding):

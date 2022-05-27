@@ -7,11 +7,7 @@ import (
 )
 
 var (
-	defaultToggleBinding = key.NewBinding(
-		key.WithKeys("?"),
-		key.WithHelp("?", "toggle help"),
-	)
-	inputToggleBinding = key.NewBinding(
+	helpToggleBinding = key.NewBinding(
 		key.WithKeys("ctrl+h"),
 		key.WithHelp("ctrl+h", "toggle help"),
 	)
@@ -75,16 +71,14 @@ func (k keyMap) FullHelp() [][]key.Binding {
 }
 
 type helpModel struct {
-	keys   keyMap
-	help   help.Model
-	toggle key.Binding
+	keys keyMap
+	help help.Model
 }
 
-func newHelp(toggle key.Binding, keys keyMap) helpModel {
+func newHelp(keys keyMap) helpModel {
 	return helpModel{
-		toggle: toggle,
-		keys:   keys,
-		help:   help.New(),
+		keys: keys,
+		help: help.New(),
 	}
 }
 
@@ -99,7 +93,7 @@ func (m helpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.toggle):
+		case key.Matches(msg, helpToggleBinding):
 			m.help.ShowAll = !m.help.ShowAll
 		}
 	}

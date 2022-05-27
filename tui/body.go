@@ -59,13 +59,13 @@ type bodyModel struct {
 
 func initialBodyModel(state state) bodyModel {
 	keys := keyMap{
-		short: []key.Binding{defaultToggleBinding},
+		short: []key.Binding{helpToggleBinding},
 		full: [][]key.Binding{
 			{upBindingV, downBindingV},
-			{quitBinding, defaultToggleBinding},
+			{quitBinding, helpToggleBinding},
 		},
 	}
-	help := newHelp(defaultToggleBinding, keys)
+	help := newHelp(keys)
 
 	choices := []choice{
 		{"e", "Open editor (" + config.Editor + ")"},

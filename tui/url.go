@@ -25,13 +25,13 @@ type urlModel struct {
 
 func initialURLModel(state state, urls []string) urlModel {
 	keys := keyMap{
-		short: []key.Binding{inputToggleBinding},
+		short: []key.Binding{helpToggleBinding},
 		full: [][]key.Binding{
 			{upBinding, downBinding},
-			{quitBinding, inputToggleBinding},
+			{autocompleteBinding, helpToggleBinding, quitBinding},
 		},
 	}
-	help := newHelp(inputToggleBinding, keys)
+	help := newHelp(keys)
 
 	input := textinput.NewModel()
 	input.Prompt = ""
