@@ -24,8 +24,7 @@ type suggestions struct {
 }
 
 type headersModel struct {
-	method string
-	url    string
+	state state
 
 	buttonFocus bool
 	nameInput   textinput.Model
@@ -46,7 +45,7 @@ func newInput(prompt string, limit int) textinput.Model {
 	return input
 }
 
-func initialHeadersModel(method, url string) headersModel {
+func initialHeadersModel(state state) headersModel {
 	name := newInput("Name: ", 64)
 	name.Focus()
 	name.PromptStyle = focusedStyle
@@ -60,8 +59,7 @@ func initialHeadersModel(method, url string) headersModel {
 	}
 
 	return headersModel{
-		method:             method,
-		url:                url,
+		state:              state,
 		nameInput:          name,
 		valueInput:         value,
 		headers:            http.Header{},
@@ -174,7 +172,8 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			} else if m.buttonFocus {
 				// Switch to next model
-				return initialRequestModel(m.method, m.url, m.headers), nil
+				state := m.state.setHeaders(m.headers)
+				return initialRequestModel(state), nil
 			}
 
 		case "up":
@@ -211,8 +210,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m headersModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("Method:  %s\n", confirmedStyle.Render(m.method)))
-	b.WriteString(fmt.Sprintf("URL:     %s\n", confirmedStyle.Render(m.url)))
+	b.WriteString(m.state.render())
 	b.WriteString("Headers:\n")
 
 	b.WriteString(" ")

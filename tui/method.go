@@ -5,20 +5,19 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/internal/client"
-	"github.com/lunjon/http/internal/types"
 )
 
 type methodModel struct {
+	state   state
 	cursor  int
 	methods []string
-	method  types.Option[string]
 	urls    []string
 }
 
-func initialMethodModel(urls []string) methodModel {
+func initialMethodModel(state state, urls []string) methodModel {
 	return methodModel{
+		state:   state,
 		methods: client.SupportedMethods,
-		method:  types.Option[string]{},
 		urls:    urls,
 	}
 }
@@ -41,7 +40,8 @@ func (m methodModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter", " ":
 			selectedMethod := m.methods[m.cursor]
-			return initialURLModel(selectedMethod, m.urls), nil
+			state := m.state.setMethod(selectedMethod)
+			return initialURLModel(state, m.urls), nil
 		}
 	}
 	return m, nil

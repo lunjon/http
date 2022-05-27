@@ -15,13 +15,13 @@ const (
 )
 
 type urlModel struct {
+	state   state
 	input   textinput.Model
-	method  string
 	urls    []string
 	matches []string
 }
 
-func initialURLModel(method string, urls []string) urlModel {
+func initialURLModel(state state, urls []string) urlModel {
 	input := textinput.NewModel()
 	input.Prompt = ""
 	input.Focus()
@@ -29,7 +29,7 @@ func initialURLModel(method string, urls []string) urlModel {
 	input.Width = 50
 
 	return urlModel{
-		method:  method,
+		state:   state,
 		input:   input,
 		urls:    urls,
 		matches: []string{},
@@ -77,11 +77,12 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.input.SetCursor(len(text))
 			m.matches = matches
 		case "enter":
-			url := m.input.Value()
-			if !util.Contains([]string{"post", "put", "patch"}, strings.ToLower(m.method)) {
-				return initialHeadersModel(m.method, url), nil
+			method := m.state.method.Value()
+			state := m.state.setURL(m.input.Value())
+			if !util.Contains([]string{"post", "put", "patch"}, strings.ToLower(method)) {
+				return initialHeadersModel(state), nil
 			}
-			return initialBodyModel(m.method, url), nil
+			return initialBodyModel(state), nil
 		}
 	}
 
@@ -89,7 +90,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m urlModel) View() string {
-	s := fmt.Sprintf("Method:  %s\n", confirmedStyle.Render(m.method))
+	s := m.state.render()
 	s += fmt.Sprintf("URL: %s\n", m.input.View())
 
 	// Only render top matches

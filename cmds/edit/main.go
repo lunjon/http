@@ -2,18 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
+
+	"github.com/lunjon/http/internal/util"
 )
 
 func main() {
-	cmd := exec.Command("nvim")
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Run()
+	b, err := util.OpenEditor("nvim")
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err)
 	}
+	fmt.Println(string(b))
 }

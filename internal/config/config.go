@@ -11,6 +11,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+func init() {
+	editor, ok := os.LookupEnv("EDITOR")
+	if !ok {
+		editor = "vim"
+	}
+	Editor = editor
+}
+
 const DefaultConfigString = `
 # Valid options and default values
 # timeout = "30s"
@@ -27,6 +35,8 @@ var (
 	boolStyle     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4"))
 	durationStyle = lipgloss.NewStyle()
 	sectionStyle  = nameStyle.Copy().Foreground(lipgloss.Color("2"))
+
+	Editor string
 )
 
 type Config struct {

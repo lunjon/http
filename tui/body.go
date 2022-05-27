@@ -2,10 +2,11 @@ package tui
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/lunjon/http/internal/config"
+	"github.com/lunjon/http/internal/util"
 )
 
 type selection int
@@ -34,28 +35,21 @@ func (c choice) render(focused bool) string {
 }
 
 type bodyModel struct {
-	method string
-	url    string
+	state state
 
 	cursor  int
 	choices []choice
 }
 
-func initialBodyModel(method, url string) bodyModel {
-	editor, ok := os.LookupEnv("EDITOR")
-	if !ok {
-		editor = "vim"
-	}
-
+func initialBodyModel(state state) bodyModel {
 	choices := []choice{
-		{"e", "Open editor (" + editor + ")"},
+		{"e", "Open editor (" + config.Editor + ")"},
 		{"f", "Search files"},
 		{"s", "Skip"},
 	}
 
 	return bodyModel{
-		method:  method,
-		url:     url,
+		state:   state,
 		choices: choices,
 	}
 }
@@ -88,11 +82,14 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case selection:
 		switch msg {
 		case choiceEditor:
-			return initialHeadersModel(m.method, m.url), nil
+			content, err := util.OpenEditor(config.Editor)
+			checkError(err)
+			state := m.state.setBody(content)
+			return initialHeadersModel(state), nil
 		case choiceFile:
-			return initialHeadersModel(m.method, m.url), nil
+			return initialHeadersModel(m.state), nil
 		case choiceSkip:
-			return initialHeadersModel(m.method, m.url), nil
+			return initialHeadersModel(m.state), nil
 		}
 	}
 	return m, nil
@@ -100,6 +97,7 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m bodyModel) View() string {
 	b := &strings.Builder{}
+	b.WriteString(m.state.render())
 
 	for index, c := range m.choices {
 		b.WriteString("  ")

@@ -1,7 +1,8 @@
 package tui
 
 import (
-	"fmt"
+	"bytes"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -16,24 +17,20 @@ type result struct {
 }
 
 type requestModel struct {
-	method  string
-	url     string
-	headers http.Header
-	client  *http.Client
-	result  types.Option[result]
+	state  state
+	client *http.Client
+	result types.Option[result]
 }
 
-func initialRequestModel(method, url string, headers http.Header) requestModel {
+func initialRequestModel(state state) requestModel {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
 
 	return requestModel{
-		method:  method,
-		url:     url,
-		headers: headers,
-		client:  client,
-		result:  types.Option[result]{},
+		state:  state,
+		client: client,
+		result: types.Option[result]{},
 	}
 }
 
@@ -77,25 +74,7 @@ func (m requestModel) View() string {
 			b.WriteString("Status: " + status)
 		}
 	} else {
-		// Render request parameters
-
-		b.WriteString(fmt.Sprintf("Method:  %s\n", confirmedStyle.Render(m.method)))
-		b.WriteString(fmt.Sprintf("URL:     %s\n", confirmedStyle.Render(m.url)))
-
-		if len(m.headers) > 0 {
-			b.WriteString("Headers:\n")
-			taber := types.NewTaber("  - ")
-			for name, values := range m.headers {
-				key := headerKeyStyle.Render(name + ":")
-				value := headerValueStyle.Render(strings.Join(values, "; "))
-				taber.WriteLine(key, value)
-			}
-			b.WriteString(taber.String())
-		} else {
-			b.WriteString("Headers: ")
-			b.WriteString(confirmedStyle.Render("[]"))
-		}
-
+		b.WriteString(m.state.render())
 		b.WriteString("\n\n")
 		b.WriteString(focusedStyle.Render(confirmButtonText))
 	}
@@ -105,11 +84,22 @@ func (m requestModel) View() string {
 }
 
 func (m requestModel) sendRequest() tea.Msg {
-	req, err := http.NewRequest(m.method, m.url, nil)
+	method := m.state.method.Value()
+	url := m.state.url.Value()
+
+	var body io.Reader
+	if m.state.body.IsSome() {
+		body = bytes.NewReader(m.state.body.Value())
+	}
+
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return result{err: err}
 	}
-	req.Header = m.headers
+
+	if m.state.headers.IsSome() {
+		req.Header = m.state.headers.Value()
+	}
 
 	res, err := m.client.Do(req)
 	return result{res: res, err: err}
