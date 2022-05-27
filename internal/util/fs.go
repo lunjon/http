@@ -2,9 +2,25 @@ package util
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
+
+func WalkDir(root string) ([]string, error) {
+	paths := []string{}
+	filepath.WalkDir(root, func(path string, e fs.DirEntry, err error) error {
+		if e.IsDir() {
+			// TODO: check if this should be ignored (e.g. node_modules).
+			return nil
+		}
+
+		paths = append(paths, path)
+		return nil
+	})
+	return paths, nil
+}
 
 func FileExists(filepath string) (exists, isdir bool, err error) {
 	var stat os.FileInfo
