@@ -67,7 +67,6 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			matches := []string{}
 
 			if len(m.matches) == 1 {
-				// We have a single match, use that
 				text = m.matches[0]
 			} else {
 				text, matches = complete.Complete(m.input.Value(), m.urls)

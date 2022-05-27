@@ -8,15 +8,25 @@ import (
 	"path/filepath"
 )
 
+var (
+	ignoreDirs = []string{".git", "node_modules"}
+)
+
+func ignore(name string) bool {
+	return Contains(ignoreDirs, name)
+}
+
 func WalkDir(root string) ([]string, error) {
 	paths := []string{}
 	filepath.WalkDir(root, func(path string, e fs.DirEntry, err error) error {
 		if e.IsDir() {
-			// TODO: check if this should be ignored (e.g. node_modules).
-			return nil
+			if ignore(e.Name()) {
+				return fs.SkipDir
+			}
+		} else {
+			paths = append(paths, path)
 		}
 
-		paths = append(paths, path)
 		return nil
 	})
 	return paths, nil

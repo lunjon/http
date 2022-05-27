@@ -87,7 +87,7 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			state := m.state.setBody(content)
 			return initialHeadersModel(state), nil
 		case choiceFile:
-			return initialHeadersModel(m.state), nil
+			return initialFileSearchModel(m.state), nil
 		case choiceSkip:
 			return initialHeadersModel(m.state), nil
 		}
@@ -99,6 +99,7 @@ func (m bodyModel) View() string {
 	b := &strings.Builder{}
 	b.WriteString(m.state.render())
 
+	b.WriteString("Body:\n")
 	for index, c := range m.choices {
 		b.WriteString("  ")
 		b.WriteString(c.render(m.cursor == index) + "\n")
