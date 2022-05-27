@@ -97,7 +97,6 @@ func (m helpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.help.ShowAll = !m.help.ShowAll
 		}
 	}
-
 	return m, nil
 }
 

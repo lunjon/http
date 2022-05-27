@@ -17,6 +17,11 @@ var (
 	selectedItemStyle = focusedStyle.Copy().PaddingLeft(2)
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingBottom(1)
+
+	filterKeyBinding = key.NewBinding(
+		key.WithKeys("/"),
+		key.WithHelp("/", "filter"),
+	)
 )
 
 type item string
@@ -41,10 +46,11 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 }
 
 type fileSearchModel struct {
+	help   tea.Model
+	state  state
 	list   list.Model
 	items  []item
 	choice string
-	state  state
 }
 
 func initialFileSearchModel(state state) fileSearchModel {
@@ -59,15 +65,25 @@ func initialFileSearchModel(state state) fileSearchModel {
 	}
 
 	l := list.New(items, itemDelegate{}, 20, 15)
+	l.SetShowHelp(false)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(true)
 	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
-	l.Styles.FilterPrompt = noStyle.Copy()
-	l.Styles.FilterCursor = noStyle.Copy()
+	l.FilterInput.PromptStyle = boldStyle
+	l.FilterInput.CursorStyle = noStyle
+
+	keys := keyMap{
+		short: []key.Binding{upBindingV, downBindingV, filterKeyBinding, helpToggleBinding},
+		full: [][]key.Binding{
+			{upBindingV, downBindingV, filterKeyBinding},
+			{helpToggleBinding, quitBinding},
+		},
+	}
+	help := newHelp(keys)
 
 	return fileSearchModel{
+		help:  help,
 		state: state,
 		list:  l,
 	}
@@ -96,6 +112,8 @@ func (m fileSearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	m.help, _ = m.help.Update(msg)
+
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
@@ -104,5 +122,5 @@ func (m fileSearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m fileSearchModel) View() string {
 	s := m.state.render()
 	s += "Select body file:\n"
-	return s + m.list.View()
+	return s + m.list.View() + m.help.View()
 }
