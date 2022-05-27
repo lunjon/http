@@ -12,8 +12,8 @@ var (
 		key.WithHelp("ctrl+h", "toggle help"),
 	)
 	quitBinding = key.NewBinding(
-		key.WithKeys("esc", "ctrl+c"),
-		key.WithHelp("esc/ctrl+c", "quit"),
+		key.WithKeys("ctrl+c"),
+		key.WithHelp("ctrl+c", "quit"),
 	)
 	configBinding = key.NewBinding(
 		key.WithKeys("enter"),

@@ -88,8 +88,6 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, quitBinding):
-			return m, tea.Quit
 		case key.Matches(msg, upBindingV):
 			if m.cursor > 0 {
 				m.cursor--

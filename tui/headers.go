@@ -140,8 +140,6 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, quitBinding):
-			return m, tea.Quit
 		case key.Matches(msg, autocompleteBinding):
 			if m.nameInput.Focused() {
 				prefix, matches := complete.Complete(m.nameInput.Value(), m.knownHeaderNames)

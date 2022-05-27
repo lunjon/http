@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -84,11 +85,8 @@ func (m fileSearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		switch keypress := msg.String(); keypress {
-		case "ctrl+c":
-			return m, tea.Quit
-
-		case "enter":
+		switch {
+		case key.Matches(msg, configBinding):
 			i := m.list.SelectedItem().(item)
 			b, err := os.ReadFile(string(i))
 			checkError(err)

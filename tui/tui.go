@@ -23,16 +23,11 @@ var (
 	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
 
 	styler = format.NewStyler()
-
-	quitKeyBinding = key.NewBinding(
-		key.WithKeys("esc", "ctrl+c"),
-		key.WithHelp("ctrl+c", "quit"),
-	)
 )
 
 func Start(urls []string) error {
-	m := initialMethodModel(state{}, urls)
-	p := tea.NewProgram(m)
+	inner := initialMethodModel(state{}, urls)
+	p := tea.NewProgram(root{inner})
 	return p.Start()
 }
 
@@ -46,4 +41,29 @@ func checkError(err error) {
 		)
 		os.Exit(1)
 	}
+}
+
+type root struct {
+	inner tea.Model
+}
+
+func (r root) Init() tea.Cmd {
+	return nil
+}
+
+func (r root) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		if key.Matches(msg, quitBinding) {
+			return r, tea.Quit
+		}
+	}
+
+	var cmd tea.Cmd
+	r.inner, cmd = r.inner.Update(msg)
+	return r, cmd
+}
+
+func (r root) View() string {
+	return r.inner.View()
 }
