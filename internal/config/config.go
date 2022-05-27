@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const defaultConfig = `
+const DefaultConfigString = `
 # Valid options and default values
 # timeout = "30s"
 # verbose = false
@@ -150,8 +150,6 @@ type duration struct {
 }
 
 func (d *duration) UnmarshalText(b []byte) error {
-	fmt.Println("YES")
-	fmt.Println(string(b))
 	var err error
 	d.value, err = time.ParseDuration(string(b))
 	return err

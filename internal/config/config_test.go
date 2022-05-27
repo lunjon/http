@@ -9,7 +9,7 @@ import (
 )
 
 func TestDefault(t *testing.T) {
-	cfg, err := ReadTOML([]byte(defaultConfig))
+	cfg, err := ReadTOML([]byte(DefaultConfigString))
 	assert.NoError(t, err)
 
 	assert.Equal(t, time.Second*30, cfg.Timeout)
@@ -44,7 +44,7 @@ local = "https://localhost/path"`
 }
 
 func TestString(t *testing.T) {
-	cfg, err := ReadTOML([]byte(defaultConfig))
+	cfg, err := ReadTOML([]byte(DefaultConfigString))
 	assert.NoError(t, err)
 	assert.NotZero(t, cfg.String())
 }

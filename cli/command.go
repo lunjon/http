@@ -317,10 +317,16 @@ func buildConfig(cfg cliConfig) *cobra.Command {
 		Use:   "edit",
 		Short: "Edit the configuration file.",
 		Run: func(cmd *cobra.Command, _ []string) {
-			err := handler.edit()
+			editor, _ := cmd.Flags().GetString("editor")
+			err := handler.edit(editor)
 			checkErr(err, cfg.errors)
 		},
 	}
+	editor, ok := os.LookupEnv("EDITOR")
+	if !ok {
+		editor = "vim"
+	}
+	edit.Flags().StringP("editor", "e", editor, "Use as editor.")
 
 	init := &cobra.Command{
 		Use:   "init",
