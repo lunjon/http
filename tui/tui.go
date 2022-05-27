@@ -53,48 +53,9 @@ var (
 )
 
 func Start(urls []string) error {
-	p := tea.NewProgram(initialModel(urls))
+	m := initialMethodModel(state{}, urls)
+	p := tea.NewProgram(m)
 	return p.Start()
-}
-
-func initialModel(urls []string) root {
-	inner := initialMethodModel(state{}, urls)
-	return root{
-		inner: inner,
-		help:  newHelpModel(),
-	}
-}
-
-type root struct {
-	inner tea.Model
-	help  tea.Model
-}
-
-func (r root) Init() tea.Cmd {
-	return nil
-}
-
-func (m root) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if key.Matches(msg, quitKeyBinding) {
-			return m, tea.Quit
-		}
-	}
-
-	var cmd tea.Cmd
-	m.inner, cmd = m.inner.Update(msg)
-	cmds := []tea.Cmd{cmd}
-
-	m.help, cmd = m.help.Update(msg)
-	cmds = append(cmds, cmd)
-	return m, tea.Batch(cmds...)
-}
-
-func (m root) View() string {
-	s := m.inner.View()
-	s += "\n"
-	return s + m.help.View()
 }
 
 func checkError(err error) {

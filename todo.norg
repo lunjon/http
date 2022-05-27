@@ -1,9 +1,9 @@
 * HTTP CLI
 ** General
-   - [-] Config sub-commands
-   -- [ ] Init
+   - [x] Config sub-commands
+   -- [x] Init
    -- [x] List
-   -- [ ] Edit
+   -- [x] Edit
    - [ ] Request history
    -- [ ] Write to file
    -- [ ] Truncate to x entries
@@ -20,8 +20,8 @@
    - [x] Headers
    - [x] Body
    -- [x] Implement skip
-   -- [ ] Implement editor
-   -- [ ] Implement file
+   -- [x] Implement editor
+   -- [x] Implement file
    - [ ] Resend request
    - [ ] Options
    -- [ ] Timeout

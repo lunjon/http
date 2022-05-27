@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/internal/config"
 	"github.com/lunjon/http/internal/util"
@@ -15,6 +16,21 @@ const (
 	choiceEditor selection = iota
 	choiceFile   selection = iota
 	choiceSkip   selection = iota
+)
+
+var (
+	editorBinding = key.NewBinding(
+		key.WithKeys("e", "E"),
+		key.WithHelp("e", "Open editor"),
+	)
+	fileBinding = key.NewBinding(
+		key.WithKeys("f", "F"),
+		key.WithHelp("f", "Search files"),
+	)
+	skipBinding = key.NewBinding(
+		key.WithKeys("s", "S"),
+		key.WithHelp("s", "Skip body"),
+	)
 )
 
 type choice struct {
@@ -35,13 +51,22 @@ func (c choice) render(focused bool) string {
 }
 
 type bodyModel struct {
-	state state
-
+	help    tea.Model
+	state   state
 	cursor  int
 	choices []choice
 }
 
 func initialBodyModel(state state) bodyModel {
+	keys := keyMap{
+		short: []key.Binding{defaultToggleBinding},
+		full: [][]key.Binding{
+			{upBindingV, downBindingV},
+			{quitBinding, defaultToggleBinding},
+		},
+	}
+	help := newHelp(defaultToggleBinding, keys)
+
 	choices := []choice{
 		{"e", "Open editor (" + config.Editor + ")"},
 		{"f", "Search files"},
@@ -49,6 +74,7 @@ func initialBodyModel(state state) bodyModel {
 	}
 
 	return bodyModel{
+		help:    help,
 		state:   state,
 		choices: choices,
 	}
@@ -61,22 +87,24 @@ func (m bodyModel) Init() tea.Cmd {
 func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "up", "k":
+		switch {
+		case key.Matches(msg, quitBinding):
+			return m, tea.Quit
+		case key.Matches(msg, upBindingV):
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case "down", "j":
+		case key.Matches(msg, downBindingV):
 			if m.cursor < 2 {
 				m.cursor++
 			}
-		case "e", "E":
+		case key.Matches(msg, editorBinding):
 			return m, choiceCmd(choiceEditor)
-		case "f", "F":
+		case key.Matches(msg, fileBinding):
 			return m, choiceCmd(choiceFile)
-		case "s", "S":
+		case key.Matches(msg, skipBinding):
 			return m, choiceCmd(choiceSkip)
-		case "enter":
+		case key.Matches(msg, configBinding):
 			return m, choiceCmd(selection(m.cursor))
 		}
 	case selection:
@@ -92,6 +120,8 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return initialHeadersModel(m.state), nil
 		}
 	}
+
+	m.help, _ = m.help.Update(msg)
 	return m, nil
 }
 
@@ -105,6 +135,7 @@ func (m bodyModel) View() string {
 		b.WriteString(c.render(m.cursor == index) + "\n")
 	}
 
+	b.WriteString(m.help.View())
 	return b.String()
 }
 

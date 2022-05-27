@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/internal/complete"
@@ -15,6 +16,7 @@ const (
 )
 
 type urlModel struct {
+	help    tea.Model
 	state   state
 	input   textinput.Model
 	urls    []string
@@ -22,6 +24,15 @@ type urlModel struct {
 }
 
 func initialURLModel(state state, urls []string) urlModel {
+	keys := keyMap{
+		short: []key.Binding{inputToggleBinding},
+		full: [][]key.Binding{
+			{upBinding, downBinding},
+			{quitBinding, inputToggleBinding},
+		},
+	}
+	help := newHelp(inputToggleBinding, keys)
+
 	input := textinput.NewModel()
 	input.Prompt = ""
 	input.Focus()
@@ -29,6 +40,7 @@ func initialURLModel(state state, urls []string) urlModel {
 	input.Width = 50
 
 	return urlModel{
+		help:    help,
 		state:   state,
 		input:   input,
 		urls:    urls,
@@ -42,7 +54,6 @@ func (m urlModel) Init() tea.Cmd {
 
 func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-
 	m.input, cmd = m.input.Update(msg)
 
 	input := strings.TrimSpace(m.input.Value())
@@ -61,8 +72,10 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "tab":
+		switch {
+		case key.Matches(msg, quitBinding):
+			return m, tea.Quit
+		case key.Matches(msg, autocompleteBinding):
 			var text string
 			matches := []string{}
 
@@ -75,7 +88,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.input.SetValue(text)
 			m.input.SetCursor(len(text))
 			m.matches = matches
-		case "enter":
+		case key.Matches(msg, configBinding):
 			method := m.state.method.Value()
 			state := m.state.setURL(m.input.Value())
 			if !util.Contains([]string{"post", "put", "patch"}, strings.ToLower(method)) {
@@ -85,6 +98,7 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	m.help, _ = m.help.Update(msg)
 	return m, cmd
 }
 
@@ -102,5 +116,5 @@ func (m urlModel) View() string {
 		s += fmt.Sprintf("  %s\n", u)
 	}
 
-	return s
+	return s + m.help.View()
 }

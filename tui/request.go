@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/internal/types"
 )
@@ -17,17 +18,27 @@ type result struct {
 }
 
 type requestModel struct {
+	help tea.Model
 	state  state
 	client *http.Client
 	result types.Option[result]
 }
 
 func initialRequestModel(state state) requestModel {
+	keys := keyMap{
+		short: []key.Binding{configBinding, defaultToggleBinding},
+		full: [][]key.Binding{
+			{configBinding, defaultToggleBinding},
+		},
+	}
+	help := newHelp(defaultToggleBinding, keys)
+
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
 
 	return requestModel{
+		help:    help,
 		state:  state,
 		client: client,
 		result: types.Option[result]{},
@@ -41,8 +52,10 @@ func (m requestModel) Init() tea.Cmd {
 func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "enter":
+		switch  {
+		case key.Matches(msg, quitBinding):
+			return m, tea.Quit
+		case key.Matches(msg, configBinding):
 			return m, m.sendRequest
 		}
 	case result:
@@ -50,6 +63,7 @@ func (m requestModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	}
 
+	m.help, _ = m.help.Update(msg)
 	return m, nil
 }
 
@@ -76,10 +90,11 @@ func (m requestModel) View() string {
 	} else {
 		b.WriteString(m.state.render())
 		b.WriteString("\n\n")
-		b.WriteString(focusedStyle.Render(confirmButtonText))
+		b.WriteString(focusedStyle.Render("[ Send request? ]"))
 	}
 
 	b.WriteString("\n")
+	b.WriteString(m.help.View())
 	return b.String()
 }
 

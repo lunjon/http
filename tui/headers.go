@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -24,6 +25,7 @@ type suggestions struct {
 }
 
 type headersModel struct {
+	help  tea.Model
 	state state
 
 	buttonFocus bool
@@ -46,6 +48,15 @@ func newInput(prompt string, limit int) textinput.Model {
 }
 
 func initialHeadersModel(state state) headersModel {
+	keys := keyMap{
+		short: []key.Binding{inputToggleBinding},
+		full: [][]key.Binding{
+			{upBinding, downBinding, leftBinding, rightbinding},
+			{quitBinding, autocompleteBinding, inputToggleBinding},
+		},
+	}
+	help := newHelp(inputToggleBinding, keys)
+
 	name := newInput("Name: ", 64)
 	name.Focus()
 	name.PromptStyle = focusedStyle
@@ -59,6 +70,7 @@ func initialHeadersModel(state state) headersModel {
 	}
 
 	return headersModel{
+		help:               help,
 		state:              state,
 		nameInput:          name,
 		valueInput:         value,
@@ -127,8 +139,10 @@ func (m *headersModel) unsetSuggestions() {
 func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "tab":
+		switch {
+		case key.Matches(msg, quitBinding):
+			return m, tea.Quit
+		case key.Matches(msg, autocompleteBinding):
 			if m.nameInput.Focused() {
 				prefix, matches := complete.Complete(m.nameInput.Value(), m.knownHeaderNames)
 				if prefix != "" && len(matches) > 0 {
@@ -155,7 +169,7 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			}
-		case "enter":
+		case key.Matches(msg, configBinding):
 			if m.nameInput.Focused() || m.valueInput.Focused() {
 				name := m.nameInput.Value()
 				value := m.valueInput.Value()
@@ -176,29 +190,31 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return initialRequestModel(state), nil
 			}
 
-		case "up":
+		case key.Matches(msg, upBinding):
 			if m.buttonFocus {
 				cmd := m.setFocus(true, false, false)
 				m.buttonFocus = false
 				return m, cmd
 			}
-		case "down":
+		case key.Matches(msg, downBinding):
 			if !m.buttonFocus {
 				m.setFocus(false, false, true)
 				return m, nil
 			}
-		case "right":
+		case key.Matches(msg, rightbinding):
 			if m.nameInput.Focused() {
 				cmd := m.setFocus(false, true, false)
 				return m, cmd
 			}
-		case "left":
+		case key.Matches(msg, leftBinding):
 			if m.valueInput.Focused() {
 				cmd := m.setFocus(true, false, false)
 				return m, cmd
 			}
 		}
 	}
+
+	m.help, _ = m.help.Update(msg)
 
 	var cmd1, cmd2 tea.Cmd
 
@@ -249,5 +265,6 @@ func (m headersModel) View() string {
 
 	b.WriteString(confirm)
 	b.WriteString("\n")
+	b.WriteString(m.help.View())
 	return b.String()
 }

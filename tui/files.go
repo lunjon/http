@@ -15,7 +15,7 @@ var (
 	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
 	selectedItemStyle = focusedStyle.Copy().PaddingLeft(2)
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
+	helpStyle         = list.DefaultStyles().HelpStyle.PaddingBottom(1)
 )
 
 type item string
