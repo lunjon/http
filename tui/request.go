@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/types"
 )
 
@@ -74,15 +75,15 @@ func (m requestModel) View() string {
 
 		result := m.result.Value()
 		if result.err != nil {
-			b.WriteString(styler.RedB("Error: ") + result.err.Error())
+			b.WriteString(style.RedB("Error: ") + result.err.Error())
 		} else {
 			var status string
 			if result.res.StatusCode >= 500 {
-				status = styler.RedB(result.res.Status)
+				status = style.RedB(result.res.Status)
 			} else if result.res.StatusCode >= 400 {
-				status = styler.YellowB(result.res.Status)
+				status = style.YellowB(result.res.Status)
 			} else {
-				status = styler.GreenB(result.res.Status)
+				status = style.GreenB(result.res.Status)
 			}
 			b.WriteString("Status: " + status)
 		}

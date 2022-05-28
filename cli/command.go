@@ -13,9 +13,9 @@ import (
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
-	"github.com/lunjon/http/internal/format"
 	"github.com/lunjon/http/internal/logging"
 	"github.com/lunjon/http/internal/server"
+	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/util"
 	"github.com/lunjon/http/tui"
 	"github.com/spf13/cobra"
@@ -73,8 +73,7 @@ A request body can be specified in three ways:
 		Use:   "version",
 		Short: "Print version",
 		Run: func(*cobra.Command, []string) {
-			styler := format.NewStyler()
-			fmt.Printf("http version: %s\n", styler.WhiteB(version))
+			fmt.Printf("http version: %s\n", style.Bold(version))
 		},
 	})
 
@@ -197,16 +196,16 @@ func buildRequestRun(
 		cl := client.NewClient(httpClient, logger, traceLogger)
 		display, _ := flags.GetString(displayFlagName)
 
-		var formatter format.ResponseFormatter
+		var formatter ResponseFormatter
 		switch display {
 		case "all":
-			formatter, _ = format.NewResponseFormatter(format.NewStyler(), format.ResponseComponents)
+			formatter, _ = NewResponseFormatter(ResponseComponents)
 		case "", "none":
-			formatter, _ = format.NewResponseFormatter(format.NewStyler(), []string{})
+			formatter, _ = NewResponseFormatter([]string{})
 		default:
 			components := strings.Split(strings.TrimSpace(display), ",")
 			components = util.Map(components, strings.TrimSpace)
-			formatter, err = format.NewResponseFormatter(format.NewStyler(), components)
+			formatter, err = NewResponseFormatter(components)
 			checkErr(err, cfg.errors)
 		}
 
@@ -287,11 +286,10 @@ Useful for local testing and debugging.`,
 
 			// TODO: trap exit signal for graceful shutdown
 
-			styler := format.NewStyler()
-			fmt.Printf("Starting server on :%s.\n", styler.WhiteB(fmt.Sprint(port)))
-			fmt.Printf("Press %s to exit.\n", styler.WhiteB("CTRL-C"))
+			fmt.Printf("Starting server on :%s.\n", style.Bold(fmt.Sprint(port)))
+			fmt.Printf("Press %s to exit.\n", style.Bold("CTRL-C"))
 
-			server := server.New(port, styler)
+			server := server.New(port)
 			err := server.Serve()
 			checkErr(err, cfg.errors)
 		},

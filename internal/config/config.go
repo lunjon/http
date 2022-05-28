@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/lunjon/http/internal/style"
 )
 
 func init() {
@@ -30,12 +30,6 @@ const DefaultConfigString = `
 `
 
 var (
-	noStyle       = lipgloss.NewStyle()
-	nameStyle     = lipgloss.NewStyle().Bold(true)
-	boolStyle     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4"))
-	durationStyle = lipgloss.NewStyle()
-	sectionStyle  = nameStyle.Copy().Foreground(lipgloss.Color("2"))
-
 	Editor string
 )
 
@@ -83,16 +77,16 @@ func (cfg Config) String() string {
 	}
 
 	for _, item := range roots {
-		key := nameStyle.Render(item.key)
+		key := style.Blue(item.key)
 		var val string
 
 		switch value := item.value.(type) {
 		case string, time.Duration:
-			val = noStyle.Render(fmt.Sprintf(`"%s"`, value))
+			val = style.None(fmt.Sprintf(`"%s"`, value))
 		case bool:
-			val = boolStyle.Render(fmt.Sprint(value))
+			val = style.BlueB(fmt.Sprint(value))
 		default:
-			val = noStyle.Render(fmt.Sprint(value))
+			val = style.None(fmt.Sprint(value))
 		}
 
 		b.WriteString(fmt.Sprintf("%s = %v\n", key, val))
@@ -101,11 +95,11 @@ func (cfg Config) String() string {
 	if len(cfg.Aliases) > 0 {
 		b.WriteString(fmt.Sprintf(
 			"\n[%s]\n",
-			sectionStyle.Render("aliases"),
+			style.GreenB("aliases"),
 		))
 
 		for k, v := range cfg.Aliases {
-			line := fmt.Sprintf(` %s = "%s"`, nameStyle.Render(k), v)
+			line := fmt.Sprintf(` %s = "%s"`, style.Bold(k), v)
 			b.WriteString(line + "\n")
 		}
 	}

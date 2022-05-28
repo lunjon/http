@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lunjon/http/internal/config"
+	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/util"
 )
 
@@ -45,7 +46,7 @@ func (c choice) render(focused bool) string {
 		key = focusedStyle.Render(c.key)
 		cursor = focusedStyle.Render(">")
 	} else {
-		key = boldStyle.Render(c.key)
+		key = style.Bold(c.key)
 	}
 	return fmt.Sprintf("%s %s  %s", cursor, key, blurredStyle.Render(c.text))
 }

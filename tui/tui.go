@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/lunjon/http/internal/format"
+	"github.com/lunjon/http/internal/style"
 )
 
 const (
@@ -17,12 +17,10 @@ const (
 var (
 	noStyle        = lipgloss.NewStyle()
 	boldStyle      = lipgloss.NewStyle().Bold(true)
-	errorStyle     = boldStyle.Copy().Foreground(lipgloss.Color("1"))
+	errorStyle     = style.RedB
 	confirmedStyle = boldStyle.Copy().Foreground(lipgloss.Color("10"))
 	focusedStyle   = boldStyle.Copy().Foreground(lipgloss.Color("14"))
 	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
-
-	styler = format.NewStyler()
 )
 
 func Start(urls []string) error {
@@ -36,7 +34,7 @@ func checkError(err error) {
 		fmt.Fprintf(
 			os.Stderr,
 			"%s: %s\n",
-			errorStyle.Render("error"),
+			errorStyle("error"),
 			err,
 		)
 		os.Exit(1)

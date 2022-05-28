@@ -53,8 +53,8 @@ func (s state) render() string {
 			b.WriteString("Headers:\n")
 			taber := types.NewTaber("  - ")
 			for name, values := range headers {
-				key := headerKeyStyle.Render(name + ":")
-				value := headerValueStyle.Render(strings.Join(values, "; "))
+				key := headerKeyStyle(name + ":")
+				value := headerValueStyle(strings.Join(values, "; "))
 				taber.WriteLine(key, value)
 			}
 			b.WriteString(taber.String())

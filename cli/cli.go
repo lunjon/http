@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/lunjon/http/internal/config"
-	"github.com/lunjon/http/internal/format"
+	"github.com/lunjon/http/internal/style"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +42,6 @@ const (
 )
 
 var (
-	styler          = format.NewStyler()
 	defaultFailFunc = func(int) {}
 )
 
@@ -67,6 +66,6 @@ func checkErr(err error, output io.Writer) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(output, "%s: %v\n", styler.RedB("error"), err)
+	fmt.Fprintf(output, "%s: %v\n", style.RedB("error"), err)
 	os.Exit(1)
 }

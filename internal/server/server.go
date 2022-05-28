@@ -6,25 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
-	"github.com/lunjon/http/internal/format"
-)
-
-var (
-	bold      = lipgloss.NewStyle().Bold(true)
-	redB      = bold.Copy().Foreground(lipgloss.Color("1")).Render
-	greenB    = bold.Copy().Foreground(lipgloss.Color("2")).Render
-	greenish  = bold.Copy().Foreground(lipgloss.Color("48"))
-	greenishB = greenish.Copy().Bold(true)
-	grey      = bold.Copy().Foreground(lipgloss.Color("245")).Render
+	"github.com/lunjon/http/internal/style"
 )
 
 type Server struct {
-	styler *format.Styler
 	server *http.Server
 }
 
-func New(port uint, styler *format.Styler) *Server {
+func New(port uint) *Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 
@@ -47,23 +36,23 @@ func (s *Server) Serve() error {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Incoming request:")
-	fmt.Printf("  Method:  %s\n", greenB(r.Method))
-	fmt.Printf("  Path:    %s\n", greenB(r.URL.Path))
+	fmt.Printf("  Method:  %s\n", style.GreenB(r.Method))
+	fmt.Printf("  Path:    %s\n", style.GreenB(r.URL.Path))
 
 	if len(r.Header) > 0 {
 		fmt.Println("  Headers:")
 		for name, values := range r.Header {
-			v := strings.Join(values, grey("; "))
-			v = fmt.Sprintf("%s %s %s", greenB("["), v, greenB("]"))
-			fmt.Printf("    %s: %s\n", bold.Render(name), v)
+			v := strings.Join(values, style.Grey("; "))
+			v = fmt.Sprintf("%s %s %s", style.GreenB("["), v, style.GreenB("]"))
+			fmt.Printf("    %s: %s\n", style.Bold(name), v)
 		}
 	}
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Printf("  Body:    %s: %s\n", redB("error"), err)
+		fmt.Printf("  Body:    %s: %s\n", style.RedB("error"), err)
 	} else if len(b) > 0 {
 		s := fmt.Sprintf("%d bytes", len(b))
-		fmt.Printf("  Body:    %s\n", greenB(s))
+		fmt.Printf("  Body:    %s\n", style.GreenB(s))
 	}
 }

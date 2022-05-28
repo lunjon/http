@@ -16,7 +16,6 @@ import (
 
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
-	"github.com/lunjon/http/internal/format"
 )
 
 var (
@@ -35,7 +34,7 @@ type RequestHandler struct {
 	cfg        config.Config
 	client     *client.Client
 	headers    http.Header
-	formatter  format.ResponseFormatter
+	formatter  ResponseFormatter
 	signer     client.RequestSigner
 	output     io.Writer
 	logger     *log.Logger
@@ -46,7 +45,7 @@ type RequestHandler struct {
 
 func newRequestHandler(
 	client *client.Client,
-	formatter format.ResponseFormatter,
+	formatter ResponseFormatter,
 	signer client.RequestSigner,
 	logger *log.Logger,
 	cfg config.Config,

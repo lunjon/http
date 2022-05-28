@@ -5,19 +5,18 @@ import (
 	"os"
 
 	"github.com/lunjon/http/cli"
-	"github.com/lunjon/http/internal/format"
+	"github.com/lunjon/http/internal/style"
 )
 
 func main() {
-	styler := format.NewStyler()
 	cmd, err := cli.Build("v0.12.1")
 	if err != nil {
-		fmt.Println(styler.RedB("error:"), err)
+		fmt.Println(style.RedB("error:"), err)
 		os.Exit(1)
 	}
 
 	if err = cmd.Execute(); err != nil {
-		fmt.Println(styler.RedB("error:"), err)
+		fmt.Println(style.RedB("error:"), err)
 		os.Exit(1)
 	}
 }

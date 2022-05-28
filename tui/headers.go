@@ -8,15 +8,15 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/complete"
+	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/types"
 )
 
 var (
-	headerKeyStyle   = lipgloss.NewStyle().Bold(true)
-	headerValueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("250"))
+	headerKeyStyle   = style.Bold
+	headerValueStyle = style.Grey
 )
 
 type suggestions struct {
@@ -243,9 +243,9 @@ func (m headersModel) View() string {
 		b.WriteString("\n")
 		taber := types.NewTaber("  - ")
 		for _, name := range m.headerNames {
-			key := headerKeyStyle.Render(name + ":")
+			key := headerKeyStyle(name + ":")
 			values := strings.Join(m.headers.Values(name), "; ")
-			values = headerValueStyle.Render(values)
+			values = headerValueStyle(values)
 
 			taber.WriteLine(key, values)
 		}

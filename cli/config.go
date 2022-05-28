@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/lunjon/http/internal/config"
+	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/util"
 )
 
@@ -36,7 +37,7 @@ func (handler ConfigHandler) list() error {
 		fmt.Fprintf(
 			handler.output,
 			"No configuration file found.\nUse %s to create one.\n",
-			styler.WhiteB("config init"),
+			style.Bold("config init"),
 		)
 		return nil
 	}
@@ -76,9 +77,9 @@ func (handler ConfigHandler) init() error {
 
 Use %s list the configuration, or %s to edit the file.
 `,
-		styler.GreenB(handler.configPath),
-		styler.WhiteB("config"),
-		styler.WhiteB("config edit"),
+		style.GreenB(handler.configPath),
+		style.Bold("config"),
+		style.Bold("config edit"),
 	)
 	return err
 }

@@ -1,4 +1,4 @@
-package format
+package cli
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/types"
 	"github.com/lunjon/http/internal/util"
 )
@@ -19,10 +20,9 @@ type ResponseFormatter interface {
 
 type DefaultFormatter struct {
 	components []string
-	styler     *Styler
 }
 
-func NewResponseFormatter(styler *Styler, components []string) (*DefaultFormatter, error) {
+func NewResponseFormatter(components []string) (*DefaultFormatter, error) {
 	if len(components) > len(ResponseComponents) {
 		return nil, fmt.Errorf("invalid format specifiers: too many")
 	}
@@ -34,7 +34,7 @@ func NewResponseFormatter(styler *Styler, components []string) (*DefaultFormatte
 		}
 	}
 
-	return &DefaultFormatter{components: parsed, styler: styler}, nil
+	return &DefaultFormatter{components: parsed}, nil
 }
 
 func (f *DefaultFormatter) Format(r *http.Response) ([]byte, error) {
@@ -63,7 +63,7 @@ func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
 	for name, value := range r.Header {
 		n := fmt.Sprintf("%s:", name)
 		v := fmt.Sprint(value)
-		taber.WriteLine(f.styler.WhiteB(n), v)
+		taber.WriteLine(style.Bold(n), v)
 	}
 	fmt.Fprint(w, taber.String())
 }
