@@ -85,15 +85,16 @@ func (cfg Config) String() string {
 	for _, item := range roots {
 		key := nameStyle.Render(item.key)
 		var val string
+
 		switch value := item.value.(type) {
-		case string:
+		case string, time.Duration:
 			val = noStyle.Render(fmt.Sprintf(`"%s"`, value))
 		case bool:
 			val = boolStyle.Render(fmt.Sprint(value))
-		case time.Duration:
-			val = durationStyle.Render(fmt.Sprint(value))
-
+		default:
+			val = noStyle.Render(fmt.Sprint(value))
 		}
+
 		b.WriteString(fmt.Sprintf("%s = %v\n", key, val))
 	}
 
