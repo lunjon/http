@@ -48,14 +48,13 @@ func newInput(prompt string, limit int) textinput.Model {
 }
 
 func initialHeadersModel(state state) headersModel {
-	keys := keyMap{
-		short: []key.Binding{helpToggleBinding},
+	help := newHelp(keyMap{
+		short: []key.Binding{},
 		full: [][]key.Binding{
+			{autocompleteBinding},
 			{upBinding, downBinding, leftBinding, rightbinding},
-			{autocompleteBinding, quitBinding, helpToggleBinding},
 		},
-	}
-	help := newHelp(keys)
+	})
 
 	name := newInput("Name: ", 64)
 	name.Focus()

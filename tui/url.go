@@ -24,14 +24,13 @@ type urlModel struct {
 }
 
 func initialURLModel(state state, urls []string) urlModel {
-	keys := keyMap{
-		short: []key.Binding{helpToggleBinding},
+	help := newHelp(keyMap{
+		short: []key.Binding{},
 		full: [][]key.Binding{
+			{autocompleteBinding},
 			{upBinding, downBinding},
-			{autocompleteBinding, helpToggleBinding, quitBinding},
 		},
-	}
-	help := newHelp(keys)
+	})
 
 	input := textinput.NewModel()
 	input.Prompt = ""
@@ -101,8 +100,10 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m urlModel) View() string {
-	s := m.state.render()
-	s += fmt.Sprintf("URL: %s\n", m.input.View())
+	b := strings.Builder{}
+	b.WriteString(m.state.render())
+
+	b.WriteString(fmt.Sprintf("URL: %s\n", m.input.View()))
 
 	// Only render top matches
 	limit := listLimit
@@ -111,8 +112,9 @@ func (m urlModel) View() string {
 	}
 
 	for _, u := range m.matches[:limit] {
-		s += fmt.Sprintf("  %s\n", u)
+		b.WriteString(fmt.Sprintf("  %s\n", u))
 	}
 
-	return s + m.help.View()
+	b.WriteString(m.help.View())
+	return b.String()
 }

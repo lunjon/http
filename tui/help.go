@@ -76,6 +76,12 @@ type helpModel struct {
 }
 
 func newHelp(keys keyMap) helpModel {
+	// Insert help toggle
+	short := []key.Binding{helpToggleBinding}
+	full := []key.Binding{helpToggleBinding, quitBinding}
+	keys.short = append(short, keys.short...)
+	keys.full[0] = append(full, keys.full[0]...)
+
 	return helpModel{
 		keys: keys,
 		help: help.New(),

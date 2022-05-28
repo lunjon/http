@@ -26,14 +26,13 @@ type requestModel struct {
 }
 
 func initialRequestModel(state state) requestModel {
-	keys := keyMap{
-		short: []key.Binding{confirmBinding, helpToggleBinding},
+	help := newHelp(keyMap{
+		short: []key.Binding{confirmBinding},
 		full: [][]key.Binding{
+			{},
 			{confirmBinding},
-			{helpToggleBinding, quitBinding},
 		},
-	}
-	help := newHelp(keys)
+	})
 
 	client := &http.Client{
 		Timeout: time.Second * 10,

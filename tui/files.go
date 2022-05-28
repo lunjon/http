@@ -73,14 +73,13 @@ func initialFileSearchModel(state state) fileSearchModel {
 	l.FilterInput.PromptStyle = boldStyle
 	l.FilterInput.CursorStyle = noStyle
 
-	keys := keyMap{
-		short: []key.Binding{upBindingV, downBindingV, filterKeyBinding, helpToggleBinding},
+	help := newHelp(keyMap{
+		short: []key.Binding{upBindingV, downBindingV, filterKeyBinding},
 		full: [][]key.Binding{
+			{},
 			{upBindingV, downBindingV, filterKeyBinding},
-			{helpToggleBinding, quitBinding},
 		},
-	}
-	help := newHelp(keys)
+	})
 
 	return fileSearchModel{
 		help:  help,
