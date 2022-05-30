@@ -13,7 +13,7 @@ func TestFileExists(t *testing.T) {
 		exists bool
 		isdir  bool
 	}{
-		{"fs.go", true, false},
+		{"testdata/test.json", true, false},
 		{"testdata", true, true},
 		{"unknown-file", false, false},
 	}

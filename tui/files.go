@@ -103,10 +103,11 @@ func (m fileSearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, confirmBinding):
 			i := m.list.SelectedItem().(item)
-			b, err := os.ReadFile(string(i))
+			filepath := string(i)
+			b, err := os.ReadFile(filepath)
 			checkError(err)
 
-			state := m.state.setBody(b)
+			state := m.state.setBody(confirmedStyle.Render(filepath), b)
 			return initialHeadersModel(state), nil
 		}
 	}

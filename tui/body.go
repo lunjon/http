@@ -110,7 +110,7 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case choiceEditor:
 			content, err := util.OpenEditor(config.Editor)
 			checkError(err)
-			state := m.state.setBody(content)
+			state := m.state.setBody(confirmedStyle.Render("From editor"), content)
 			return initialHeadersModel(state), nil
 		case choiceFile:
 			return initialFileSearchModel(m.state), nil

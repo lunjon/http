@@ -9,10 +9,11 @@ import (
 )
 
 type state struct {
-	method  types.Option[string]
-	url     types.Option[string]
-	headers types.Option[http.Header]
-	body    types.Option[[]byte]
+	method          types.Option[string]
+	url             types.Option[string]
+	headers         types.Option[http.Header]
+	body            types.Option[[]byte]
+	bodyDescription string
 }
 
 func (s state) setMethod(m string) state {
@@ -30,8 +31,9 @@ func (s state) setHeaders(h http.Header) state {
 	return s
 }
 
-func (s state) setBody(b []byte) state {
+func (s state) setBody(desc string, b []byte) state {
 	s.body = s.body.Set(b)
+	s.bodyDescription = desc
 	return s
 }
 
@@ -45,6 +47,10 @@ func (s state) render() string {
 	if s.url.IsSome() {
 		url := s.url.Value()
 		b.WriteString(fmt.Sprintf("URL:     %s\n", confirmedStyle.Render(url)))
+	}
+
+	if s.body.IsSome() {
+		b.WriteString(fmt.Sprintf("Body:    %s\n", s.bodyDescription))
 	}
 
 	if s.headers.IsSome() {
