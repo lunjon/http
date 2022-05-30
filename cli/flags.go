@@ -2,8 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -76,4 +78,43 @@ func parseHeader(h string) (string, string, error) {
 	key := strings.TrimSpace(match[0][1])
 	value := strings.TrimSpace(match[0][2])
 	return key, value, nil
+}
+
+type portOption struct {
+	port uint
+}
+
+func newPortOption() *portOption {
+	return &portOption{
+		port: 8080,
+	}
+}
+
+func (o *portOption) value() uint {
+	return o.port
+}
+
+func (o *portOption) Set(s string) error {
+	v, err := strconv.ParseUint(s, 10, 16)
+	if err != nil {
+		return fmt.Errorf("invalid number or outside")
+	}
+
+	if v > math.MaxUint16 {
+		return fmt.Errorf("outside valid range for port")
+	}
+	if v <= 1024 {
+		return fmt.Errorf("reserved port number")
+	}
+
+	o.port = uint(v)
+	return nil
+}
+
+func (h *portOption) Type() string {
+	return "Port"
+}
+
+func (h *portOption) String() string {
+	return ""
 }

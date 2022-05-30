@@ -276,26 +276,27 @@ func buildHTTPCommand(
 }
 
 func buildServer(cfg cliConfig) *cobra.Command {
+	port := newPortOption()
+
 	c := &cobra.Command{
-		Use:   "server",
-		Short: "Starts an HTTP server on localhost.",
+		Use:     "server",
+		Aliases: []string{"serve"},
+		Short:   "Starts an HTTP server on localhost.",
 		Long: `Starts an HTTP server on localhost.
 Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			port, _ := cmd.Flags().GetUint("port")
-
 			// TODO: trap exit signal for graceful shutdown
 
 			fmt.Printf("Starting server on :%s.\n", style.Bold(fmt.Sprint(port)))
 			fmt.Printf("Press %s to exit.\n", style.Bold("CTRL-C"))
 
-			server := server.New(port)
+			server := server.New(port.value())
 			err := server.Serve()
 			checkErr(err, cfg.errors)
 		},
 	}
 
-	c.Flags().UintP("port", "p", 8080, "Port to listen on.")
+	c.Flags().VarP(port, "port", "p", "Port to listen on. Must be valid number in the range 1024-65535.")
 	return c
 }
 
