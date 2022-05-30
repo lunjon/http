@@ -7,7 +7,10 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Added
 - `config init` sub-command
 - `config edit` sub-command
-- Body model/view to TUI
+- Body model/view to TUI with support for editing and searching for files
+
+### Changed
+- Complete TUI overhaul with lots of improvements
 
 ## [0.12.1] - 2022-05-25
 

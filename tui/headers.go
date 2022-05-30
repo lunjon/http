@@ -224,9 +224,10 @@ func (m headersModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m headersModel) View() string {
 	var b strings.Builder
 	b.WriteString(m.state.render())
-	b.WriteString("Headers:\n")
 
-	b.WriteString(" ")
+	renderQuery(&b, "Headers:")
+
+	b.WriteString("\n   ")
 	b.WriteString(m.nameInput.View())
 	b.WriteString(m.valueInput.View())
 	b.WriteString("\n")
@@ -242,9 +243,9 @@ func (m headersModel) View() string {
 		b.WriteString("\n")
 		taber := types.NewTaber("  - ")
 		for _, name := range m.headerNames {
-			key := headerKeyStyle(name + ":")
+			key := headerKeyStyle.Render(name + ":")
 			values := strings.Join(m.headers.Values(name), "; ")
-			values = headerValueStyle(values)
+			values = headerValueStyle.Render(values)
 
 			taber.WriteLine(key, values)
 		}
@@ -255,9 +256,9 @@ func (m headersModel) View() string {
 
 	confirm := confirmButtonText
 	if m.buttonFocus {
-		confirm = focusedStyle.Render(confirm)
+		confirm = askFocusedStyle.Render(confirm)
 	} else {
-		confirm = blurredStyle.Render(confirm)
+		confirm = askBlurredStyle.Render(confirm)
 	}
 
 	b.WriteString(confirm)

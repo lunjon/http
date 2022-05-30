@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -12,6 +13,7 @@ import (
 
 const (
 	confirmButtonText = " [ confirm ] "
+	okIcon            = ""
 )
 
 var (
@@ -21,6 +23,10 @@ var (
 	confirmedStyle = boldStyle.Copy().Foreground(lipgloss.Color("10"))
 	focusedStyle   = boldStyle.Copy().Foreground(lipgloss.Color("14"))
 	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+
+	queryPrefix     = blurredStyle.PaddingLeft(1).PaddingRight(1)
+	askFocusedStyle = focusedStyle.Copy().Bold(true).PaddingLeft(2)
+	askBlurredStyle = blurredStyle.Copy().Bold(true).PaddingLeft(2)
 )
 
 func Start(urls []string) error {
@@ -34,7 +40,7 @@ func checkError(err error) {
 		fmt.Fprintf(
 			os.Stderr,
 			"%s: %s\n",
-			errorStyle("error"),
+			errorStyle.Render("error"),
 			err,
 		)
 		os.Exit(1)
@@ -64,4 +70,13 @@ func (r root) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (r root) View() string {
 	return r.inner.View()
+}
+
+func renderQuery(w io.Writer, name string) {
+	fmt.Fprintf(
+		w,
+		"%s%s",
+		queryPrefix.Render("?"),
+		boldStyle.Render(name),
+	)
 }

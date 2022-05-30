@@ -46,7 +46,7 @@ func (c choice) render(focused bool) string {
 		key = focusedStyle.Render(c.key)
 		cursor = focusedStyle.Render(">")
 	} else {
-		key = style.Bold(c.key)
+		key = style.Bold.Render(c.key)
 	}
 	return fmt.Sprintf("%s %s  %s", cursor, key, blurredStyle.Render(c.text))
 }
@@ -110,7 +110,7 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case choiceEditor:
 			content, err := util.OpenEditor(config.Editor)
 			checkError(err)
-			state := m.state.setBody(confirmedStyle.Render("From editor"), content)
+			state := m.state.setBody("From editor", content)
 			return initialHeadersModel(state), nil
 		case choiceFile:
 			return initialFileSearchModel(m.state), nil
@@ -124,12 +124,13 @@ func (m bodyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m bodyModel) View() string {
-	b := &strings.Builder{}
+	b := strings.Builder{}
 	b.WriteString(m.state.render())
+	renderQuery(&b, "Body:")
+	b.WriteString("\n")
 
-	b.WriteString("Body:\n")
 	for index, c := range m.choices {
-		b.WriteString("  ")
+		b.WriteString("   ")
 		b.WriteString(c.render(m.cursor == index) + "\n")
 	}
 

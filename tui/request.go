@@ -74,22 +74,22 @@ func (m requestModel) View() string {
 
 		result := m.result.Value()
 		if result.err != nil {
-			b.WriteString(style.RedB("Error: ") + result.err.Error())
+			b.WriteString(style.RedB.Render("Error: ") + result.err.Error())
 		} else {
 			var status string
 			if result.res.StatusCode >= 500 {
-				status = style.RedB(result.res.Status)
+				status = style.RedB.Render(result.res.Status)
 			} else if result.res.StatusCode >= 400 {
-				status = style.YellowB(result.res.Status)
+				status = style.YellowB.Render(result.res.Status)
 			} else {
-				status = style.GreenB(result.res.Status)
+				status = style.GreenB.Render(result.res.Status)
 			}
 			b.WriteString("Status: " + status)
 		}
 	} else {
 		b.WriteString(m.state.render())
 		b.WriteString("\n\n")
-		b.WriteString(focusedStyle.Render("[ Send request? ]"))
+		b.WriteString(askFocusedStyle.Render("[ Send request? ]"))
 	}
 
 	b.WriteString("\n")

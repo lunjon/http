@@ -77,16 +77,16 @@ func (cfg Config) String() string {
 	}
 
 	for _, item := range roots {
-		key := style.Blue(item.key)
+		key := style.Blue.Render(item.key)
 		var val string
 
 		switch value := item.value.(type) {
 		case string, time.Duration:
-			val = style.None(fmt.Sprintf(`"%s"`, value))
+			val = style.None.Render(fmt.Sprintf(`"%s"`, value))
 		case bool:
-			val = style.BlueB(fmt.Sprint(value))
+			val = style.BlueB.Render(fmt.Sprint(value))
 		default:
-			val = style.None(fmt.Sprint(value))
+			val = style.None.Render(fmt.Sprint(value))
 		}
 
 		b.WriteString(fmt.Sprintf("%s = %v\n", key, val))
@@ -95,11 +95,11 @@ func (cfg Config) String() string {
 	if len(cfg.Aliases) > 0 {
 		b.WriteString(fmt.Sprintf(
 			"\n[%s]\n",
-			style.GreenB("aliases"),
+			style.GreenB.Render("aliases"),
 		))
 
 		for k, v := range cfg.Aliases {
-			line := fmt.Sprintf(` %s = "%s"`, style.Bold(k), v)
+			line := fmt.Sprintf(` %s = "%s"`, style.Bold.Render(k), v)
 			b.WriteString(line + "\n")
 		}
 	}

@@ -107,7 +107,7 @@ func (m fileSearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b, err := os.ReadFile(filepath)
 			checkError(err)
 
-			state := m.state.setBody(confirmedStyle.Render(filepath), b)
+			state := m.state.setBody(filepath, b)
 			return initialHeadersModel(state), nil
 		}
 	}

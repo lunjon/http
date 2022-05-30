@@ -62,7 +62,8 @@ func (m methodModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m methodModel) View() string {
 	b := strings.Builder{}
-	b.WriteString("Method: \n")
+	renderQuery(&b, "Method:")
+	b.WriteString("\n")
 
 	for i, choice := range m.methods {
 		cursor := " "
@@ -71,7 +72,7 @@ func (m methodModel) View() string {
 			choice = focusedStyle.Render(choice)
 		}
 
-		b.WriteString(fmt.Sprintf("  %s %s\n", cursor, choice))
+		b.WriteString(fmt.Sprintf("   %s %s\n", cursor, choice))
 
 	}
 

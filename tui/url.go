@@ -7,7 +7,9 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/complete"
+	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/util"
 )
 
@@ -86,12 +88,15 @@ func (m urlModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.input.SetCursor(len(text))
 			m.matches = matches
 		case key.Matches(msg, confirmBinding):
-			method := m.state.method.Value()
-			state := m.state.setURL(m.input.Value())
-			if !util.Contains([]string{"post", "put", "patch"}, strings.ToLower(method)) {
-				return initialHeadersModel(state), nil
+			url, err := client.ParseURL(m.input.Value(), nil)
+			if err == nil {
+				state := m.state.setURL(url.String())
+				method := m.state.method.Value()
+				if !util.Contains([]string{"post", "put", "patch"}, strings.ToLower(method)) {
+					return initialHeadersModel(state), nil
+				}
+				return initialBodyModel(state), nil
 			}
-			return initialBodyModel(state), nil
 		}
 	}
 
@@ -103,7 +108,29 @@ func (m urlModel) View() string {
 	b := strings.Builder{}
 	b.WriteString(m.state.render())
 
-	b.WriteString(fmt.Sprintf("URL: %s\n", m.input.View()))
+	renderQuery(&b, "URL: ")
+	b.WriteString(m.input.View())
+	b.WriteString("\n")
+
+	// Display parsed value
+	value := strings.TrimSpace(m.input.Value())
+	if value != "" {
+		line := "   "
+
+		url, err := client.ParseURL(value, nil)
+		if err != nil {
+			line += style.RedB.Render("X")
+			line += " "
+			line += blurredStyle.Render(value)
+		} else {
+			line += confirmedStyle.Render(okIcon)
+			line += " "
+			line += blurredStyle.Render(url.String())
+		}
+		b.WriteString(line)
+	}
+
+	b.WriteString("\n")
 
 	// Only render top matches
 	limit := listLimit
@@ -112,7 +139,7 @@ func (m urlModel) View() string {
 	}
 
 	for _, u := range m.matches[:limit] {
-		b.WriteString(fmt.Sprintf("  %s\n", u))
+		b.WriteString(fmt.Sprintf("   %s\n", u))
 	}
 
 	b.WriteString(m.help.View())

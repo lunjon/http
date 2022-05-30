@@ -63,7 +63,7 @@ func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
 	for name, value := range r.Header {
 		n := fmt.Sprintf("%s:", name)
 		v := fmt.Sprint(value)
-		taber.WriteLine(style.Bold(n), v)
+		taber.WriteLine(style.Bold.Render(n), v)
 	}
 	fmt.Fprint(w, taber.String())
 }

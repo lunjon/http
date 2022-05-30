@@ -37,7 +37,7 @@ func (handler ConfigHandler) list() error {
 		fmt.Fprintf(
 			handler.output,
 			"No configuration file found.\nUse %s to create one.\n",
-			style.Bold("config init"),
+			style.Bold.Render("config init"),
 		)
 		return nil
 	}
@@ -77,9 +77,9 @@ func (handler ConfigHandler) init() error {
 
 Use %s list the configuration, or %s to edit the file.
 `,
-		style.GreenB(handler.configPath),
-		style.Bold("config"),
-		style.Bold("config edit"),
+		style.GreenB.Render(handler.configPath),
+		style.Bold.Render("config"),
+		style.Bold.Render("config edit"),
 	)
 	return err
 }

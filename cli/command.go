@@ -73,7 +73,7 @@ A request body can be specified in three ways:
 		Use:   "version",
 		Short: "Print version",
 		Run: func(*cobra.Command, []string) {
-			fmt.Printf("http version: %s\n", style.Bold(version))
+			fmt.Printf("http version: %s\n", style.Bold.Render(version))
 		},
 	})
 
@@ -286,9 +286,6 @@ func buildServer(cfg cliConfig) *cobra.Command {
 Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: trap exit signal for graceful shutdown
-
-			fmt.Printf("Starting server on :%s.\n", style.Bold(fmt.Sprint(port)))
-			fmt.Printf("Press %s to exit.\n", style.Bold("CTRL-C"))
 
 			server := server.New(port.value())
 			err := server.Serve()

@@ -66,6 +66,6 @@ func checkErr(err error, output io.Writer) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(output, "%s: %v\n", style.RedB("error"), err)
+	fmt.Fprintf(output, "%s: %v\n", style.RedB.Render("error"), err)
 	os.Exit(1)
 }

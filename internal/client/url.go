@@ -11,8 +11,9 @@ var (
 	portPattern      = regexp.MustCompile(`^:\d+`)
 	protoPattern     = regexp.MustCompile(`^https?://`)
 	localhostPattern = regexp.MustCompile(`^(localhost|127\.0\.0\.1)`)
-	hostPattern      = regexp.MustCompile(`^[a-z](\.[a-z]+)*`)
+	hostPattern      = regexp.MustCompile(`^[a-z]+(\.[a-z]+)*`)
 	aliasPattern     = regexp.MustCompile(`\{[\w]+\}`)
+	schemePattern    = regexp.MustCompile(`^https?(:|:/|://)?$`)
 )
 
 // ParseURL parses the given URL
@@ -46,7 +47,7 @@ func ParseURL(url string, aliases map[string]string) (*url.URL, error) {
 	}
 
 	// api.com...
-	if hostPattern.MatchString(url) {
+	if hostPattern.MatchString(url) && !schemePattern.MatchString(url) {
 		return parseURL("https://" + url)
 	}
 
