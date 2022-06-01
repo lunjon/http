@@ -18,7 +18,7 @@ func Complete(text string, items []string) (string, []string) {
 
 	for _, item := range items {
 		itemLower := strings.ToLower(item)
-		if strings.HasPrefix(itemLower, textLower) {
+		if strings.Contains(itemLower, textLower) {
 			matches = append(matches, item)
 		}
 	}
