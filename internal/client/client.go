@@ -43,10 +43,10 @@ type Client struct {
 }
 
 func NewClient(
-	httpClient *http.Client,
+	settings Settings,
 	clientLogger *log.Logger,
 	traceLogger *log.Logger,
-) *Client {
+) (*Client, error) {
 	t := newTracer(traceLogger)
 	trace := &httptrace.ClientTrace{
 		TLSHandshakeStart: t.TLSHandshakeStart,
@@ -57,12 +57,13 @@ func NewClient(
 		DNSDone:           t.DNSDone,
 	}
 
+	httpClient, err := settings.buildHTTPClient()
 	return &Client{
 		httpClient:   httpClient,
 		tracer:       t,
 		clientLogger: clientLogger,
 		clientTrace:  trace,
-	}
+	}, err
 }
 
 func (client *Client) BuildRequest(method string, u *url.URL, body []byte, header http.Header) (*http.Request, error) {

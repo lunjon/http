@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -101,45 +100,45 @@ A request body can be specified in three ways:
 	return root
 }
 
-func buildHTTPClient(cfg config.Config, cmd *cobra.Command) (*http.Client, error) {
-	flags := cmd.Flags()
+// func buildHTTPClient(cfg config.Config, cmd *cobra.Command) (*http.Client, error) {
+// 	flags := cmd.Flags()
 
-	var tlsConfig tls.Config
-	certPub, _ := flags.GetString(certpubFlagName)
-	certKey, _ := flags.GetString(certkeyFlagName)
+// 	var tlsConfig tls.Config
+// 	certPub, _ := flags.GetString(certpubFlagName)
+// 	certKey, _ := flags.GetString(certkeyFlagName)
 
-	if certPub != "" && certKey == "" {
-		return nil, errCertFlags
-	} else if certPub == "" && certKey != "" {
-		return nil, errCertFlags
-	} else if certPub != "" && certKey != "" {
-		cert, err := tls.LoadX509KeyPair(certPub, certKey)
-		if err != nil {
-			return nil, err
-		}
+// 	if certPub != "" && certKey == "" {
+// 		return nil, errCertFlags
+// 	} else if certPub == "" && certKey != "" {
+// 		return nil, errCertFlags
+// 	} else if certPub != "" && certKey != "" {
+// 		cert, err := tls.LoadX509KeyPair(certPub, certKey)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		tlsConfig = tls.Config{
-			Certificates: []tls.Certificate{cert},
-		}
-	}
+// 		tlsConfig = tls.Config{
+// 			Certificates: []tls.Certificate{cert},
+// 		}
+// 	}
 
-	noFollowRedirects, _ := flags.GetBool(noFollowRedirectsFlagName)
-	var redirect checkRedirectFunc = nil
-	if noFollowRedirects {
-		redirect = func(*http.Request, []*http.Request) error {
-			return http.ErrUseLastResponse
-		}
-	}
+// 	noFollowRedirects, _ := flags.GetBool(noFollowRedirectsFlagName)
+// 	var redirect checkRedirectFunc = nil
+// 	if noFollowRedirects {
+// 		redirect = func(*http.Request, []*http.Request) error {
+// 			return http.ErrUseLastResponse
+// 		}
+// 	}
 
-	return &http.Client{
-		Timeout:       cfg.Timeout,
-		CheckRedirect: redirect,
-		Transport: &http.Transport{
-			Proxy:           http.ProxyFromEnvironment,
-			TLSClientConfig: &tlsConfig,
-		},
-	}, nil
-}
+// 	return &http.Client{
+// 		Timeout:       cfg.Timeout,
+// 		CheckRedirect: redirect,
+// 		Transport: &http.Transport{
+// 			Proxy:           http.ProxyFromEnvironment,
+// 			TLSClientConfig: &tlsConfig,
+// 		},
+// 	}, nil
+// }
 
 func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 	flags := cmd.Flags()
@@ -183,18 +182,32 @@ func buildRequestRun(
 			logger.SetOutput(cfg.logs)
 		}
 
+		// HTTP CLIENT
 		traceLogger := logging.New(io.Discard)
-		trace, _ := flags.GetBool(traceFlagName)
-		if trace {
+		if flags.Changed(traceFlagName) {
 			traceLogger.SetOutput(cfg.logs)
 		}
 
-		httpClient, err := buildHTTPClient(appConfig, cmd)
+		settings := client.NewSettings().
+			WithTimeout(appConfig.Timeout).
+			WithNoFollowRedirects(flags.Changed(noFollowRedirectsFlagName))
+
+		certPub, _ := flags.GetString(certpubFlagName)
+		certKey, _ := flags.GetString(certkeyFlagName)
+
+		if certPub != "" && certKey == "" {
+			checkErr(errCertFlags, cfg.errors)
+		} else if certPub == "" && certKey != "" {
+			checkErr(errCertFlags, cfg.errors)
+		} else if certPub != "" && certKey != "" {
+			settings = settings.WithCert(certPub, certKey)
+		}
+
+		cl, err := client.NewClient(settings, logger, traceLogger)
 		checkErr(err, cfg.errors)
 
-		cl := client.NewClient(httpClient, logger, traceLogger)
+		// DISPLAY
 		display, _ := flags.GetString(displayFlagName)
-
 		var formatter ResponseFormatter
 		switch display {
 		case "all":
@@ -368,8 +381,11 @@ Possible values:
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
-	cmd.Flags().String(certpubFlagName, "", "Use as client certificate. Requires the --key flag.")
-	cmd.Flags().String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
 	cmd.Flags().StringP(outputFlagName, "o", "", "Write output to file instead of stdout.")
 	cmd.Flags().Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
+
+	cmd.Flags().String(certpubFlagName, "", "Use as client certificate. Requires the --key flag.")
+	cmd.MarkFlagFilename(certpubFlagName)
+	cmd.Flags().String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
+	cmd.MarkFlagFilename(certkeyFlagName)
 }

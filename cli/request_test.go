@@ -30,8 +30,9 @@ func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
 
 	logger := logging.New(io.Discard)
 	logger.SetOutput(logs)
+	settings := client.NewSettings()
 
-	c := client.NewClient(testServer.Client(), logger, logger)
+	c, _ := client.NewClient(settings, logger, logger)
 
 	state := &state{}
 

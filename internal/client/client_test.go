@@ -10,7 +10,7 @@ import (
 
 func setupClient(t *testing.T) *Client {
 	logger := logging.NewLogger()
-	client := NewClient(server.Client(), logger, logger)
+	client, _ := NewClient(NewSettings(), logger, logger)
 	return client
 }
 

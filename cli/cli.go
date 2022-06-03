@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path"
 	"time"
@@ -16,7 +15,6 @@ import (
 
 type FailFunc func(status int)
 type runFunc func(*cobra.Command, []string)
-type checkRedirectFunc func(*http.Request, []*http.Request) error
 
 type cliConfig struct {
 	logs       io.Writer

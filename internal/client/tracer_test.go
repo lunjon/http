@@ -11,7 +11,7 @@ import (
 
 func TestTracer(t *testing.T) {
 	logger := logging.NewLogger()
-	client := NewClient(server.Client(), logger, logger)
+	client, _ := NewClient(NewSettings(), logger, logger)
 
 	url, _ := ParseURL(server.URL, nil)
 	req, err := client.BuildRequest("GET", url, nil, nil)
