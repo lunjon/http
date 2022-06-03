@@ -1,4 +1,4 @@
-all: format build test
+all: format build test check
 alias t := test
 
 format:
@@ -19,3 +19,11 @@ release version:
     git push
     ./build.sh
     gh release create {{version}} bin/*
+
+check:
+    staticcheck ./...
+
+# Get/install dependencies
+deps:
+    go get ./...
+    go install honnef.co/go/tools/cmd/staticcheck@latest

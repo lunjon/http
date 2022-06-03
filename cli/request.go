@@ -39,7 +39,6 @@ type RequestHandler struct {
 	output     io.Writer
 	logger     *log.Logger
 	failFunc   FailFunc
-	headerOpt  *HeaderOption
 	outputFile string
 }
 

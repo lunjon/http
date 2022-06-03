@@ -9,7 +9,6 @@ import (
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
 	"github.com/lunjon/http/internal/logging"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,8 +18,6 @@ type state struct {
 
 type fixture struct {
 	handler *RequestHandler
-	root    *cobra.Command
-	logs    *strings.Builder
 	infos   *strings.Builder
 	errors  *strings.Builder
 	state   *state

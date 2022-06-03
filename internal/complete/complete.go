@@ -2,11 +2,6 @@ package complete
 
 import "strings"
 
-type match struct {
-	s     string
-	lower string
-}
-
 func Complete(text string, items []string) (string, []string) {
 	text = strings.TrimSpace(text)
 	if text == "" {

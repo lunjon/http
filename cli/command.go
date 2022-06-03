@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -373,12 +372,4 @@ Possible values:
 	cmd.Flags().String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
 	cmd.Flags().StringP(outputFlagName, "o", "", "Write output to file instead of stdout.")
 	cmd.Flags().Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
-}
-
-func getAliasFilepath() (string, error) {
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return path.Join(homedir, ".gohttp", "aliases.json"), nil
 }

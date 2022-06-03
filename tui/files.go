@@ -16,7 +16,6 @@ var (
 	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
 	selectedItemStyle = focusedStyle.Copy().PaddingLeft(2)
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingBottom(1)
 
 	filterKeyBinding = key.NewBinding(
 		key.WithKeys("/"),
@@ -42,15 +41,13 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 			return selectedItemStyle.Render("> " + s)
 		}
 	}
-	fmt.Fprintf(w, fn(string(i)))
+	fmt.Fprint(w, fn(string(i)))
 }
 
 type fileSearchModel struct {
-	help   tea.Model
-	state  state
-	list   list.Model
-	items  []item
-	choice string
+	help  tea.Model
+	state state
+	list  list.Model
 }
 
 func initialFileSearchModel(state state) fileSearchModel {

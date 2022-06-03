@@ -40,7 +40,6 @@ type Client struct {
 	tracer       *Tracer
 	clientTrace  *httptrace.ClientTrace
 	clientLogger *log.Logger
-	traceLogger  *log.Logger
 }
 
 func NewClient(

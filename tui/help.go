@@ -39,17 +39,9 @@ var (
 		key.WithKeys("left"),
 		key.WithHelp("←", "move left"),
 	)
-	leftBindingV = key.NewBinding(
-		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "move left"),
-	)
 	rightbinding = key.NewBinding(
 		key.WithKeys("right"),
 		key.WithHelp("→", "move right"),
-	)
-	rightbindingV = key.NewBinding(
-		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "move right"),
 	)
 	autocompleteBinding = key.NewBinding(
 		key.WithKeys("tab"),
