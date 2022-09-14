@@ -4,13 +4,14 @@ A CLI for sending HTTP requests the easiest way possible.
 
 Features:
  - Simplified URL parsing, e.g. `:1234/path` becomes `http://localhost:1234/path`
- - Persistant URL aliases
+ - Configuration file in TOML
+ - URL aliases and interpolation
  - Flexible request body handling through stdin, file or flag
  - Multiple output formats
  - Request history
  - TUI for those who prefer an interactive experience
- - Configuration file in TOML
  - Starting a server on localhost (useful for development)
+
 
 ## Installation
 
