@@ -8,8 +8,12 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - `config init` sub-command
 - `config edit` sub-command
 - Body model/view to TUI with support for editing and searching for files
+- Request history, and sub-command:
+  - `history`: list history
+  - `history clear`: clears history
 
 ### Changed
+- Renamed option `output` to `outfile` (output has been reserved for future use)
 - Complete TUI overhaul with lots of improvements
 
 ## [0.12.1] - 2022-05-25

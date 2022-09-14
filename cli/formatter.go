@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/lunjon/http/internal/history"
 	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/types"
 	"github.com/lunjon/http/internal/util"
@@ -14,8 +15,9 @@ import (
 
 var ResponseComponents = []string{"status", "statuscode", "headers", "body"}
 
-type ResponseFormatter interface {
-	Format(*http.Response) ([]byte, error)
+type Formatter interface {
+	FormatResponse(*http.Response) ([]byte, error)
+	FormatHistory([]history.Entry) ([]byte, error)
 }
 
 type DefaultFormatter struct {
@@ -37,7 +39,7 @@ func NewResponseFormatter(components []string) (*DefaultFormatter, error) {
 	return &DefaultFormatter{components: parsed}, nil
 }
 
-func (f *DefaultFormatter) Format(r *http.Response) ([]byte, error) {
+func (f *DefaultFormatter) FormatResponse(r *http.Response) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	for _, comp := range f.components {
 		switch comp {
@@ -77,4 +79,8 @@ func (f *DefaultFormatter) addBody(w io.Writer, r *http.Response) error {
 	_, err = w.Write(b)
 	fmt.Fprintln(w, "")
 	return err
+}
+
+func (f *DefaultFormatter) FormatHistory([]history.Entry) ([]byte, error) {
+	return nil, nil
 }

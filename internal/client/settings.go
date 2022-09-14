@@ -10,44 +10,44 @@ import (
 
 type checkRedirectFunc func(*http.Request, []*http.Request) error
 
-type certPair struct {
-	certFile string
-	keyFile  string
+type CertPair struct {
+	CertFile string
+	KeyFile  string
 }
 
 type Settings struct {
-	timeout         time.Duration
-	cert            types.Option[certPair]
-	followRedirects bool
+	Timeout         time.Duration          `json:"timeout"`
+	Cert            types.Option[CertPair] `json:"cert"`
+	FollowRedirects bool                   `json:"followRedirects"`
 }
 
 func NewSettings() Settings {
 	return Settings{
-		timeout: time.Second * 30,
-		cert:    types.Option[certPair]{},
+		Timeout: time.Second * 30,
+		Cert:    types.Option[CertPair]{},
 	}
 }
 
 func (s Settings) WithTimeout(t time.Duration) Settings {
-	s.timeout = t
+	s.Timeout = t
 	return s
 }
 
 func (s Settings) WithCert(certFile, keyFile string) Settings {
-	s.cert = s.cert.Set(certPair{certFile, keyFile})
+	s.Cert = s.Cert.Set(CertPair{certFile, keyFile})
 	return s
 }
 
 func (s Settings) WithNoFollowRedirects(b bool) Settings {
-	s.followRedirects = !b
+	s.FollowRedirects = !b
 	return s
 }
 
-func (s Settings) buildHTTPClient() (*http.Client, error) {
+func (s Settings) BuildHTTPClient() (*http.Client, error) {
 	var tlsConfig tls.Config
-	if s.cert.IsSome() {
-		pair := s.cert.Value()
-		cert, err := tls.LoadX509KeyPair(pair.certFile, pair.keyFile)
+	if s.Cert.IsSome() {
+		pair := s.Cert.Value()
+		cert, err := tls.LoadX509KeyPair(pair.CertFile, pair.KeyFile)
 		if err != nil {
 			return nil, err
 		}
@@ -58,14 +58,14 @@ func (s Settings) buildHTTPClient() (*http.Client, error) {
 	}
 
 	var redirect checkRedirectFunc
-	if s.followRedirects {
+	if s.FollowRedirects {
 		redirect = func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
 	}
 
 	return &http.Client{
-		Timeout:       s.timeout,
+		Timeout:       s.Timeout,
 		CheckRedirect: redirect,
 		Transport: &http.Transport{
 			Proxy:           http.ProxyFromEnvironment,

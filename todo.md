@@ -1,14 +1,23 @@
-# General
-- Config sub-commands
-  - [x] Init
-  - [x] List
-  - [x] Edit
-- Request history
-  - [ ] Write to file
-  - [ ] Truncate to x entries
+# Features
 
-# Configuration
-- [x] Format: toml?
+## General
+- Request history
+  - [x] Write to file
+  - Sub-commands:
+    - [x] `http history`: base form, lists history
+    - [x] `http history clear`: clears history
+    - [ ] `http history run N`: runs an entry from history (0 latest, etc.)
+  - [ ] Configuration section: `[history]`
+    - [ ] `enabled = boolean`
+    - [ ] `size = int`
+  - [ ] Truncate to x entries
+- Option for specifying output format
+  - [ ] table
+  - [ ] json
+  - [ ] none
+
+## Configuration
+- [ ] Section in README
 - [x] Timeout
 - Sections
   - [x] aliases
@@ -18,18 +27,25 @@
   - [ ] table: `name = { stage = "", prod = ""}`
     - usage: `{name.stage}`
 
-# TUI
+## Serve
+- Options
+  - [ ] Response status code
+  - [ ] Response body
+  - [ ] Response headers
+  - [ ] Server certificate
+
+## TUI
 - [x] URL suggestions from alias file
 - [x] Headers
 - [x] Body
   - [x] Implement skip
   - [x] Implement editor
   - [x] Implement file
-- [ ] Resend request
-- [ ] Options
+- Options
   - [ ] Timeout
   - [ ] Certificate
 - [ ] Splash screen
   - [ ] New request
   - [ ] History
 
+# Fixes

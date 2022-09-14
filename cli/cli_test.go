@@ -10,14 +10,16 @@ import (
 	"testing"
 
 	"github.com/lunjon/http/internal/config"
+	"github.com/lunjon/http/internal/history"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	testServer     *httptest.Server
-	testdir        = "test-http"
-	testConfigPath = path.Join(testdir, "config.toml")
+	testServer      *httptest.Server
+	testdir         = "test-http"
+	testConfigPath  = path.Join(testdir, "config.toml")
+	testHistoryPath = path.Join(testdir, "history")
 )
 
 type signerMock struct {
@@ -33,10 +35,14 @@ type formatterMock struct {
 	called bool
 }
 
-func (f *formatterMock) Format(r *http.Response) ([]byte, error) {
+func (f *formatterMock) FormatResponse(r *http.Response) ([]byte, error) {
 	f.called = true
 	defer r.Body.Close()
 	return io.ReadAll(r.Body)
+}
+
+func (f *formatterMock) FormatHistory([]history.Entry) ([]byte, error) {
+	return nil, nil
 }
 
 type serverHandler struct{}

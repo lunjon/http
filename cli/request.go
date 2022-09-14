@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,9 +12,12 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
+	"github.com/lunjon/http/internal/history"
+	"github.com/lunjon/http/internal/types"
 )
 
 var (
@@ -31,21 +33,23 @@ const (
 
 // RequestHandler handles all commands.
 type RequestHandler struct {
-	cfg        config.Config
-	client     *client.Client
-	headers    http.Header
-	formatter  ResponseFormatter
-	signer     client.RequestSigner
-	output     io.Writer
-	logger     *log.Logger
-	failFunc   FailFunc
-	outputFile string
+	cfg            config.Config
+	client         *client.Client
+	headers        http.Header
+	formatter      Formatter
+	signer         client.RequestSigner
+	historyHandler history.Handler
+	output         io.Writer
+	logger         *log.Logger
+	failFunc       FailFunc
+	outputFile     types.Option[string]
 }
 
 func newRequestHandler(
 	client *client.Client,
-	formatter ResponseFormatter,
+	formatter Formatter,
 	signer client.RequestSigner,
+	historyHandler history.Handler,
 	logger *log.Logger,
 	cfg config.Config,
 	headers http.Header,
@@ -53,16 +57,22 @@ func newRequestHandler(
 	outputFile string,
 	failFunc FailFunc,
 ) *RequestHandler {
+	outfile := types.Option[string]{}
+	if outputFile != "" {
+		outfile = outfile.Set(outputFile)
+	}
+
 	return &RequestHandler{
-		cfg:        cfg,
-		client:     client,
-		output:     output,
-		headers:    headers,
-		logger:     logger,
-		signer:     signer,
-		formatter:  formatter,
-		failFunc:   failFunc,
-		outputFile: outputFile,
+		cfg:            cfg,
+		client:         client,
+		headers:        headers,
+		formatter:      formatter,
+		signer:         signer,
+		historyHandler: historyHandler,
+		output:         output,
+		logger:         logger,
+		failFunc:       failFunc,
+		outputFile:     outfile,
 	}
 }
 
@@ -97,6 +107,23 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		return err
 	}
 
+	// Add to history
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_, err := handler.historyHandler.Append(req, body.bytes, handler.client.Settings())
+		if err != nil {
+			handler.logger.Printf("Error building history entry: %s", err)
+			return
+		}
+
+		err = handler.historyHandler.Write()
+		if err != nil {
+			handler.logger.Printf("Error writing history file: %s", err)
+		}
+	}()
+
 	res, err := handler.client.Send(req)
 	if err != nil {
 		return err
@@ -107,6 +134,8 @@ func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error
 		return err
 	}
 
+	// Wait for history to be written
+	wg.Wait()
 	return nil
 }
 
@@ -126,7 +155,7 @@ func (handler *RequestHandler) buildRequest(
 }
 
 func (handler *RequestHandler) outputResults(r *http.Response) error {
-	b, err := handler.formatter.Format(r)
+	b, err := handler.formatter.FormatResponse(r)
 	if err != nil {
 		return err
 	}
@@ -190,7 +219,7 @@ func (handler *RequestHandler) getRequestBody(bodyFlag string) (requestBody, err
 	}
 
 	// We first try to read as a file
-	body, err := ioutil.ReadFile(bodyFlag)
+	body, err := os.ReadFile(bodyFlag)
 	if err != nil && !os.IsNotExist(err) {
 		return emptyRequestBody, err
 	}

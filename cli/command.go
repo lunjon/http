@@ -11,6 +11,7 @@ import (
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
+	"github.com/lunjon/http/internal/history"
 	"github.com/lunjon/http/internal/logging"
 	"github.com/lunjon/http/internal/server"
 	"github.com/lunjon/http/internal/style"
@@ -92,6 +93,7 @@ A request body can be specified in three ways:
 		root.AddCommand(buildHTTPCommand(cfg, cmd.method, cmd.conf))
 	}
 
+	root.AddCommand(buildHistory(cfg))
 	root.AddCommand(buildServer(cfg))
 	root.AddCommand(buildConfig(cfg))
 
@@ -99,46 +101,6 @@ A request body can be specified in three ways:
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
 	return root
 }
-
-// func buildHTTPClient(cfg config.Config, cmd *cobra.Command) (*http.Client, error) {
-// 	flags := cmd.Flags()
-
-// 	var tlsConfig tls.Config
-// 	certPub, _ := flags.GetString(certpubFlagName)
-// 	certKey, _ := flags.GetString(certkeyFlagName)
-
-// 	if certPub != "" && certKey == "" {
-// 		return nil, errCertFlags
-// 	} else if certPub == "" && certKey != "" {
-// 		return nil, errCertFlags
-// 	} else if certPub != "" && certKey != "" {
-// 		cert, err := tls.LoadX509KeyPair(certPub, certKey)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		tlsConfig = tls.Config{
-// 			Certificates: []tls.Certificate{cert},
-// 		}
-// 	}
-
-// 	noFollowRedirects, _ := flags.GetBool(noFollowRedirectsFlagName)
-// 	var redirect checkRedirectFunc = nil
-// 	if noFollowRedirects {
-// 		redirect = func(*http.Request, []*http.Request) error {
-// 			return http.ErrUseLastResponse
-// 		}
-// 	}
-
-// 	return &http.Client{
-// 		Timeout:       cfg.Timeout,
-// 		CheckRedirect: redirect,
-// 		Transport: &http.Transport{
-// 			Proxy:           http.ProxyFromEnvironment,
-// 			TLSClientConfig: &tlsConfig,
-// 		},
-// 	}, nil
-// }
 
 func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 	flags := cmd.Flags()
@@ -163,7 +125,7 @@ func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 	return cfg
 }
 
-// Returns a run function that handles a request for the given HTTP method
+// Returns a function that handles a request for the given HTTP method
 // and respects the config.
 func buildRequestRun(
 	method string,
@@ -208,7 +170,7 @@ func buildRequestRun(
 
 		// DISPLAY
 		display, _ := flags.GetString(displayFlagName)
-		var formatter ResponseFormatter
+		var formatter Formatter
 		switch display {
 		case "all":
 			formatter, _ = NewResponseFormatter(ResponseComponents)
@@ -233,7 +195,7 @@ func buildRequestRun(
 		}
 
 		output := cfg.infos
-		outputFile, _ := flags.GetString(outputFlagName)
+		outputFile, _ := flags.GetString(outfileFlagName)
 		if outputFile != "" {
 			file, err := os.Create(outputFile)
 			checkErr(err, cfg.errors)
@@ -253,6 +215,7 @@ func buildRequestRun(
 			cl,
 			formatter,
 			signer,
+			history.NewHandler(cfg.historyPath),
 			logger,
 			appConfig,
 			headerOpt.values,
@@ -285,6 +248,36 @@ func buildHTTPCommand(
 	addCommonFlags(cmd, headerOption)
 	configure(cmd)
 	return cmd
+}
+
+func buildHistory(cfg cliConfig) *cobra.Command {
+	root := &cobra.Command{
+		Use:     "history",
+		Aliases: []string{"hist"},
+		Short:   "Command for managing request history.",
+		Run: func(cmd *cobra.Command, args []string) {
+			handler := history.NewHandler(cfg.historyPath)
+			entries, err := handler.GetAll()
+			checkErr(err, cfg.errors)
+
+			for _, entry := range entries {
+				fmt.Fprintf(cfg.infos, "%s %s\n", entry.Method, entry.URL)
+			}
+		},
+	}
+
+	clear := &cobra.Command{
+		Use:   "clear",
+		Short: "Clears request history",
+		Run: func(cmd *cobra.Command, args []string) {
+			handler := history.NewHandler(cfg.historyPath)
+			err := handler.Clear()
+			checkErr(err, cfg.errors)
+		},
+	}
+
+	root.AddCommand(clear)
+	return root
 }
 
 func buildServer(cfg cliConfig) *cobra.Command {
@@ -381,7 +374,7 @@ Possible values:
 	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
 	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
-	cmd.Flags().StringP(outputFlagName, "o", "", "Write output to file instead of stdout.")
+	cmd.Flags().StringP(outfileFlagName, "o", "", "Write output to file instead of stdout.")
 	cmd.Flags().Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 
 	cmd.Flags().String(certpubFlagName, "", "Use as client certificate. Requires the --key flag.")

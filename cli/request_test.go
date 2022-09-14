@@ -8,19 +8,21 @@ import (
 
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
+	"github.com/lunjon/http/internal/history"
 	"github.com/lunjon/http/internal/logging"
 	"github.com/stretchr/testify/require"
 )
 
-type state struct {
+type testState struct {
 	failCalled bool
 }
 
 type fixture struct {
-	handler *RequestHandler
-	infos   *strings.Builder
-	errors  *strings.Builder
-	state   *state
+	handler     *RequestHandler
+	infos       *strings.Builder
+	errors      *strings.Builder
+	state       *testState
+	historyMock history.Handler
 }
 
 func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
@@ -34,12 +36,12 @@ func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
 
 	c, _ := client.NewClient(settings, logger, logger)
 
-	state := &state{}
-
+	state := &testState{}
 	failFunc := func(int) {
 		state.failCalled = true
 	}
 
+	historyHandler := history.NewHandler(testHistoryPath)
 	formatter := &formatterMock{}
 	signer := &signerMock{}
 
@@ -52,6 +54,7 @@ func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
 		c,
 		formatter,
 		signer,
+		historyHandler,
 		logger,
 		cfg,
 		http.Header{},
@@ -61,10 +64,11 @@ func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
 	)
 
 	return &fixture{
-		handler: handler,
-		infos:   infos,
-		errors:  errors,
-		state:   state,
+		handler:     handler,
+		infos:       infos,
+		errors:      errors,
+		state:       state,
+		historyMock: historyHandler,
 	}
 }
 
@@ -75,6 +79,10 @@ func TestGet(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
+
+	entry, err := fixture.historyMock.Latest()
+	require.NoError(t, err)
+	require.Equal(t, http.MethodGet, entry.Method)
 }
 
 func TestGetErrorWithFail(t *testing.T) {

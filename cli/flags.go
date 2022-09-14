@@ -22,9 +22,10 @@ const (
 	traceFlagName             = "trace"
 	certpubFlagName           = "cert"
 	certkeyFlagName           = "key"
-	outputFlagName            = "output"
+	outfileFlagName           = "outfile"
 	noFollowRedirectsFlagName = "no-follow-redirects"
 	aliasHeadingFlagName      = "no-heading"
+	historyNumberFlagName     = "num"
 )
 
 var (

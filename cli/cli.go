@@ -17,10 +17,11 @@ type FailFunc func(status int)
 type runFunc func(*cobra.Command, []string)
 
 type cliConfig struct {
-	logs       io.Writer
-	infos      io.Writer
-	errors     io.Writer
-	configPath string
+	logs        io.Writer
+	infos       io.Writer
+	errors      io.Writer
+	configPath  string
+	historyPath string
 }
 
 func (cfg cliConfig) getAppConfig() (config.Config, error) {
@@ -51,11 +52,14 @@ func Build(version string) (*cobra.Command, error) {
 	}
 
 	configPath := path.Join(homedir, ".config", "httpcli", "config.toml")
+	historyPath := path.Join(homedir, ".config", "httpcli", "history")
+
 	cfg := cliConfig{
-		configPath: configPath,
-		infos:      os.Stdout,
-		logs:       os.Stderr,
-		errors:     os.Stderr,
+		configPath:  configPath,
+		historyPath: historyPath,
+		infos:       os.Stdout,
+		logs:        os.Stderr,
+		errors:      os.Stderr,
 	}
 	return build(version, cfg), nil
 }

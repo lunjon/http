@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ignoreDirs = []string{".git", "node_modules"}
+	ignoreDirs = []string{".git", "node_modules", "target"}
 )
 
 func ignore(name string) bool {

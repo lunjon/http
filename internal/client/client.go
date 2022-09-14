@@ -40,6 +40,7 @@ type Client struct {
 	tracer       *Tracer
 	clientTrace  *httptrace.ClientTrace
 	clientLogger *log.Logger
+	settings     Settings
 }
 
 func NewClient(
@@ -57,12 +58,13 @@ func NewClient(
 		DNSDone:           t.DNSDone,
 	}
 
-	httpClient, err := settings.buildHTTPClient()
+	httpClient, err := settings.BuildHTTPClient()
 	return &Client{
 		httpClient:   httpClient,
 		tracer:       t,
 		clientLogger: clientLogger,
 		clientTrace:  trace,
+		settings:     settings,
 	}, err
 }
 
@@ -133,4 +135,8 @@ func (client *Client) Send(req *http.Request) (*http.Response, error) {
 	}
 
 	return res, err
+}
+
+func (client *Client) Settings() Settings {
+	return client.settings
 }
