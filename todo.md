@@ -28,6 +28,7 @@
     - usage: `{name.stage}`
 
 ## Serve
+- [ ] Graceful shutdown, handle `ctrl-c`
 - [ ] Rename to only `serve`
 - Options
   - [ ] Flag for current status
