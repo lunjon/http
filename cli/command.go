@@ -94,7 +94,7 @@ A request body can be specified in three ways:
 	}
 
 	root.AddCommand(buildHistory(cfg))
-	root.AddCommand(buildServer(cfg))
+	root.AddCommand(buildServe(cfg))
 	root.AddCommand(buildConfig(cfg))
 
 	// Persistant flags
@@ -280,13 +280,12 @@ func buildHistory(cfg cliConfig) *cobra.Command {
 	return root
 }
 
-func buildServer(cfg cliConfig) *cobra.Command {
+func buildServe(cfg cliConfig) *cobra.Command {
 	port := newPortOption()
 
 	c := &cobra.Command{
-		Use:     "server",
-		Aliases: []string{"serve"},
-		Short:   "Starts an HTTP server on localhost.",
+		Use:   "serve",
+		Short: "Starts an HTTP server on localhost.",
 		Long: `Starts an HTTP server on localhost.
 Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {

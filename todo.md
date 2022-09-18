@@ -28,11 +28,15 @@
     - usage: `{name.stage}`
 
 ## Serve
+- [ ] Rename to only `serve`
 - Options
+  - [ ] Flag for current status
+    - Shows req/s
   - [ ] Response status code
   - [ ] Response body
   - [ ] Response headers
   - [ ] Server certificate
+  - [ ] Summary
 
 ## TUI
 - [x] URL suggestions from alias file
