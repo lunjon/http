@@ -9,13 +9,18 @@ import (
 	"github.com/lunjon/http/internal/style"
 )
 
-type formatter interface {
-	format(*http.Request)
+type callback interface {
+	start() error
+	handle(*http.Request)
+	stop() error
 }
 
-type defaultFormatter struct{}
+type defaultCallback struct{}
 
-func (f defaultFormatter) format(r *http.Request) {
+func (f defaultCallback) start() error { return nil }
+func (f defaultCallback) stop() error  { return nil }
+
+func (f defaultCallback) handle(r *http.Request) {
 	fmt.Println("Incoming request:")
 	fmt.Printf("  Method:  %s\n", style.GreenB.Render(r.Method))
 	fmt.Printf("  Path:    %s\n", style.GreenB.Render(r.URL.Path))
@@ -36,4 +41,15 @@ func (f defaultFormatter) format(r *http.Request) {
 		s := fmt.Sprintf("%d bytes", len(b))
 		fmt.Printf("  Body:    %s\n", style.GreenB.Render(s))
 	}
+}
+
+type statusCallback struct {
+	count int
+}
+
+func (f statusCallback) start() error { return nil }
+func (f statusCallback) stop() error  { return nil }
+
+func (f *statusCallback) handle(r *http.Request) {
+	f.count++
 }

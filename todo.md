@@ -29,15 +29,15 @@
 
 ## Serve
 - [ ] Graceful shutdown, handle `ctrl-c`
-- [ ] Rename to only `serve`
+- [x] Rename to only `serve`
 - Options
   - [ ] Flag for current status
     - Shows req/s
+  - [ ] Summary
   - [ ] Response status code
   - [ ] Response body
   - [ ] Response headers
   - [ ] Server certificate
-  - [ ] Summary
 
 ## TUI
 - [x] URL suggestions from alias file

@@ -7,47 +7,60 @@ import (
 	"github.com/lunjon/http/internal/style"
 )
 
-type Server struct {
-	server    *http.Server
-	handler   *requestHandler
-	formatter formatter
-	callback  chan *http.Request
-	port      uint
+type Options struct {
+	Port        uint
+	ShowSummary bool
 }
 
-func New(port uint) *Server {
-	handler := newHandler()
+type Server struct {
+	server  *http.Server
+	handler *requestHandler
+	cb      callback
+	ch      chan *http.Request
+	options Options
+}
+
+func New(opts Options) *Server {
+	ch := make(chan *http.Request)
+
+	handler := newHandler(ch)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler.handle)
 
 	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    fmt.Sprintf(":%d", opts.Port),
 		Handler: mux,
 	}
-	return &Server{
-		server:    s,
-		handler:   handler,
-		formatter: defaultFormatter{},
-		callback:  make(chan *http.Request),
-		port:      port,
-	}
-}
 
-func (s *Server) Close() error {
-	close(s.callback)
-	return s.server.Close()
+	return &Server{
+		server:  s,
+		handler: handler,
+		cb:      defaultCallback{},
+		ch:      ch,
+		options: opts,
+	}
 }
 
 func (s *Server) Serve() error {
-	go onRequest(s.formatter, s.callback)
+	err := s.cb.start()
+	if err != nil {
+		return err
+	}
 
-	fmt.Printf("Starting server on :%s.\n", style.Bold.Render(fmt.Sprint(s.port)))
+	go s.onRequest()
+
+	fmt.Printf("Starting server on :%s.\n", style.Bold.Render(fmt.Sprint(s.options.Port)))
 	fmt.Printf("Press %s to exit.\n", style.Bold.Render("CTRL-C"))
 	return s.server.ListenAndServe()
 }
 
-func onRequest(f formatter, ch chan *http.Request) {
-	for r := range ch {
-		f.format(r)
+func (s *Server) Close() error {
+	close(s.ch)
+	return s.server.Close()
+}
+
+func (s *Server) onRequest() {
+	for r := range s.ch {
+		s.cb.handle(r)
 	}
 }

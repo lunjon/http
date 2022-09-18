@@ -291,7 +291,12 @@ Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: trap exit signal for graceful shutdown
 
-			server := server.New(port.value())
+			opts := server.Options{
+				Port:        port.value(),
+				ShowSummary: true, // TODO: add as flag, default true
+			}
+
+			server := server.New(opts)
 			err := server.Serve()
 			checkErr(err, cfg.errors)
 		},
