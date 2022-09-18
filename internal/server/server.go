@@ -9,6 +9,7 @@ import (
 
 type Options struct {
 	Port        uint
+	ShowStatus  bool
 	ShowSummary bool
 }
 
@@ -17,6 +18,7 @@ type Server struct {
 	handler *requestHandler
 	cb      callback
 	ch      chan *http.Request
+	done    chan bool
 	options Options
 }
 
@@ -32,22 +34,24 @@ func New(opts Options) *Server {
 		Handler: mux,
 	}
 
+	var cb callback
+	if opts.ShowStatus {
+		cb = newStatusCallback()
+	} else {
+		cb = defaultCallback{}
+	}
+
 	return &Server{
 		server:  s,
 		handler: handler,
-		cb:      defaultCallback{},
+		cb:      cb,
 		ch:      ch,
 		options: opts,
 	}
 }
 
 func (s *Server) Serve() error {
-	err := s.cb.start()
-	if err != nil {
-		return err
-	}
-
-	go s.onRequest()
+	go s.cb.loop(s.ch, s.done)
 
 	fmt.Printf("Starting server on :%s.\n", style.Bold.Render(fmt.Sprint(s.options.Port)))
 	fmt.Printf("Press %s to exit.\n", style.Bold.Render("CTRL-C"))
@@ -56,11 +60,8 @@ func (s *Server) Serve() error {
 
 func (s *Server) Close() error {
 	close(s.ch)
+	go func() {
+		s.done <- true
+	}()
 	return s.server.Close()
-}
-
-func (s *Server) onRequest() {
-	for r := range s.ch {
-		s.cb.handle(r)
-	}
 }

@@ -5,7 +5,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
@@ -282,6 +284,7 @@ func buildHistory(cfg cliConfig) *cobra.Command {
 
 func buildServe(cfg cliConfig) *cobra.Command {
 	port := newPortOption()
+	statusFlagName := "show-status"
 
 	c := &cobra.Command{
 		Use:   "serve",
@@ -289,20 +292,40 @@ func buildServe(cfg cliConfig) *cobra.Command {
 		Long: `Starts an HTTP server on localhost.
 Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO: trap exit signal for graceful shutdown
+			flags := cmd.Flags()
 
+			showStatus, _ := flags.GetBool(statusFlagName)
 			opts := server.Options{
 				Port:        port.value(),
+				ShowStatus:  showStatus,
 				ShowSummary: true, // TODO: add as flag, default true
 			}
 
 			server := server.New(opts)
-			err := server.Serve()
-			checkErr(err, cfg.errors)
+
+			errs := make(chan error)
+			sig := make(chan os.Signal, 1)
+			signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+			go func() {
+				err := server.Serve()
+				if err != nil {
+					errs <- err
+				}
+			}()
+
+			select {
+			case <-sig:
+				server.Close()
+			case err := <-errs:
+				server.Close()
+				checkErr(err, cfg.errors)
+			}
 		},
 	}
 
 	c.Flags().VarP(port, "port", "p", "Port to listen on. Must be valid number in the range 1024-65535.")
+	c.Flags().Bool(statusFlagName, false, "Shows current status instead of showing each request.")
 	return c
 }
 

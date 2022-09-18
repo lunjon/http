@@ -28,11 +28,10 @@
     - usage: `{name.stage}`
 
 ## Serve
-- [ ] Graceful shutdown, handle `ctrl-c`
+- [x] Graceful shutdown, handle `ctrl-c`
 - [x] Rename to only `serve`
 - Options
-  - [ ] Flag for current status
-    - Shows req/s
+  - [x] Flag for current status
   - [ ] Summary
   - [ ] Response status code
   - [ ] Response body
