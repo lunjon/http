@@ -50,22 +50,16 @@ func newStatusCallback() *statusCallback {
 func (s statusCallback) loop(reqs chan *http.Request, stop chan bool) {
 	ticker := time.NewTicker(time.Second)
 	t := ticker.C
-	curr := 0
-	prev := 0
+
+	count := 0 // Count of requests per second
 
 	for {
 		select {
 		case <-reqs:
-			curr++
+			count++
 		case <-t:
-			if curr == prev {
-				fmt.Println("0 requests/s")
-				continue
-			}
-
-			fmt.Printf("~ %d requests/s\n", curr)
-			prev = curr
-			curr = 0
+			fmt.Printf("%d requests/s\n", count)
+			count = 0
 		case <-stop:
 			ticker.Stop()
 			return
