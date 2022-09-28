@@ -1,16 +1,12 @@
 # Features
 
 ## General
-- Request history
-  - [x] Write to file
-  - Sub-commands:
-    - [x] `http history`: base form, lists history
-    - [x] `http history clear`: clears history
-    - [ ] `http history run N`: runs an entry from history (0 latest, etc.)
-  - [ ] Configuration section: `[history]`
-    - [ ] `enabled = boolean`
-    - [ ] `size = int`
-  - [ ] Truncate to x entries
+- [ ] `http history run N`: runs an entry from history (0 latest, etc.)
+- [ ] Rename --body flag to:
+  - [ ] --data: read body as string
+  - [ ] --data-stdin: read body from stdin
+  - [ ] --data-file: read body from file
+  - [ ] --data-form: read URL encoded body
 - Option for specifying output format
   - [ ] table
   - [ ] json
@@ -22,6 +18,8 @@
 - Sections
   - [x] aliases
   - [ ] history (for config, not actual history)
+    - [ ] `enabled = boolean`
+    - [ ] `size = int`
 - Complex alias: support having the alias value:
   - [x] string: use value as is
   - [ ] table: `name = { stage = "", prod = ""}`
@@ -45,11 +43,3 @@
   - [x] Implement skip
   - [x] Implement editor
   - [x] Implement file
-- Options
-  - [ ] Timeout
-  - [ ] Certificate
-- [ ] Splash screen
-  - [ ] New request
-  - [ ] History
-
-# Fixes
