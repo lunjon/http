@@ -9,7 +9,6 @@ Features:
  - Flexible request body handling through stdin, file or flag
  - Multiple output formats
  - Request history
- - TUI for those who prefer an interactive experience
  - Starting a server on localhost (useful for development)
 
 
@@ -36,24 +35,37 @@ $ http get api.example/resources/abbccc-122333 --header x-user=donald
 ...
 ```
 
-### URL alias
-
-The `alias` is used to list, create and remove URL aliases:
- - List: `http alias`
- - Add: `http alias name url`
- - Remove: `http alias --remove name`
-
-An alias can then be used in the request URL:
-```sh
-$ http get "{name}/api/path"
-```
-
 ### Request body
 
 Can be specified as:
-- string: `http post http://example.com/api --body '{"name":"meow"}'`
-- file: `http post http://example.com/api --body r.json`
-- stdin: `http post http://example.com/api < myfile`
+- string: `http post http://example.com/api --data '{"name":"meow"}'`
+- file: `http post http://example.com/api --data-file r.json`
+- stdin: `http post http://example.com/api --data-stdin < myfile`
+
+## Configuration file
+
+The configuration file can be managed with:
+  - `http config`: list existing configuration file
+  - `http config init`: creates a new if none exists at `~/.config/httpcli/config.toml`
+  - `http config edit`: edits the file using editor set in `$EDITOR` environment variable
+
+The configuration file can contain the following:
+
+```toml
+timeout = "duration"  # e.g. 10s
+fail = boolean        # Always fail with an exit code != 0 if response status >= 400
+
+# Aliases can be used for simplified URLs
+[aliases]
+name = "string"
+local = "http://localhost:8080"
+```
+
+Aliases are a way of storing and simplifying URLs. For instance, in the example above we can send `GET http://localhost:8080/path` using:
+
+```bash
+http get "{local}/path"
+```
 
 ## Shell completion
 
