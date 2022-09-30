@@ -18,7 +18,6 @@ import (
 	"github.com/lunjon/http/internal/server"
 	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/util"
-	"github.com/lunjon/http/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -56,18 +55,7 @@ A request body can be specified in three ways:
  * stdin: pipe or IO redirection
  * --body '...': request body from a string
  * --body file: read content from a file`,
-		Run: func(cmd *cobra.Command, args []string) {
-			appConfig, err := cfg.getAppConfig()
-			checkErr(err, cfg.errors)
-
-			urls := []string{}
-			for _, url := range appConfig.Aliases {
-				urls = append(urls, url)
-			}
-
-			err = tui.Start(urls)
-			checkErr(err, cfg.errors)
-		},
+		Run: func(cmd *cobra.Command, args []string) {},
 	}
 
 	root.AddCommand(&cobra.Command{
@@ -78,7 +66,6 @@ A request body can be specified in three ways:
 		},
 	})
 
-	// HTTP
 	httpCommands := []struct {
 		method string
 		conf   func(*cobra.Command)

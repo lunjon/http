@@ -14,8 +14,10 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Changed
 - Renamed option `output` to `outfile` (output has been reserved for future use)
-- Complete TUI overhaul with lots of improvements
 - Renamed `http server` to `http serve`
+
+### Removed
+- TUI
 
 ## [0.12.1] - 2022-05-25
 

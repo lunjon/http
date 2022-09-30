@@ -51,11 +51,12 @@ func Build(version string) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	configPath := path.Join(homedir, ".config", "httpcli", "config.toml")
-	historyPath := path.Join(homedir, ".config", "httpcli", "history")
+	configDir := path.Join(homedir, ".config", "httpcli")
+	configFilepath := path.Join(configDir, "config.toml")
+	historyPath := path.Join(configDir, ".history")
 
 	cfg := cliConfig{
-		configPath:  configPath,
+		configPath:  configFilepath,
 		historyPath: historyPath,
 		infos:       os.Stdout,
 		logs:        os.Stderr,
