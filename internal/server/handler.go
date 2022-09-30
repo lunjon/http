@@ -18,6 +18,5 @@ func newHandler(ch chan *http.Request) *requestHandler {
 
 func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
 	h.ch <- r
-
 	w.WriteHeader(h.statusCode)
 }

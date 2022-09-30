@@ -75,11 +75,9 @@ func (client *Client) BuildRequest(method string, u *url.URL, body []byte, heade
 		return nil, fmt.Errorf("invalid or unsupported method: %s", method)
 	}
 
-	client.clientLogger.Printf("Building request: %s %s", method, u.String())
-
 	var b io.Reader
 	if body != nil {
-		client.clientLogger.Printf("Using request body: %s", string(body))
+		client.clientLogger.Print("Using request body")
 		b = bytes.NewReader(body)
 	}
 

@@ -23,8 +23,9 @@ var (
 )
 
 const (
-	userAgentHeader   = "User-Agent"
-	contentTypeHeader = "Content-Type"
+	userAgentHeader     = "User-Agent"
+	contentTypeHeader   = "Content-Type"
+	contentLengthHeader = "Content-Length"
 )
 
 // RequestHandler handles all commands.
@@ -73,6 +74,11 @@ func newRequestHandler(
 }
 
 func (handler *RequestHandler) handleRequest(method, url string, data dataOptions) error {
+	headers, err := handler.getHeaders()
+	if err != nil {
+		return err
+	}
+
 	body := emptyRequestBody
 	if strings.Contains("post put patch", strings.ToLower(method)) {
 		b, err := data.getRequestBody()
@@ -80,22 +86,23 @@ func (handler *RequestHandler) handleRequest(method, url string, data dataOption
 			return err
 		}
 		body = b
+
+		setContentType := headers.Get(contentTypeHeader) == "" && body.mime != client.MIMETypeUnknown
+		if setContentType {
+			handler.logger.Printf("Detected MIME type: %s", body.mime)
+			headers.Set(contentTypeHeader, body.mime.String())
+		}
+
+		setContentLength := headers.Get(contentLengthHeader) == "" && len(b.bytes) > 0
+		if setContentLength {
+			handler.logger.Printf("Adding %s header", contentLengthHeader)
+			headers.Set(contentLengthHeader, fmt.Sprint(len(b.bytes)))
+		}
 	}
 
 	u, err := client.ParseURL(url, handler.cfg.Aliases)
 	if err != nil {
 		return err
-	}
-
-	headers, err := handler.getHeaders()
-	if err != nil {
-		return err
-	}
-
-	setContentType := headers.Get(contentTypeHeader) == "" && body.mime != client.MIMETypeUnknown
-	if setContentType {
-		handler.logger.Printf("Detected MIME type: %s", body.mime)
-		headers.Set(contentTypeHeader, body.mime.String())
 	}
 
 	req, err := handler.buildRequest(method, u, body.bytes, headers)
