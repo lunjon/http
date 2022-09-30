@@ -8,8 +8,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
 	"runtime"
 	"strings"
 	"sync"
@@ -76,10 +74,10 @@ func newRequestHandler(
 	}
 }
 
-func (handler *RequestHandler) handleRequest(method, url, bodyflag string) error {
+func (handler *RequestHandler) handleRequest(method, url string, data dataOptions) error {
 	body := emptyRequestBody
 	if strings.Contains("post put patch", strings.ToLower(method)) {
-		b, err := handler.getRequestBody(bodyflag)
+		b, err := data.getRequestBody()
 		if err != nil {
 			return err
 		}
@@ -194,54 +192,4 @@ func (handler *RequestHandler) getHeaders() (http.Header, error) {
 type requestBody struct {
 	bytes []byte
 	mime  client.MIMEType
-}
-
-func (handler *RequestHandler) getRequestBody(bodyFlag string) (requestBody, error) {
-	bodyFlag = strings.TrimSpace(bodyFlag)
-	mime := client.MIMETypeUnknown
-
-	if bodyFlag == "" {
-		// Not provided via flags, check stdin
-		stat, _ := os.Stdin.Stat()
-		if (stat.Mode() & os.ModeCharDevice) == 0 {
-			handler.logger.Print("Reading body from stdin")
-
-			b, err := io.ReadAll(os.Stdin)
-			if err != nil {
-				return emptyRequestBody, err
-			}
-
-			return requestBody{b, mime}, nil
-		}
-
-		handler.logger.Print("No body provided")
-		return requestBody{nil, mime}, nil
-	}
-
-	// We first try to read as a file
-	body, err := os.ReadFile(bodyFlag)
-	if err != nil && !os.IsNotExist(err) {
-		return emptyRequestBody, err
-	}
-
-	if body != nil {
-		// Try detecting filetype in order to set MIME type
-		switch path.Ext(bodyFlag) {
-		case ".html":
-			mime = client.MIMETypeHTML
-		case ".csv":
-			mime = client.MIMETypeCSV
-		case ".json":
-			mime = client.MIMETypeJSON
-		case ".xml":
-			mime = client.MIMETypeXML
-		}
-	}
-
-	if body == nil {
-		// Assume that the content was given as string
-		body = []byte(bodyFlag)
-	}
-
-	return requestBody{body, mime}, nil
 }

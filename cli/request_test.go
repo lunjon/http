@@ -75,7 +75,7 @@ func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
 func TestGet(t *testing.T) {
 	fixture := setupRequestTest(t)
 
-	err := fixture.handler.handleRequest("get", testServer.URL, "")
+	err := fixture.handler.handleRequest("get", testServer.URL, dataOptions{})
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
@@ -88,7 +88,7 @@ func TestGet(t *testing.T) {
 func TestGetErrorWithFail(t *testing.T) {
 	fixture := setupRequestTest(t, config.New().UseFail(true))
 
-	err := fixture.handler.handleRequest("get", testServer.URL+"/error", "")
+	err := fixture.handler.handleRequest("get", testServer.URL+"/error", dataOptions{})
 	require.NoError(t, err)
 	require.True(t, fixture.state.failCalled)
 	require.Empty(t, fixture.infos.String())
@@ -96,15 +96,15 @@ func TestGetErrorWithFail(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
-	bodies := []string{
-		"",                  // empty
-		`{"body":"string"}`, // as string
-		"command.go",        // filepath
+	bodies := []dataOptions{
+		{},
+		{dataString: `{"body":"string"}`},
+		{dataFile: "command.go"},
 	}
 	fixture := setupRequestTest(t)
 
-	for _, bodyflag := range bodies {
-		err := fixture.handler.handleRequest(http.MethodPost, testServer.URL, bodyflag)
+	for _, opts := range bodies {
+		err := fixture.handler.handleRequest(http.MethodPost, testServer.URL, opts)
 		require.NoError(t, err)
 		require.NotEmpty(t, fixture.infos.String())
 		require.Empty(t, fixture.errors.String())

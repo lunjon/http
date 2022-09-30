@@ -2,18 +2,26 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"net/http"
+	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/lunjon/http/internal/client"
+	"github.com/spf13/cobra"
 )
 
 const (
 	headerFlagName            = "header"
 	awsSigV4FlagName          = "aws-sigv4"
 	awsRegionFlagName         = "aws-region"
-	bodyFlagName              = "body"
+	dataStringFlagName        = "data"
+	dataStdinFlagName         = "data-stdin"
+	dataFileFlagName          = "data-file"
 	displayFlagName           = "display"
 	failFlagName              = "fail"
 	detailsFlagName           = "details"
@@ -118,4 +126,66 @@ func (h *portOption) Type() string {
 
 func (h *portOption) String() string {
 	return ""
+}
+
+type dataOptions struct {
+	dataString string
+	dataFile   string
+	dataStdin  bool
+}
+
+func dataOptionsFromFlags(cmd *cobra.Command) (dataOptions, error) {
+	flags := cmd.Flags()
+	dataString, _ := flags.GetString(dataStringFlagName)
+	dataFile, _ := flags.GetString(dataFileFlagName)
+	dataStdin, _ := flags.GetBool(dataStdinFlagName)
+
+	opts := dataOptions{
+		dataString: dataString,
+		dataFile:   dataFile,
+		dataStdin:  dataStdin,
+	}
+	return opts, opts.validate()
+}
+
+func (opts dataOptions) validate() error {
+	invalid := (opts.dataString != "" && opts.dataFile != "") || (opts.dataString != "" && opts.dataStdin) || (opts.dataFile != "" && opts.dataStdin)
+	if invalid {
+		return fmt.Errorf("invalid combination of --data* options: must only specify one")
+	}
+	return nil
+}
+
+func (opts dataOptions) getRequestBody() (requestBody, error) {
+	if err := opts.validate(); err != nil {
+		return emptyRequestBody, err
+	}
+
+	mime := client.MIMETypeUnknown
+	if opts.dataString != "" {
+		return requestBody{[]byte(opts.dataString), mime}, nil
+	} else if opts.dataFile != "" {
+		body, err := os.ReadFile(opts.dataFile)
+		if err != nil {
+			return emptyRequestBody, err
+		}
+
+		// Try detecting filetype in order to set MIME type
+		switch path.Ext(opts.dataFile) {
+		case ".html":
+			mime = client.MIMETypeHTML
+		case ".csv":
+			mime = client.MIMETypeCSV
+		case ".json":
+			mime = client.MIMETypeJSON
+		case ".xml":
+			mime = client.MIMETypeXML
+		}
+		return requestBody{body, mime}, nil
+	} else if opts.dataStdin {
+		b, err := io.ReadAll(os.Stdin)
+		return requestBody{b, mime}, err
+	}
+
+	return emptyRequestBody, nil
 }

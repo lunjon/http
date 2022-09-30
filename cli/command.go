@@ -24,11 +24,21 @@ import (
 var (
 	noConfigure   = func(*cobra.Command) {}
 	bodyConfigure = func(cmd *cobra.Command) {
-		cmd.Flags().StringP(
-			bodyFlagName,
-			"B",
+		flags := cmd.Flags()
+		flags.String(
+			dataStringFlagName,
 			"",
-			"Request body to use. Can be string content or a filename.",
+			"Use string as request body.",
+		)
+		flags.String(
+			dataFileFlagName,
+			"",
+			"Read request body from file.",
+		)
+		flags.Bool(
+			dataStdinFlagName,
+			false,
+			"Read request body from stdin.",
 		)
 	}
 )
@@ -214,8 +224,10 @@ func buildRequestRun(
 		)
 
 		url := args[0]
-		bodyFlag, _ := flags.GetString(bodyFlagName)
-		err = handler.handleRequest(method, url, bodyFlag)
+		dataOpts, err := dataOptionsFromFlags(cmd)
+		checkErr(err, cfg.errors)
+
+		err = handler.handleRequest(method, url, dataOpts)
 		checkErr(err, cfg.errors)
 	}
 }

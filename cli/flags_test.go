@@ -34,3 +34,30 @@ func TestHeaderOption(t *testing.T) {
 		})
 	}
 }
+
+func TestDataOptions(t *testing.T) {
+	tests := []struct {
+		value   dataOptions
+		wantErr bool
+	}{
+		{dataOptions{}, false},
+		{dataOptions{dataString: ""}, false},
+		{dataOptions{dataFile: ""}, false},
+		{dataOptions{dataStdin: true}, false},
+
+		{dataOptions{dataString: "yes", dataFile: "yes"}, true},
+		{dataOptions{dataString: "yes", dataStdin: true}, true},
+		{dataOptions{dataFile: "yes", dataStdin: true}, true},
+		{dataOptions{dataString: "yes", dataFile: "yes", dataStdin: true}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run("", func(t *testing.T) {
+			err := tt.value.validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dataOptions.validate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}

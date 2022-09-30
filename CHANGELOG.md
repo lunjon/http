@@ -11,6 +11,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Request history, and sub-command:
   - `history`: list history
   - `history clear`: clears history
+- New flags for options: `--data`, `--data-file`, `--data-stdin` 
 
 ### Changed
 - Renamed option `output` to `outfile` (output has been reserved for future use)
@@ -18,6 +19,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Removed
 - TUI
+- `--body` option, in favor of `--data*` options
 
 ## [0.12.1] - 2022-05-25
 
