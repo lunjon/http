@@ -35,11 +35,13 @@ var (
 			"",
 			"Read request body from file.",
 		)
+		cmd.MarkFlagFilename(dataFileFlagName)
 		flags.Bool(
 			dataStdinFlagName,
 			false,
 			"Read request body from stdin.",
 		)
+		cmd.MarkFlagsMutuallyExclusive(dataStringFlagName, dataFileFlagName, dataStdinFlagName)
 	}
 )
 
@@ -97,6 +99,8 @@ A request body can be specified in three ways:
 
 	// Persistant flags
 	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
+
+	root.Flags().SortFlags = true
 	return root
 }
 
@@ -148,20 +152,15 @@ func buildRequestRun(
 			traceLogger.SetOutput(cfg.logs)
 		}
 
-		settings := client.NewSettings().
-			WithTimeout(appConfig.Timeout).
-			WithNoFollowRedirects(flags.Changed(noFollowRedirectsFlagName))
-
-		certPub, _ := flags.GetString(certpubFlagName)
+		certFile, _ := flags.GetString(certfileFlagName)
 		certKey, _ := flags.GetString(certkeyFlagName)
 
-		if certPub != "" && certKey == "" {
-			checkErr(errCertFlags, cfg.errors)
-		} else if certPub == "" && certKey != "" {
-			checkErr(errCertFlags, cfg.errors)
-		} else if certPub != "" && certKey != "" {
-			settings = settings.WithCert(certPub, certKey)
-		}
+		certOptions, err := client.CertOptionsFrom(certFile, certKey)
+		checkErr(err, cfg.errors)
+		settings := client.NewSettings().
+			WithTimeout(appConfig.Timeout).
+			WithNoFollowRedirects(flags.Changed(noFollowRedirectsFlagName)).
+			WithCert(certOptions)
 
 		cl, err := client.NewClient(settings, logger, traceLogger)
 		checkErr(err, cfg.errors)
@@ -386,12 +385,13 @@ between is optional.`)
 set with the --aws-region option. Credentials are expected to be set
 in environment variables.
 `)
-	cmd.Flags().String(
+	flags := cmd.Flags()
+	flags.String(
 		awsRegionFlagName,
 		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 
-	cmd.Flags().String(displayFlagName, "body", `Comma (,) separated list of response items to display.
+	flags.String(displayFlagName, "body", `Comma (,) separated list of response items to display.
 Possible values:
   none:       no output
   all:        all information
@@ -400,14 +400,14 @@ Possible values:
   headers:    response headers
   body:       response body
 `)
-	cmd.Flags().BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
-	cmd.Flags().Bool(traceFlagName, false, "Output detailed TLS trace information.")
-	cmd.Flags().DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
-	cmd.Flags().StringP(outfileFlagName, "o", "", "Write output to file instead of stdout.")
-	cmd.Flags().Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
+	flags.BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
+	flags.Bool(traceFlagName, false, "Output detailed TLS trace information.")
+	flags.DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
+	flags.StringP(outfileFlagName, "o", "", "Write output to file instead of stdout.")
+	flags.Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 
-	cmd.Flags().String(certpubFlagName, "", "Use as client certificate. Requires the --key flag.")
-	cmd.MarkFlagFilename(certpubFlagName)
-	cmd.Flags().String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
+	flags.String(certfileFlagName, "", "Use as client certificate. Requires the --key flag.")
+	cmd.MarkFlagFilename(certfileFlagName)
+	flags.String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
 	cmd.MarkFlagFilename(certkeyFlagName)
 }

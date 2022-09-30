@@ -2,7 +2,6 @@ package cli
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -20,7 +19,6 @@ import (
 
 var (
 	newline          = []byte("\n")
-	errCertFlags     = errors.New("--cert must be used with --key")
 	emptyRequestBody = requestBody{mime: client.MIMETypeUnknown}
 )
 

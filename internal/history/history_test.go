@@ -124,7 +124,7 @@ func TestLoad(t *testing.T) {
 		settings client.Settings
 	}{
 		{http.MethodGet, nil, client.NewSettings()},
-		{http.MethodPost, []byte("test"), client.NewSettings().WithCert("cert", "key")},
+		{http.MethodPost, []byte("test"), client.NewSettings().WithCertPEM("cert", "key")},
 	}
 	for _, s := range requests {
 		r := newRequest(s.method, s.body)

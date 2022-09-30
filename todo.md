@@ -13,10 +13,6 @@
 
 ## Configuration
 - [ ] Section in README
-- Complex alias: support having the alias value:
-  - [x] string: use value as is
-  - [ ] table: `name = { stage = "", prod = ""}`
-    - usage: `{name.stage}`
 
 ## Serve
 - Options
