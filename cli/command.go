@@ -65,7 +65,6 @@ A request body can be specified in three ways:
  * stdin: pipe or IO redirection
  * --body '...': request body from a string
  * --body file: read content from a file`,
-		Run: func(cmd *cobra.Command, args []string) {},
 	}
 
 	root.AddCommand(&cobra.Command{
