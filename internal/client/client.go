@@ -50,12 +50,12 @@ func NewClient(
 ) (*Client, error) {
 	t := newTracer(traceLogger)
 	trace := &httptrace.ClientTrace{
-		TLSHandshakeStart: t.TLSHandshakeStart,
-		TLSHandshakeDone:  t.TLSHandshakeDone,
-		ConnectStart:      t.ConnectStart,
-		ConnectDone:       t.ConnectDone,
 		DNSStart:          t.DNSStart,
 		DNSDone:           t.DNSDone,
+		ConnectStart:      t.ConnectStart,
+		ConnectDone:       t.ConnectDone,
+		TLSHandshakeStart: t.TLSHandshakeStart,
+		TLSHandshakeDone:  t.TLSHandshakeDone,
 	}
 
 	httpClient, err := settings.BuildHTTPClient()

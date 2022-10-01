@@ -43,7 +43,7 @@ func (s Settings) BuildHTTPClient() (*http.Client, error) {
 	}
 
 	var redirect checkRedirectFunc
-	if s.FollowRedirects {
+	if !s.FollowRedirects {
 		redirect = func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		}

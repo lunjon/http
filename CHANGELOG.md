@@ -4,6 +4,9 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Fixed
+- Follow redirects had inverted logic
+
 ### Added
 - `config init` sub-command
 - `config edit` sub-command
