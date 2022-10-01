@@ -8,9 +8,8 @@ import (
 )
 
 type Options struct {
-	Port        uint
-	ShowStatus  bool
-	ShowSummary bool
+	Port       uint
+	ShowStatus bool
 }
 
 type Server struct {

@@ -33,7 +33,6 @@ const (
 	outfileFlagName               = "outfile"
 	noFollowRedirectsFlagName     = "no-follow-redirects"
 	aliasHeadingFlagName          = "no-heading"
-	historyNumberFlagName         = "num"
 	tlsTraceFlagName              = "tls-trace"
 	tlsMinVersionFlagName         = "tls-min-version"
 	tlsMaxVersionFlagName         = "tls-max-version"

@@ -251,7 +251,7 @@ func buildHTTPCommand(
 }
 
 func buildHistory(cfg cliConfig) *cobra.Command {
-	root := &cobra.Command{
+	hst := &cobra.Command{
 		Use:     "history",
 		Aliases: []string{"hist"},
 		Short:   "Command for managing request history.",
@@ -276,14 +276,13 @@ func buildHistory(cfg cliConfig) *cobra.Command {
 		},
 	}
 
-	root.AddCommand(clear)
-	return root
+	hst.AddCommand(clear)
+	return hst
 }
 
 func buildServe(cfg cliConfig) *cobra.Command {
 	port := newPortOption()
 	statusFlagName := "show-status"
-	summaryFlagName := "show-summary"
 
 	c := &cobra.Command{
 		Use:   "serve",
@@ -294,12 +293,10 @@ Useful for local testing and debugging.`,
 			flags := cmd.Flags()
 
 			showStatus, _ := flags.GetBool(statusFlagName)
-			showSummary, _ := flags.GetBool(summaryFlagName)
 
 			opts := server.Options{
-				Port:        port.value(),
-				ShowStatus:  showStatus,
-				ShowSummary: showSummary,
+				Port:       port.value(),
+				ShowStatus: showStatus,
 			}
 
 			server := server.New(opts)
@@ -327,7 +324,6 @@ Useful for local testing and debugging.`,
 
 	c.Flags().VarP(port, "port", "p", "Port to listen on. Must be valid number in the range 1024-65535.")
 	c.Flags().Bool(statusFlagName, false, "Shows current status instead of showing each request.")
-	c.Flags().Bool(summaryFlagName, false, "Shows a summary of requests at exit.")
 	return c
 }
 
