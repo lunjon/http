@@ -1,0 +1,25 @@
+package options
+
+const (
+	HeaderFlagName                = "header"
+	AWSSigV4FlagName              = "aws-sigv4"
+	AWSRegionFlagName             = "aws-region"
+	DataStringFlagName            = "data"
+	DataStdinFlagName             = "data-stdin"
+	DataFileFlagName              = "data-file"
+	DisplayFlagName               = "display"
+	FailFlagName                  = "fail"
+	DetailsFlagName               = "details"
+	TimeoutFlagName               = "timeout"
+	VerboseFlagName               = "verbose"
+	OutfileFlagName               = "outfile"
+	NoFollowRedirectsFlagName     = "no-follow-redirects"
+	AliasHeadingFlagName          = "no-heading"
+	CertfileFlagName              = "cert"
+	CertkeyFlagName               = "key"
+	CertKindFlagName              = "cert-kind"
+	TLSTraceFlagName              = "tls-trace"
+	TLSMinVersionFlagName         = "tls-min-version"
+	TLSMaxVersionFlagName         = "tls-max-version"
+	TLSInsecureSkipVerifyFlagName = "tls-skip-verify-insecure"
+)
