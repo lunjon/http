@@ -12,6 +12,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
   - `history`: list history
   - `history clear`: clears history
 - New flags for options: `--data`, `--data-file`, `--data-stdin` 
+- Flags for setting min/max TLS version
 
 ### Changed
 - Renamed option `output` to `outfile` (output has been reserved for future use)

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -134,6 +135,8 @@ func buildRequestRun(
 	method string,
 	cfg cliConfig,
 	headerOpt *options.HeaderOption,
+	tlsMinVersion *options.TLSVersionOption,
+	tlsMaxVersion *options.TLSVersionOption,
 ) runFunc {
 	return func(cmd *cobra.Command, args []string) {
 		flags := cmd.Flags()
@@ -160,7 +163,9 @@ func buildRequestRun(
 		certFile, _ := flags.GetString(options.CertfileFlagName)
 		certKey, _ := flags.GetString(options.CertkeyFlagName)
 		if certFile != "" && certKey != "" {
-			tlsOpts := client.NewTLSOptions().WithX509Cert(certFile, certKey)
+			tlsOpts := client.NewTLSOptions().
+				WithX509Cert(certFile, certKey).
+				WithVersions(tlsMinVersion.Value(), tlsMaxVersion.Value())
 			settings = settings.WithTLSOptions(tlsOpts)
 		}
 
@@ -238,15 +243,17 @@ func buildHTTPCommand(
 	configure func(*cobra.Command),
 ) *cobra.Command {
 	headerOption := options.NewHeaderOption()
+	tlsMinVersion := options.NewTLSVersionOption(tls.VersionTLS12)
+	tlsMaxVersion := options.NewTLSVersionOption(tls.VersionTLS13)
 
 	cmd := &cobra.Command{
 		Use:   fmt.Sprintf("%s <url>", strings.ToLower(method)),
 		Short: fmt.Sprintf("HTTP %s request", strings.ToUpper(method)),
 		Args:  cobra.ExactArgs(1),
-		Run:   buildRequestRun(method, cfg, headerOption),
+		Run:   buildRequestRun(method, cfg, headerOption, tlsMinVersion, tlsMaxVersion),
 	}
 
-	addCommonFlags(cmd, headerOption)
+	addCommonFlags(cmd, headerOption, tlsMinVersion, tlsMaxVersion)
 	configure(cmd)
 	return cmd
 }
@@ -369,8 +376,13 @@ func buildConfig(cfg cliConfig) *cobra.Command {
 	return root
 }
 
-func addCommonFlags(cmd *cobra.Command, h *options.HeaderOption) {
-	cmd.Flags().VarP(h, options.HeaderFlagName, "H", `HTTP header, may be specified multiple times.
+func addCommonFlags(
+	cmd *cobra.Command,
+	header *options.HeaderOption,
+	tlsMinVersion *options.TLSVersionOption,
+	tlsMaxVersion *options.TLSVersionOption,
+) {
+	cmd.Flags().VarP(header, options.HeaderFlagName, "H", `HTTP header, may be specified multiple times.
 The value must conform to the format "name: value". "name" and "value" can
 be separated by either a colon ":" or an equal sign "=", and the space
 between is optional.`)
@@ -399,7 +411,6 @@ Possible values:
   body:       response body
 `)
 	flags.BoolP(options.FailFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
-	flags.Bool(options.TLSTraceFlagName, false, "Output detailed TLS trace information.")
 	flags.DurationP(options.TimeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 	flags.StringP(options.OutfileFlagName, "o", "", "Write output to file instead of stdout.")
 	flags.Bool(options.NoFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
@@ -408,4 +419,8 @@ Possible values:
 	cmd.MarkFlagFilename(options.CertfileFlagName)
 	flags.String(options.CertkeyFlagName, "", "Use as private key. Requires the --cert flag.")
 	cmd.MarkFlagFilename(options.CertkeyFlagName)
+
+	flags.Bool(options.TLSTraceFlagName, false, "Output detailed TLS trace information.")
+	flags.Var(tlsMinVersion, options.TLSMinVersionFlagName, "Set minimum TLS version to use. Allowed values are 1.0-3.")
+	flags.Var(tlsMaxVersion, options.TLSMaxVersionFlagName, "Set maximum TLS version to use. Allowed values are 1.0-3.")
 }

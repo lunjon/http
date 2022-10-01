@@ -11,4 +11,3 @@
   - [ ] none
 
 ## Configuration
-- [x] Section in README

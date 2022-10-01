@@ -24,6 +24,12 @@ func NewTLSOptions() TLSOptions {
 	}
 }
 
+func (tlsOptions TLSOptions) WithVersions(min, max uint16) TLSOptions {
+	tlsOptions.MinVersion = min
+	tlsOptions.MaxVersion = max
+	return tlsOptions
+}
+
 func (tlsOptions TLSOptions) WithX509Cert(certfile, keyfile string) TLSOptions {
 	tlsOptions.Cert = tlsOptions.Cert.Set(x509Cert{
 		certfile: certfile,
