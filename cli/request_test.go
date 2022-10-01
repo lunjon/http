@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lunjon/http/cli/options"
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
 	"github.com/lunjon/http/internal/history"
@@ -75,7 +76,7 @@ func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
 func TestGet(t *testing.T) {
 	fixture := setupRequestTest(t)
 
-	err := fixture.handler.handleRequest("get", testServer.URL, dataOptions{})
+	err := fixture.handler.handleRequest("get", testServer.URL, options.DataOptions{})
 	require.NoError(t, err)
 	require.NotEmpty(t, fixture.infos.String())
 	require.Empty(t, fixture.errors.String())
@@ -88,7 +89,7 @@ func TestGet(t *testing.T) {
 func TestGetErrorWithFail(t *testing.T) {
 	fixture := setupRequestTest(t, config.New().UseFail(true))
 
-	err := fixture.handler.handleRequest("get", testServer.URL+"/error", dataOptions{})
+	err := fixture.handler.handleRequest("get", testServer.URL+"/error", options.DataOptions{})
 	require.NoError(t, err)
 	require.True(t, fixture.state.failCalled)
 	require.Empty(t, fixture.infos.String())
@@ -96,10 +97,10 @@ func TestGetErrorWithFail(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
-	datas := []dataOptions{
-		{},
-		{dataString: `{"body":"string"}`},
-		{dataFile: "command.go"},
+	datas := []options.DataOptions{
+		options.NewDataOptions("", "", false),
+		options.NewDataOptions(`{"body":"string"}`, "", false),
+		options.NewDataOptions("", "command.go", false),
 	}
 	fixture := setupRequestTest(t)
 

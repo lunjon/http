@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/lunjon/http/cli/options"
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
 	"github.com/lunjon/http/internal/history"
@@ -26,22 +27,22 @@ var (
 	bodyConfigure = func(cmd *cobra.Command) {
 		flags := cmd.Flags()
 		flags.String(
-			dataStringFlagName,
+			options.DataStringFlagName,
 			"",
 			"Use string as request body.",
 		)
 		flags.String(
-			dataFileFlagName,
+			options.DataFileFlagName,
 			"",
 			"Read request body from file.",
 		)
-		cmd.MarkFlagFilename(dataFileFlagName)
+		cmd.MarkFlagFilename(options.DataFileFlagName)
 		flags.Bool(
-			dataStdinFlagName,
+			options.DataStdinFlagName,
 			false,
 			"Read request body from stdin.",
 		)
-		cmd.MarkFlagsMutuallyExclusive(dataStringFlagName, dataFileFlagName, dataStdinFlagName)
+		cmd.MarkFlagsMutuallyExclusive(options.DataStringFlagName, options.DataFileFlagName, options.DataStdinFlagName)
 	}
 )
 
@@ -98,7 +99,7 @@ A request body can be specified in three ways:
 	root.AddCommand(buildConfig(cfg))
 
 	// Persistant flags
-	root.PersistentFlags().BoolP(verboseFlagName, "v", false, "Show logs.")
+	root.PersistentFlags().BoolP(options.VerboseFlagName, "v", false, "Show logs.")
 
 	root.Flags().SortFlags = true
 	return root
@@ -106,21 +107,21 @@ A request body can be specified in three ways:
 
 func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 	flags := cmd.Flags()
-	if flags.Changed(failFlagName) {
-		v, _ := flags.GetBool(failFlagName)
+	if flags.Changed(options.FailFlagName) {
+		v, _ := flags.GetBool(options.FailFlagName)
 		cfg = cfg.UseFail(v)
 	}
 
-	if flags.Changed(verboseFlagName) {
-		v, _ := flags.GetBool(verboseFlagName)
+	if flags.Changed(options.VerboseFlagName) {
+		v, _ := flags.GetBool(options.VerboseFlagName)
 		cfg = cfg.UseVerbose(v)
 	}
-	if flags.Changed(tlsTraceFlagName) {
-		v, _ := flags.GetBool(tlsTraceFlagName)
+	if flags.Changed(options.TLSTraceFlagName) {
+		v, _ := flags.GetBool(options.TLSTraceFlagName)
 		cfg = cfg.UseVerbose(v)
 	}
-	if flags.Changed(tlsTraceFlagName) {
-		v, _ := flags.GetBool(tlsTraceFlagName)
+	if flags.Changed(options.TLSTraceFlagName) {
+		v, _ := flags.GetBool(options.TLSTraceFlagName)
 		cfg = cfg.UseVerbose(v)
 	}
 
@@ -132,7 +133,7 @@ func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 func buildRequestRun(
 	method string,
 	cfg cliConfig,
-	headerOpt *HeaderOption,
+	headerOpt *options.HeaderOption,
 ) runFunc {
 	return func(cmd *cobra.Command, args []string) {
 		flags := cmd.Flags()
@@ -148,16 +149,16 @@ func buildRequestRun(
 
 		// HTTP CLIENT
 		traceLogger := logging.New(io.Discard)
-		if flags.Changed(tlsTraceFlagName) {
+		if flags.Changed(options.TLSTraceFlagName) {
 			traceLogger.SetOutput(cfg.logs)
 		}
 
 		settings := client.NewSettings().
 			WithTimeout(appConfig.Timeout).
-			WithNoFollowRedirects(flags.Changed(noFollowRedirectsFlagName))
+			WithNoFollowRedirects(flags.Changed(options.NoFollowRedirectsFlagName))
 
-		certFile, _ := flags.GetString(certfileFlagName)
-		certKey, _ := flags.GetString(certkeyFlagName)
+		certFile, _ := flags.GetString(options.CertfileFlagName)
+		certKey, _ := flags.GetString(options.CertkeyFlagName)
 		if certFile != "" && certKey != "" {
 			tlsOpts := client.NewTLSOptions().WithX509Cert(certFile, certKey)
 			settings = settings.WithTLSOptions(tlsOpts)
@@ -167,7 +168,7 @@ func buildRequestRun(
 		checkErr(err, cfg.errors)
 
 		// DISPLAY
-		display, _ := flags.GetString(displayFlagName)
+		display, _ := flags.GetString(options.DisplayFlagName)
 		var formatter Formatter
 		switch display {
 		case "all":
@@ -182,10 +183,10 @@ func buildRequestRun(
 		}
 
 		var signer client.RequestSigner
-		signRequest, _ := flags.GetBool(awsSigV4FlagName)
+		signRequest, _ := flags.GetBool(options.AWSSigV4FlagName)
 		if signRequest {
 			logger.Print("Signing request using Sig V4")
-			region, _ := flags.GetString(awsRegionFlagName)
+			region, _ := flags.GetString(options.AWSRegionFlagName)
 			creds := credentials.NewCredentials(&credentials.EnvProvider{})
 			signer = client.NewAWSigner(v4.NewSigner(creds), region)
 		} else {
@@ -193,7 +194,7 @@ func buildRequestRun(
 		}
 
 		output := cfg.infos
-		outputFile, _ := flags.GetString(outfileFlagName)
+		outputFile, _ := flags.GetString(options.OutfileFlagName)
 		if outputFile != "" {
 			file, err := os.Create(outputFile)
 			checkErr(err, cfg.errors)
@@ -216,14 +217,14 @@ func buildRequestRun(
 			history.NewHandler(cfg.historyPath),
 			logger,
 			appConfig,
-			headerOpt.values,
+			headerOpt.Header(),
 			output,
 			outputFile,
 			failFunc,
 		)
 
 		url := args[0]
-		dataOpts, err := dataOptionsFromFlags(cmd)
+		dataOpts, err := options.DataOptionsFromFlags(cmd)
 		checkErr(err, cfg.errors)
 
 		err = handler.handleRequest(method, url, dataOpts)
@@ -236,7 +237,7 @@ func buildHTTPCommand(
 	method string,
 	configure func(*cobra.Command),
 ) *cobra.Command {
-	headerOption := newHeaderOption()
+	headerOption := options.NewHeaderOption()
 
 	cmd := &cobra.Command{
 		Use:   fmt.Sprintf("%s <url>", strings.ToLower(method)),
@@ -281,7 +282,7 @@ func buildHistory(cfg cliConfig) *cobra.Command {
 }
 
 func buildServe(cfg cliConfig) *cobra.Command {
-	port := newPortOption()
+	port := options.NewPortOption()
 	statusFlagName := "show-status"
 
 	c := &cobra.Command{
@@ -295,7 +296,7 @@ Useful for local testing and debugging.`,
 			showStatus, _ := flags.GetBool(statusFlagName)
 
 			opts := server.Options{
-				Port:       port.value(),
+				Port:       port.Value(),
 				ShowStatus: showStatus,
 			}
 
@@ -364,18 +365,18 @@ func buildConfig(cfg cliConfig) *cobra.Command {
 	}
 
 	root.AddCommand(edit, init)
-	root.Flags().BoolP(aliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
+	root.Flags().BoolP(options.AliasHeadingFlagName, "n", false, "Do not display heading when listing aliases. Useful for e.g. scripting.")
 	return root
 }
 
-func addCommonFlags(cmd *cobra.Command, h *HeaderOption) {
-	cmd.Flags().VarP(h, headerFlagName, "H", `HTTP header, may be specified multiple times.
+func addCommonFlags(cmd *cobra.Command, h *options.HeaderOption) {
+	cmd.Flags().VarP(h, options.HeaderFlagName, "H", `HTTP header, may be specified multiple times.
 The value must conform to the format "name: value". "name" and "value" can
 be separated by either a colon ":" or an equal sign "=", and the space
 between is optional.`)
 
 	cmd.Flags().BoolP(
-		awsSigV4FlagName,
+		options.AWSSigV4FlagName,
 		"4",
 		false,
 		`Use AWS signature V4 as authentication in the request. AWS region can be
@@ -384,11 +385,11 @@ in environment variables.
 `)
 	flags := cmd.Flags()
 	flags.String(
-		awsRegionFlagName,
+		options.AWSRegionFlagName,
 		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 
-	flags.String(displayFlagName, "body", `Comma (,) separated list of response items to display.
+	flags.String(options.DisplayFlagName, "body", `Comma (,) separated list of response items to display.
 Possible values:
   none:       no output
   all:        all information
@@ -397,14 +398,14 @@ Possible values:
   headers:    response headers
   body:       response body
 `)
-	flags.BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
-	flags.Bool(tlsTraceFlagName, false, "Output detailed TLS trace information.")
-	flags.DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
-	flags.StringP(outfileFlagName, "o", "", "Write output to file instead of stdout.")
-	flags.Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
+	flags.BoolP(options.FailFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
+	flags.Bool(options.TLSTraceFlagName, false, "Output detailed TLS trace information.")
+	flags.DurationP(options.TimeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
+	flags.StringP(options.OutfileFlagName, "o", "", "Write output to file instead of stdout.")
+	flags.Bool(options.NoFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 
-	flags.String(certfileFlagName, "", "Use as client certificate. Requires the --key flag.")
-	cmd.MarkFlagFilename(certfileFlagName)
-	flags.String(certkeyFlagName, "", "Use as private key. Requires the --cert flag.")
-	cmd.MarkFlagFilename(certkeyFlagName)
+	flags.String(options.CertfileFlagName, "", "Use as client certificate. Requires the --key flag.")
+	cmd.MarkFlagFilename(options.CertfileFlagName)
+	flags.String(options.CertkeyFlagName, "", "Use as private key. Requires the --cert flag.")
+	cmd.MarkFlagFilename(options.CertkeyFlagName)
 }

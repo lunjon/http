@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
-	"strings"
 	"sync"
 
+	"github.com/lunjon/http/cli/options"
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/config"
 	"github.com/lunjon/http/internal/history"
@@ -18,8 +18,7 @@ import (
 )
 
 var (
-	newline          = []byte("\n")
-	emptyRequestBody = requestBody{mime: client.MIMETypeUnknown}
+	newline = []byte("\n")
 )
 
 const (
@@ -73,30 +72,31 @@ func newRequestHandler(
 	}
 }
 
-func (handler *RequestHandler) handleRequest(method, url string, data dataOptions) error {
+func (handler *RequestHandler) handleRequest(method, url string, dataOptions options.DataOptions) error {
 	headers, err := handler.getHeaders()
 	if err != nil {
 		return err
 	}
 
-	body := emptyRequestBody
-	if strings.Contains("post put patch", strings.ToLower(method)) {
-		b, err := data.getRequestBody()
-		if err != nil {
-			return err
-		}
-		body = b
+	var body []byte
+	data, mime, err := dataOptions.GetData()
+	if err != nil {
+		return err
+	}
 
-		setContentType := headers.Get(contentTypeHeader) == "" && body.mime != client.MIMETypeUnknown
+	if data.IsSome() {
+		body = data.Value()
+
+		setContentType := headers.Get(contentTypeHeader) == "" && mime != client.MIMETypeUnknown
 		if setContentType {
-			handler.logger.Printf("Detected MIME type: %s", body.mime)
-			headers.Set(contentTypeHeader, body.mime.String())
+			handler.logger.Printf("Detected MIME type: %s", mime)
+			headers.Set(contentTypeHeader, mime.String())
 		}
 
-		setContentLength := headers.Get(contentLengthHeader) == "" && len(b.bytes) > 0
+		setContentLength := headers.Get(contentLengthHeader) == "" && len(body) > 0
 		if setContentLength {
 			handler.logger.Printf("Adding %s header", contentLengthHeader)
-			headers.Set(contentLengthHeader, fmt.Sprint(len(b.bytes)))
+			headers.Set(contentLengthHeader, fmt.Sprint(len(body)))
 		}
 	}
 
@@ -105,7 +105,7 @@ func (handler *RequestHandler) handleRequest(method, url string, data dataOption
 		return err
 	}
 
-	req, err := handler.buildRequest(method, u, body.bytes, headers)
+	req, err := handler.buildRequest(method, u, body, headers)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (handler *RequestHandler) handleRequest(method, url string, data dataOption
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_, err := handler.historyHandler.Append(req, body.bytes)
+		_, err := handler.historyHandler.Append(req, body)
 		if err != nil {
 			handler.logger.Printf("Error building history entry: %s", err)
 			return
@@ -192,9 +192,4 @@ func (handler *RequestHandler) getHeaders() (http.Header, error) {
 		handler.headers.Set(userAgentHeader, s)
 	}
 	return handler.headers, nil
-}
-
-type requestBody struct {
-	bytes []byte
-	mime  client.MIMEType
 }

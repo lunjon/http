@@ -1,4 +1,4 @@
-package cli
+package options
 
 import (
 	"testing"
@@ -23,7 +23,7 @@ func TestHeaderOption(t *testing.T) {
 		{": value", true},
 	}
 
-	header := newHeaderOption()
+	header := NewHeaderOption()
 	for _, tt := range tests {
 		t.Run("Parse header: "+tt.value, func(t *testing.T) {
 			err := header.Set(tt.value)
@@ -37,18 +37,18 @@ func TestHeaderOption(t *testing.T) {
 
 func TestDataOptions(t *testing.T) {
 	tests := []struct {
-		value   dataOptions
+		value   DataOptions
 		wantErr bool
 	}{
-		{dataOptions{}, false},
-		{dataOptions{dataString: ""}, false},
-		{dataOptions{dataFile: ""}, false},
-		{dataOptions{dataStdin: true}, false},
+		{DataOptions{}, false},
+		{DataOptions{dataString: ""}, false},
+		{DataOptions{dataFile: ""}, false},
+		{DataOptions{dataStdin: true}, false},
 
-		{dataOptions{dataString: "yes", dataFile: "yes"}, true},
-		{dataOptions{dataString: "yes", dataStdin: true}, true},
-		{dataOptions{dataFile: "yes", dataStdin: true}, true},
-		{dataOptions{dataString: "yes", dataFile: "yes", dataStdin: true}, true},
+		{DataOptions{dataString: "yes", dataFile: "yes"}, true},
+		{DataOptions{dataString: "yes", dataStdin: true}, true},
+		{DataOptions{dataFile: "yes", dataStdin: true}, true},
+		{DataOptions{dataString: "yes", dataFile: "yes", dataStdin: true}, true},
 	}
 
 	for _, tt := range tests {

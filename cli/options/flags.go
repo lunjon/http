@@ -1,4 +1,4 @@
-package cli
+package options
 
 import (
 	"fmt"
@@ -12,31 +12,32 @@ import (
 	"strings"
 
 	"github.com/lunjon/http/internal/client"
+	"github.com/lunjon/http/internal/types"
 	"github.com/spf13/cobra"
 )
 
 const (
-	headerFlagName                = "header"
-	awsSigV4FlagName              = "aws-sigv4"
-	awsRegionFlagName             = "aws-region"
-	dataStringFlagName            = "data"
-	dataStdinFlagName             = "data-stdin"
-	dataFileFlagName              = "data-file"
-	displayFlagName               = "display"
-	failFlagName                  = "fail"
-	detailsFlagName               = "details"
-	timeoutFlagName               = "timeout"
-	verboseFlagName               = "verbose"
-	certfileFlagName              = "cert"
-	certkeyFlagName               = "key"
-	certKindFlagName              = "cert-kind"
-	outfileFlagName               = "outfile"
-	noFollowRedirectsFlagName     = "no-follow-redirects"
-	aliasHeadingFlagName          = "no-heading"
-	tlsTraceFlagName              = "tls-trace"
-	tlsMinVersionFlagName         = "tls-min-version"
-	tlsMaxVersionFlagName         = "tls-max-version"
-	tlsInsecureSkipVerifyFlagName = "tls-skip-verify-insecure"
+	HeaderFlagName                = "header"
+	AWSSigV4FlagName              = "aws-sigv4"
+	AWSRegionFlagName             = "aws-region"
+	DataStringFlagName            = "data"
+	DataStdinFlagName             = "data-stdin"
+	DataFileFlagName              = "data-file"
+	DisplayFlagName               = "display"
+	FailFlagName                  = "fail"
+	DetailsFlagName               = "details"
+	TimeoutFlagName               = "timeout"
+	VerboseFlagName               = "verbose"
+	OutfileFlagName               = "outfile"
+	NoFollowRedirectsFlagName     = "no-follow-redirects"
+	AliasHeadingFlagName          = "no-heading"
+	CertfileFlagName              = "cert"
+	CertkeyFlagName               = "key"
+	CertKindFlagName              = "cert-kind"
+	TLSTraceFlagName              = "tls-trace"
+	TLSMinVersionFlagName         = "tls-min-version"
+	TLSMaxVersionFlagName         = "tls-max-version"
+	TLSInsecureSkipVerifyFlagName = "tls-skip-verify-insecure"
 )
 
 var (
@@ -47,7 +48,7 @@ type HeaderOption struct {
 	values http.Header
 }
 
-func newHeaderOption() *HeaderOption {
+func NewHeaderOption() *HeaderOption {
 	return &HeaderOption{
 		values: make(http.Header),
 	}
@@ -96,13 +97,13 @@ type portOption struct {
 	port uint
 }
 
-func newPortOption() *portOption {
+func NewPortOption() *portOption {
 	return &portOption{
 		port: 8080,
 	}
 }
 
-func (o *portOption) value() uint {
+func (o *portOption) Value() uint {
 	return o.port
 }
 
@@ -133,19 +134,27 @@ func (h *portOption) String() string {
 
 // Container for the data flags/options.
 // Every field is mutually exclusive.
-type dataOptions struct {
+type DataOptions struct {
 	dataString string
 	dataFile   string
 	dataStdin  bool
 }
 
-func dataOptionsFromFlags(cmd *cobra.Command) (dataOptions, error) {
-	flags := cmd.Flags()
-	dataString, _ := flags.GetString(dataStringFlagName)
-	dataFile, _ := flags.GetString(dataFileFlagName)
-	dataStdin, _ := flags.GetBool(dataStdinFlagName)
+func NewDataOptions(dataString, dataFile string, dataStdin bool) DataOptions {
+	return DataOptions{
+		dataString: dataString,
+		dataFile:   dataFile,
+		dataStdin:  dataStdin,
+	}
+}
 
-	opts := dataOptions{
+func DataOptionsFromFlags(cmd *cobra.Command) (DataOptions, error) {
+	flags := cmd.Flags()
+	dataString, _ := flags.GetString(DataStringFlagName)
+	dataFile, _ := flags.GetString(DataFileFlagName)
+	dataStdin, _ := flags.GetBool(DataStdinFlagName)
+
+	opts := DataOptions{
 		dataString: dataString,
 		dataFile:   dataFile,
 		dataStdin:  dataStdin,
@@ -153,7 +162,7 @@ func dataOptionsFromFlags(cmd *cobra.Command) (dataOptions, error) {
 	return opts, opts.validate()
 }
 
-func (opts dataOptions) validate() error {
+func (opts DataOptions) validate() error {
 	invalid := (opts.dataString != "" && opts.dataFile != "") || (opts.dataString != "" && opts.dataStdin) || (opts.dataFile != "" && opts.dataStdin)
 	if invalid {
 		return fmt.Errorf("invalid combination of --data* options: must only specify one")
@@ -161,18 +170,19 @@ func (opts dataOptions) validate() error {
 	return nil
 }
 
-func (opts dataOptions) getRequestBody() (requestBody, error) {
+func (opts DataOptions) GetData() (types.Option[[]byte], client.MIMEType, error) {
+	body := types.Option[[]byte]{}
+	mime := client.MIMETypeUnknown
 	if err := opts.validate(); err != nil {
-		return emptyRequestBody, err
+		return body, mime, err
 	}
 
-	mime := client.MIMETypeUnknown
 	if opts.dataString != "" {
-		return requestBody{[]byte(opts.dataString), mime}, nil
+		return body.Set([]byte(opts.dataString)), mime, nil
 	} else if opts.dataFile != "" {
-		body, err := os.ReadFile(opts.dataFile)
+		b, err := os.ReadFile(opts.dataFile)
 		if err != nil {
-			return emptyRequestBody, err
+			return body, mime, err
 		}
 
 		// Try detecting filetype in order to set MIME type
@@ -186,11 +196,11 @@ func (opts dataOptions) getRequestBody() (requestBody, error) {
 		case ".xml":
 			mime = client.MIMETypeXML
 		}
-		return requestBody{body, mime}, nil
+		return body.Set(b), mime, nil
 	} else if opts.dataStdin {
 		b, err := io.ReadAll(os.Stdin)
-		return requestBody{b, mime}, err
+		return body.Set(b), mime, err
 	}
 
-	return emptyRequestBody, nil
+	return body, mime, nil
 }
