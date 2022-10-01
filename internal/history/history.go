@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lunjon/http/internal/util"
 	"net/http"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/lunjon/http/internal/client"
-	"github.com/lunjon/http/internal/util"
 )
 
 var ErrNoHistory = errors.New("no history")
@@ -18,7 +16,7 @@ var ErrNoHistory = errors.New("no history")
 type Handler interface {
 	GetAll() ([]Entry, error)
 	GetByIndex(index uint16) (Entry, error)
-	Append(*http.Request, []byte, client.Settings) (Entry, error)
+	Append(*http.Request, []byte) (Entry, error)
 	Latest() (Entry, error)
 	Write() error
 	Clear() error
@@ -60,15 +58,13 @@ func (h *fileHandler) GetByIndex(i uint16) (Entry, error) {
 func (h *fileHandler) Append(
 	req *http.Request,
 	body []byte,
-	settings client.Settings,
 ) (Entry, error) {
 	entry := Entry{
-		Timestamp:      time.Now(),
-		Method:         req.Method,
-		URL:            req.URL.String(),
-		Header:         req.Header,
-		Body:           body,
-		ClientSettings: settings,
+		Timestamp: time.Now(),
+		Method:    req.Method,
+		URL:       req.URL.String(),
+		Header:    req.Header,
+		Body:      body,
 	}
 
 	h.changes = append(h.changes, entry)

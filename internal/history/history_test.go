@@ -7,14 +7,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/util"
 	"github.com/stretchr/testify/require"
 )
 
 type fixture struct {
 	handler  *fileHandler
-	settings client.Settings
 	filepath string
 }
 
@@ -31,7 +29,6 @@ func setupTest(t *testing.T) *fixture {
 	return &fixture{
 		handler:  NewHandler(filepath),
 		filepath: filepath,
-		settings: client.NewSettings(),
 	}
 }
 
@@ -39,7 +36,7 @@ func TestAppend(t *testing.T) {
 	f := setupTest(t)
 	req := newRequest(http.MethodGet, nil)
 
-	_, err := f.handler.Append(req, nil, f.settings)
+	_, err := f.handler.Append(req, nil)
 
 	require.NoError(t, err)
 	require.False(t, f.fileExists())
@@ -57,7 +54,7 @@ func TestLatest(t *testing.T) {
 	// Arrange
 	f := setupTest(t)
 	req := newRequest(http.MethodGet, nil)
-	_, err := f.handler.Append(req, nil, f.settings)
+	_, err := f.handler.Append(req, nil)
 
 	// Act
 	require.NoError(t, err)
@@ -74,7 +71,7 @@ func TestWrite(t *testing.T) {
 
 	// Act
 	req := newRequest(http.MethodGet, nil)
-	_, appendErr := f.handler.Append(req, nil, f.settings)
+	_, appendErr := f.handler.Append(req, nil)
 	writeErr := f.handler.Write()
 
 	// Assert
@@ -86,7 +83,7 @@ func TestWrite(t *testing.T) {
 func TestClear(t *testing.T) {
 	// Arrange
 	f := setupTest(t)
-	_, err := f.handler.Append(newRequest(http.MethodGet, nil), nil, f.settings)
+	_, err := f.handler.Append(newRequest(http.MethodGet, nil), nil)
 	require.NoError(t, err)
 	err = f.handler.Write()
 	require.NoError(t, err)
@@ -119,16 +116,15 @@ func TestLoad(t *testing.T) {
 
 	// Act
 	requests := []struct {
-		method   string
-		body     []byte
-		settings client.Settings
+		method string
+		body   []byte
 	}{
-		{http.MethodGet, nil, client.NewSettings()},
-		{http.MethodPost, []byte("test"), client.NewSettings().WithCertPEM("cert", "key")},
+		{http.MethodGet, nil},
+		{http.MethodPost, []byte("test")},
 	}
 	for _, s := range requests {
 		r := newRequest(s.method, s.body)
-		_, err := f.handler.Append(r, nil, s.settings)
+		_, err := f.handler.Append(r, nil)
 		require.NoError(t, err)
 	}
 	_ = f.handler.Write()

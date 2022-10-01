@@ -16,25 +16,28 @@ import (
 )
 
 const (
-	headerFlagName            = "header"
-	awsSigV4FlagName          = "aws-sigv4"
-	awsRegionFlagName         = "aws-region"
-	dataStringFlagName        = "data"
-	dataStdinFlagName         = "data-stdin"
-	dataFileFlagName          = "data-file"
-	displayFlagName           = "display"
-	failFlagName              = "fail"
-	detailsFlagName           = "details"
-	timeoutFlagName           = "timeout"
-	verboseFlagName           = "verbose"
-	traceFlagName             = "trace"
-	certfileFlagName          = "cert"
-	certkeyFlagName           = "key"
-	certKindFlagName          = "cert-kind"
-	outfileFlagName           = "outfile"
-	noFollowRedirectsFlagName = "no-follow-redirects"
-	aliasHeadingFlagName      = "no-heading"
-	historyNumberFlagName     = "num"
+	headerFlagName                = "header"
+	awsSigV4FlagName              = "aws-sigv4"
+	awsRegionFlagName             = "aws-region"
+	dataStringFlagName            = "data"
+	dataStdinFlagName             = "data-stdin"
+	dataFileFlagName              = "data-file"
+	displayFlagName               = "display"
+	failFlagName                  = "fail"
+	detailsFlagName               = "details"
+	timeoutFlagName               = "timeout"
+	verboseFlagName               = "verbose"
+	certfileFlagName              = "cert"
+	certkeyFlagName               = "key"
+	certKindFlagName              = "cert-kind"
+	outfileFlagName               = "outfile"
+	noFollowRedirectsFlagName     = "no-follow-redirects"
+	aliasHeadingFlagName          = "no-heading"
+	historyNumberFlagName         = "num"
+	tlsTraceFlagName              = "tls-trace"
+	tlsMinVersionFlagName         = "tls-min-version"
+	tlsMaxVersionFlagName         = "tls-max-version"
+	tlsInsecureSkipVerifyFlagName = "tls-skip-verify-insecure"
 )
 
 var (
@@ -129,6 +132,8 @@ func (h *portOption) String() string {
 	return ""
 }
 
+// Container for the data flags/options.
+// Every field is mutually exclusive.
 type dataOptions struct {
 	dataString string
 	dataFile   string

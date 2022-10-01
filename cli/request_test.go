@@ -96,14 +96,14 @@ func TestGetErrorWithFail(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
-	bodies := []dataOptions{
+	datas := []dataOptions{
 		{},
 		{dataString: `{"body":"string"}`},
 		{dataFile: "command.go"},
 	}
 	fixture := setupRequestTest(t)
 
-	for _, opts := range bodies {
+	for _, opts := range datas {
 		err := fixture.handler.handleRequest(http.MethodPost, testServer.URL, opts)
 		require.NoError(t, err)
 		require.NotEmpty(t, fixture.infos.String())

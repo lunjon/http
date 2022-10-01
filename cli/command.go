@@ -115,12 +115,12 @@ func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 		v, _ := flags.GetBool(verboseFlagName)
 		cfg = cfg.UseVerbose(v)
 	}
-	if flags.Changed(traceFlagName) {
-		v, _ := flags.GetBool(traceFlagName)
+	if flags.Changed(tlsTraceFlagName) {
+		v, _ := flags.GetBool(tlsTraceFlagName)
 		cfg = cfg.UseVerbose(v)
 	}
-	if flags.Changed(traceFlagName) {
-		v, _ := flags.GetBool(traceFlagName)
+	if flags.Changed(tlsTraceFlagName) {
+		v, _ := flags.GetBool(tlsTraceFlagName)
 		cfg = cfg.UseVerbose(v)
 	}
 
@@ -148,19 +148,20 @@ func buildRequestRun(
 
 		// HTTP CLIENT
 		traceLogger := logging.New(io.Discard)
-		if flags.Changed(traceFlagName) {
+		if flags.Changed(tlsTraceFlagName) {
 			traceLogger.SetOutput(cfg.logs)
 		}
 
-		certFile, _ := flags.GetString(certfileFlagName)
-		certKey, _ := flags.GetString(certkeyFlagName)
-
-		certOptions, err := client.CertOptionsFrom(certFile, certKey)
-		checkErr(err, cfg.errors)
 		settings := client.NewSettings().
 			WithTimeout(appConfig.Timeout).
-			WithNoFollowRedirects(flags.Changed(noFollowRedirectsFlagName)).
-			WithCert(certOptions)
+			WithNoFollowRedirects(flags.Changed(noFollowRedirectsFlagName))
+
+		certFile, _ := flags.GetString(certfileFlagName)
+		certKey, _ := flags.GetString(certkeyFlagName)
+		if certFile != "" && certKey != "" {
+			tlsOpts := client.NewTLSOptions().WithX509Cert(certFile, certKey)
+			settings = settings.WithTLSOptions(tlsOpts)
+		}
 
 		cl, err := client.NewClient(settings, logger, traceLogger)
 		checkErr(err, cfg.errors)
@@ -401,7 +402,7 @@ Possible values:
   body:       response body
 `)
 	flags.BoolP(failFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
-	flags.Bool(traceFlagName, false, "Output detailed TLS trace information.")
+	flags.Bool(tlsTraceFlagName, false, "Output detailed TLS trace information.")
 	flags.DurationP(timeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 	flags.StringP(outfileFlagName, "o", "", "Write output to file instead of stdout.")
 	flags.Bool(noFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")

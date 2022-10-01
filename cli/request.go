@@ -115,7 +115,7 @@ func (handler *RequestHandler) handleRequest(method, url string, data dataOption
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_, err := handler.historyHandler.Append(req, body.bytes, handler.client.Settings())
+		_, err := handler.historyHandler.Append(req, body.bytes)
 		if err != nil {
 			handler.logger.Printf("Error building history entry: %s", err)
 			return
