@@ -18,6 +18,7 @@ const (
 	CertfileFlagName              = "cert"
 	CertkeyFlagName               = "key"
 	CertKindFlagName              = "cert-kind"
+	CertPassFlagName              = "cert-pass"
 	TLSTraceFlagName              = "tls-trace"
 	TLSMinVersionFlagName         = "tls-min-version"
 	TLSMaxVersionFlagName         = "tls-max-version"

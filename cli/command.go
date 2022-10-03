@@ -133,6 +133,9 @@ func buildRequestRun(
 	headerOpt *options.HeaderOption,
 	tlsMinVersion *options.TLSVersionOption,
 	tlsMaxVersion *options.TLSVersionOption,
+	certFile *options.FileOption,
+	keyFile *options.FileOption,
+	certKind *options.CertKindOption,
 ) runFunc {
 	return func(cmd *cobra.Command, args []string) {
 		flags := cmd.Flags()
@@ -156,15 +159,31 @@ func buildRequestRun(
 			WithTimeout(appConfig.Timeout).
 			WithNoFollowRedirects(flags.Changed(options.NoFollowRedirectsFlagName))
 
-		certFile, _ := flags.GetString(options.CertfileFlagName)
-		certKey, _ := flags.GetString(options.CertkeyFlagName)
-		if certFile != "" && certKey != "" {
-			tlsOpts := client.NewTLSOptions().
-				WithX509Cert(certFile, certKey).
-				WithVersions(tlsMinVersion.Value(), tlsMaxVersion.Value())
-			settings = settings.WithTLSOptions(tlsOpts)
+		tlsOpts := client.NewTLSOptions().
+			WithVersions(tlsMinVersion.Value(), tlsMaxVersion.Value())
+
+		certFile, certFileSet := certFile.Value()
+		if certFileSet {
+			certKind.Update(certFile)
+			keyFile, keyFileSet := keyFile.Value()
+			switch certKind.Value() {
+			case options.CertKindX509:
+				if !keyFileSet {
+					checkErr(fmt.Errorf("%s option required but not set", options.CertkeyFlagName), cfg.errors)
+				}
+				tlsOpts = tlsOpts.WithX509Cert(certFile, keyFile)
+			case options.CertKindPKCS12:
+				certPass, _ := flags.GetString(options.CertPassFlagName)
+				if keyFileSet {
+					checkErr(fmt.Errorf("%s option should not be specified with type %s", options.CertkeyFlagName, certKind.Value()), cfg.errors)
+				}
+				pfx, err := os.ReadFile(certFile)
+				checkErr(err, cfg.errors)
+				tlsOpts = tlsOpts.WithPKCS12Cert(pfx, certPass)
+			}
 		}
 
+		settings = settings.WithTLSOptions(tlsOpts)
 		cl, err := client.NewClient(settings, logger, traceLogger)
 		checkErr(err, cfg.errors)
 
@@ -241,15 +260,27 @@ func buildHTTPCommand(
 	headerOption := options.NewHeaderOption()
 	tlsMinVersion := options.NewTLSVersionOption(tls.VersionTLS12)
 	tlsMaxVersion := options.NewTLSVersionOption(tls.VersionTLS13)
+	certFile := &options.FileOption{}
+	keyFile := &options.FileOption{}
+	certKind := &options.CertKindOption{}
 
 	cmd := &cobra.Command{
 		Use:   fmt.Sprintf("%s <url>", strings.ToLower(method)),
 		Short: fmt.Sprintf("HTTP %s request", strings.ToUpper(method)),
 		Args:  cobra.ExactArgs(1),
-		Run:   buildRequestRun(method, cfg, headerOption, tlsMinVersion, tlsMaxVersion),
+		Run: buildRequestRun(
+			method,
+			cfg,
+			headerOption,
+			tlsMinVersion,
+			tlsMaxVersion,
+			certFile,
+			keyFile,
+			certKind,
+		),
 	}
 
-	addCommonFlags(cmd, headerOption, tlsMinVersion, tlsMaxVersion)
+	addCommonFlags(cmd, headerOption, tlsMinVersion, tlsMaxVersion, certFile, keyFile, certKind)
 	configure(cmd)
 	return cmd
 }
@@ -377,6 +408,9 @@ func addCommonFlags(
 	header *options.HeaderOption,
 	tlsMinVersion *options.TLSVersionOption,
 	tlsMaxVersion *options.TLSVersionOption,
+	certFile *options.FileOption,
+	keyFile *options.FileOption,
+	certKind *options.CertKindOption,
 ) {
 	cmd.Flags().VarP(header, options.HeaderFlagName, "H", `HTTP header, may be specified multiple times.
 The value must conform to the format "name: value". "name" and "value" can
@@ -411,10 +445,12 @@ Possible values:
 	flags.StringP(options.OutfileFlagName, "o", "", "Write output to file instead of stdout.")
 	flags.Bool(options.NoFollowRedirectsFlagName, false, "Do not follow redirects. Default allows a maximum of 10 consecutive requests.")
 
-	flags.String(options.CertfileFlagName, "", "Use as client certificate. Requires the --key flag.")
+	flags.Var(certFile, options.CertfileFlagName, "Use as client certificate. Requires the --key flag.")
 	cmd.MarkFlagFilename(options.CertfileFlagName)
-	flags.String(options.CertkeyFlagName, "", "Use as private key. Requires the --cert flag.")
+	flags.Var(keyFile, options.CertkeyFlagName, "Use as private key. Requires the --cert flag.")
 	cmd.MarkFlagFilename(options.CertkeyFlagName)
+	flags.Var(certKind, options.CertKindFlagName, "Specifies certificate type.")
+	flags.String(options.CertPassFlagName, "", "Use as password for certificate.")
 
 	flags.Bool(options.TLSTraceFlagName, false, "Output detailed TLS trace information.")
 	flags.Var(tlsMinVersion, options.TLSMinVersionFlagName, "Set minimum TLS version to use. Allowed values are 1.0-3.")
