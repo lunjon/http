@@ -64,11 +64,7 @@ Examples:
  * localhost/path	->	http://localhost/path
  * :1234/index		->	http://localhost:1234/index
  * domain.com		->	https://domain.com
-
-A request body can be specified in three ways:
- * stdin: pipe or IO redirection
- * --body '...': request body from a string
- * --body file: read content from a file`,
+`,
 	}
 
 	root.AddCommand(&cobra.Command{
