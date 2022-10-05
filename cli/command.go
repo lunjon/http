@@ -289,7 +289,7 @@ func buildHistory(cfg cliConfig) *cobra.Command {
 	hst := &cobra.Command{
 		Use:     "history",
 		Aliases: []string{"hist"},
-		Short:   "Command for managing request history.",
+		Short:   "Command for managing request history",
 		Run: func(cmd *cobra.Command, args []string) {
 			handler := history.NewHandler(cfg.historyPath)
 			entries, err := handler.GetAll()
@@ -321,7 +321,7 @@ func buildServe(cfg cliConfig) *cobra.Command {
 
 	c := &cobra.Command{
 		Use:   "serve",
-		Short: "Starts an HTTP server on localhost.",
+		Short: "Starts an HTTP server on localhost",
 		Long: `Starts an HTTP server on localhost.
 Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -367,7 +367,7 @@ func buildConfig(cfg cliConfig) *cobra.Command {
 
 	root := &cobra.Command{
 		Use:   "config",
-		Short: "Configuration commands.",
+		Short: "Configuration commands",
 		Run: func(cmd *cobra.Command, _ []string) {
 			err := handler.list()
 			checkErr(err, cfg.errors)
