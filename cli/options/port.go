@@ -42,5 +42,5 @@ func (h *portOption) Type() string {
 }
 
 func (h *portOption) String() string {
-	return ""
+	return fmt.Sprint(h.port)
 }

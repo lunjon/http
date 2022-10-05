@@ -5,8 +5,7 @@ import (
 )
 
 var (
-	bold = lipgloss.NewStyle().Bold(true)
-
+	bold    = lipgloss.NewStyle().Bold(true)
 	None    = lipgloss.NewStyle()
 	Bold    = bold
 	Red     = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
