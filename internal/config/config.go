@@ -99,7 +99,7 @@ func (cfg Config) String() string {
 		))
 
 		for k, v := range cfg.Aliases {
-			line := fmt.Sprintf(` %s = "%s"`, style.Bold.Render(k), v)
+			line := fmt.Sprintf(`%s = "%s"`, style.Bold.Render(k), v)
 			b.WriteString(line + "\n")
 		}
 	}
