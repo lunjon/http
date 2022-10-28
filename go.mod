@@ -3,7 +3,7 @@ module github.com/lunjon/http
 go 1.18
 
 require (
-	github.com/BurntSushi/toml v1.2.0
+	github.com/BurntSushi/toml v1.2.1
 	github.com/aws/aws-sdk-go v1.44.109
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/spf13/cobra v1.6.1
