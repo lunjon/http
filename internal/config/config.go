@@ -12,25 +12,25 @@ import (
 )
 
 func init() {
-	editor, ok := os.LookupEnv("EDITOR")
-	if !ok {
-		editor = "vim"
+	Editor = "vim"
+	if v, ok := os.LookupEnv("VISUAL"); ok {
+		Editor = v
+	} else if v, ok := os.LookupEnv("EDITOR"); ok {
+		Editor = v
 	}
-	Editor = editor
 }
 
 const DefaultConfigString = `
 # Valid options and default values
 # timeout = "30s"
-# verbose = false
-# fail = false
 
 [aliases] # Section for you URL aliases
 # local = http://localhost
 `
 
 var (
-	Editor string
+	Editor         string
+	DefaultTimeout = time.Second * 30
 )
 
 type Config struct {
@@ -42,6 +42,7 @@ type Config struct {
 
 func New() Config {
 	return Config{
+		Timeout: DefaultTimeout,
 		Verbose: false,
 		Fail:    false,
 		Aliases: make(map[string]string),
@@ -72,8 +73,6 @@ func (cfg Config) String() string {
 		value any
 	}{
 		{"timeout", cfg.Timeout},
-		{"verbose", cfg.Verbose},
-		{"fail", cfg.Fail},
 	}
 
 	for _, item := range roots {
@@ -117,7 +116,7 @@ func ReadTOML(data []byte) (Config, error) {
 
 	// Correction of zero values
 	if cfg.Timeout.value == 0 {
-		cfg.Timeout.value = time.Second * 30
+		cfg.Timeout.value = DefaultTimeout
 	}
 
 	if cfg.Aliases == nil {
@@ -136,16 +135,12 @@ func Load(filepath string) (Config, error) {
 
 type fileConfig struct {
 	Timeout duration
-	Verbose bool
-	Fail    bool
 	Aliases map[string]string
 }
 
 func (cfg fileConfig) convert() Config {
 	return Config{
 		Timeout: cfg.Timeout.value,
-		Verbose: cfg.Verbose,
-		Fail:    cfg.Fail,
 		Aliases: cfg.Aliases,
 	}
 }
