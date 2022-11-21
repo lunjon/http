@@ -1,4 +1,4 @@
-all: format build test check
+alias fmt := format
 alias t := test
 
 format:
