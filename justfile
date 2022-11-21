@@ -1,3 +1,5 @@
+default: test check
+
 alias fmt := format
 alias t := test
 

@@ -10,7 +10,6 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Added
 - `config init` sub-command
 - `config edit` sub-command
-- Body model/view to TUI with support for editing and searching for files
 - Request history, and sub-command:
   - `history`: list history
   - `history clear`: clears history
@@ -18,11 +17,12 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Flags for setting min/max TLS version
 
 ### Changed
-- Renamed option `output` to `outfile` (output has been reserved for future use)
+- Renamed `--display` to `--output`
+- Renamed option `--output` to `--outfile` (output has been reserved for future use)
 - Renamed `http server` to `http serve`
 
 ### Removed
-- TUI
+- TUI: simply to complex feature to have
 - `--body` option, in favor of `--data*` options
 
 ## [0.12.1] - 2022-05-25

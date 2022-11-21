@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,44 +14,76 @@ import (
 	"github.com/lunjon/http/internal/util"
 )
 
-var ResponseComponents = []string{"status", "statuscode", "headers", "body"}
+var ResponseComponents = []string{"status", "headers", "body"}
+
+type Format string
+
+const (
+	TextFormat Format = "text"
+	JSONFormat Format = "json"
+)
 
 type Formatter interface {
 	FormatResponse(*http.Response) ([]byte, error)
 	FormatHistory([]history.Entry) ([]byte, error)
 }
 
-type DefaultFormatter struct {
-	components []string
-}
+type NullFormatter struct{}
 
-func NewResponseFormatter(components []string) (*DefaultFormatter, error) {
-	if len(components) > len(ResponseComponents) {
-		return nil, fmt.Errorf("invalid format specifiers: too many")
+func (f NullFormatter) FormatResponse(*http.Response) ([]byte, error) { return nil, nil }
+func (f NullFormatter) FormatHistory([]history.Entry) ([]byte, error) { return nil, nil }
+
+func FormatterFromString(format Format, comps string) (Formatter, error) {
+	var components []string
+	switch comps {
+	case "", "none":
+		return NullFormatter{}, nil
+	case "all":
+		components = ResponseComponents
+	default:
+		components = strings.Split(strings.ToLower(comps), ",")
+		if len(components) > len(ResponseComponents) {
+			return nil, fmt.Errorf("invalid format specifiers: too many")
+		}
+		components = util.Map(components, strings.TrimSpace)
 	}
 
-	parsed := util.Map(components, strings.ToLower)
-	for _, c := range parsed {
+	for _, c := range components {
 		if !util.Contains(ResponseComponents, c) {
 			return nil, fmt.Errorf("invalid format specifier: %s", c)
 		}
 	}
 
-	return &DefaultFormatter{components: parsed}, nil
+	switch format {
+	case TextFormat:
+		return &textFormatter{components}, nil
+	case JSONFormat:
+		return &jsonFormatter{components}, nil
+	}
+
+	return nil, fmt.Errorf("unknown format: %s", format)
 }
 
-func (f *DefaultFormatter) FormatResponse(r *http.Response) ([]byte, error) {
+type textFormatter struct {
+	components []string
+}
+
+func (f *textFormatter) FormatResponse(r *http.Response) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	for _, comp := range f.components {
 		switch comp {
 		case "status":
 			fmt.Fprintln(buf, r.Status)
-		case "statuscode":
-			fmt.Fprintln(buf, r.StatusCode)
 		case "headers":
 			f.addHeaders(buf, r)
 		case "body":
-			if err := f.addBody(buf, r); err != nil {
+			defer r.Body.Close()
+			b, err := io.ReadAll(r.Body)
+			if err != nil {
+				return nil, err
+			}
+			_, err = buf.Write(b)
+			if err != nil {
 				return nil, err
 			}
 		default:
@@ -60,9 +93,9 @@ func (f *DefaultFormatter) FormatResponse(r *http.Response) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
+func (f *textFormatter) addHeaders(w io.Writer, r *http.Response) {
 	taber := types.NewTaber("")
-	for name, value := range r.Header {
+	for name, value := range headerToMap(r.Header) {
 		n := fmt.Sprintf("%s:", name)
 		v := fmt.Sprint(value)
 		taber.WriteLine(style.Bold.Render(n), v)
@@ -70,17 +103,52 @@ func (f *DefaultFormatter) addHeaders(w io.Writer, r *http.Response) {
 	fmt.Fprint(w, taber.String())
 }
 
-func (f *DefaultFormatter) addBody(w io.Writer, r *http.Response) error {
-	defer r.Body.Close()
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(b)
-	fmt.Fprintln(w, "")
-	return err
+func (f *textFormatter) FormatHistory([]history.Entry) ([]byte, error) {
+	return nil, nil
 }
 
-func (f *DefaultFormatter) FormatHistory([]history.Entry) ([]byte, error) {
+type jsonFormatter struct {
+	components []string
+}
+
+func (f *jsonFormatter) FormatResponse(r *http.Response) ([]byte, error) {
+	type output struct {
+		Status  *string           `json:"status,omitempty"`
+		Headers map[string]string `json:"headers,omitempty"`
+		Body    *string           `json:"body,omitempty"`
+	}
+
+	body := new(output)
+	for _, comp := range f.components {
+		switch comp {
+		case "status":
+			body.Status = &r.Status
+		case "headers":
+			body.Headers = headerToMap(r.Header)
+		case "body":
+			defer r.Body.Close()
+			b, err := io.ReadAll(r.Body)
+			if err != nil {
+				return nil, err
+			}
+			bs := string(b)
+			body.Body = &bs
+		default:
+			return nil, fmt.Errorf("invalid format specifier: %s", comp)
+		}
+	}
+
+	return json.MarshalIndent(body, "", " ")
+}
+
+func (f *jsonFormatter) FormatHistory([]history.Entry) ([]byte, error) {
 	return nil, nil
+}
+
+func headerToMap(h http.Header) map[string]string {
+	headers := map[string]string{}
+	for name, values := range h {
+		headers[name] = strings.Join(values, "; ")
+	}
+	return headers
 }

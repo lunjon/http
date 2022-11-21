@@ -19,7 +19,6 @@ import (
 	"github.com/lunjon/http/internal/logging"
 	"github.com/lunjon/http/internal/server"
 	"github.com/lunjon/http/internal/style"
-	"github.com/lunjon/http/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -187,20 +186,12 @@ func buildRequestRun(
 		cl, err := client.NewClient(settings, logger, traceLogger)
 		checkErr(err, cfg.errors)
 
-		// DISPLAY
-		display, _ := flags.GetString(options.DisplayFlagName)
-		var formatter Formatter
-		switch display {
-		case "all":
-			formatter, _ = NewResponseFormatter(ResponseComponents)
-		case "", "none":
-			formatter, _ = NewResponseFormatter([]string{})
-		default:
-			components := strings.Split(strings.TrimSpace(display), ",")
-			components = util.Map(components, strings.TrimSpace)
-			formatter, err = NewResponseFormatter(components)
-			checkErr(err, cfg.errors)
-		}
+		// OUTPUT
+		outputFormat, _ := flags.GetString(options.OutputFormatFlagName)
+		outputComponents, _ := flags.GetString(options.OutputFlagName)
+		logger.Printf("Format: %s (%s)", outputFormat, outputComponents)
+		formatter, err := FormatterFromString(Format(outputFormat), outputComponents)
+		checkErr(err, cfg.errors)
 
 		var signer client.RequestSigner
 		signRequest, _ := flags.GetBool(options.AWSSigV4FlagName)
@@ -431,12 +422,12 @@ in environment variables.
 		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 
-	flags.String(options.DisplayFlagName, "body", `Comma (,) separated list of response items to display.
+	flags.String(options.OutputFormatFlagName, "text", `Output format of response. Possible values: text, json.`)
+	flags.String(options.OutputFlagName, "body", `Comma (,) separated list of response items to display.
 Possible values:
   none:       no output
   all:        all information
   status:     response status code text
-  statuscode: response status code number
   headers:    response headers
   body:       response body
 `)
