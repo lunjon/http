@@ -5,11 +5,12 @@ import "time"
 type MIMEType string
 
 const (
-	MIMETypeHTML    MIMEType = "text/html"
-	MIMETypeCSV     MIMEType = "text/csv"
-	MIMETypeJSON    MIMEType = "application/json"
-	MIMETypeXML     MIMEType = "application/xml"
-	MIMETypeUnknown MIMEType = "unknown"
+	MIMETypeHTML           MIMEType = "text/html"
+	MIMETypeCSV            MIMEType = "text/csv"
+	MIMETypeJSON           MIMEType = "application/json"
+	MIMETypeXML            MIMEType = "application/xml"
+	MIMETypeFormURLEncoded MIMEType = "application/x-www-form-urlencoded"
+	MIMETypeUnknown        MIMEType = "unknown"
 )
 
 func (m MIMEType) String() string {

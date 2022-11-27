@@ -7,6 +7,7 @@ const (
 	DataStringFlagName            = "data"
 	DataStdinFlagName             = "data-stdin"
 	DataFileFlagName              = "data-file"
+	DataURLEncodeFlagName         = "data-urlencode"
 	OutputFlagName                = "output"
 	OutputFormatFlagName          = "output-format"
 	OutfileFlagName               = "outfile"
