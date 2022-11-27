@@ -98,9 +98,9 @@ func TestGetErrorWithFail(t *testing.T) {
 
 func TestPost(t *testing.T) {
 	datas := []options.DataOptions{
-		options.NewDataOptions("", "", false),
-		options.NewDataOptions(`{"body":"string"}`, "", false),
-		options.NewDataOptions("", "command.go", false),
+		options.NewDataOptions("", "", false, []string{}),
+		options.NewDataOptions(`{"body":"string"}`, "", false, []string{}),
+		options.NewDataOptions("", "command.go", false, []string{}),
 	}
 	fixture := setupRequestTest(t)
 

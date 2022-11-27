@@ -42,7 +42,19 @@ var (
 			false,
 			"Read request body from stdin.",
 		)
-		cmd.MarkFlagsMutuallyExclusive(options.DataStringFlagName, options.DataFileFlagName, options.DataStdinFlagName)
+		flags.StringArray(
+			options.DataURLEncodeFlagName,
+			[]string{},
+			`URL encoded body. Can be called multiple times (per value).
+Should be specified in format "key=value".`,
+		)
+		cmd.MarkFlagsMutuallyExclusive(
+			options.DataStringFlagName,
+			options.DataFileFlagName,
+			options.DataStdinFlagName,
+			options.DataURLEncodeFlagName,
+		)
+
 	}
 )
 
@@ -404,9 +416,7 @@ func addCommonFlags(
 	certKind *options.CertKindOption,
 ) {
 	cmd.Flags().VarP(header, options.HeaderFlagName, "H", `HTTP header, may be specified multiple times.
-The value must conform to the format "name: value". "name" and "value" can
-be separated by either a colon ":" or an equal sign "=", and the space
-between is optional.`)
+The value must conform to the format "name: value".`)
 
 	cmd.Flags().BoolP(
 		options.AWSSigV4FlagName,
