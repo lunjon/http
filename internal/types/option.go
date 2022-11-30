@@ -13,7 +13,15 @@ func (o Option[T]) IsNone() bool {
 	return !o.IsSome()
 }
 
-func (o Option[T]) Value() T {
+func (o Option[T]) Get() (T, bool) {
+	var d T
+	if !o.some {
+		return d, false
+	}
+	return o.value, true
+}
+
+func (o Option[T]) MustGet() T {
 	if !o.some {
 		panic("No value")
 	}

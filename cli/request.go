@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"runtime"
 	"sync"
 
@@ -18,7 +19,7 @@ import (
 )
 
 var (
-	newline = []byte("\n")
+	newline = []byte("\r\n")
 )
 
 const (
@@ -85,7 +86,7 @@ func (handler *RequestHandler) handleRequest(method, url string, dataOptions opt
 	}
 
 	if data.IsSome() {
-		body = data.Value()
+		body = data.MustGet()
 
 		setContentType := headers.Get(contentTypeHeader) == "" && mime != client.MIMETypeUnknown
 		if setContentType {
@@ -164,12 +165,14 @@ func (handler *RequestHandler) outputResults(r *http.Response) error {
 	}
 
 	if len(b) > 0 {
-		_, err = handler.output.Write(b)
-		if err != nil {
-			return err
+		var err error
+		if filepath, ok := handler.outputFile.Get(); ok {
+			err = os.WriteFile(filepath, b, 0644)
+		} else {
+			_, err = handler.output.Write(b)
+			_, _ = handler.output.Write(newline)
 		}
 
-		_, err = handler.output.Write(newline)
 		if err != nil {
 			return err
 		}

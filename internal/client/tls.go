@@ -49,7 +49,7 @@ func (tlsOptions TLSOptions) WithPKCS12Cert(pfx []byte, passw string) TLSOptions
 func (tlsOptions TLSOptions) getTLSConfig() (tls.Config, error) {
 	certs := []tls.Certificate{}
 	if tlsOptions.Cert.IsSome() {
-		certOpt := tlsOptions.Cert.Value()
+		certOpt := tlsOptions.Cert.MustGet()
 		crt, err := certOpt.Load()
 		if err != nil {
 			return tls.Config{}, err
