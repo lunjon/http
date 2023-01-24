@@ -22,6 +22,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	verbGroupID = "verbs"
+)
+
 var (
 	noConfigure   = func(*cobra.Command) {}
 	bodyConfigure = func(cmd *cobra.Command) {
@@ -77,6 +81,11 @@ Examples:
  * domain.com		->	https://domain.com
 `,
 	}
+
+	root.AddGroup(&cobra.Group{
+		ID:    verbGroupID,
+		Title: "HTTP Commands:",
+	})
 
 	root.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -268,9 +277,10 @@ func buildHTTPCommand(
 	certKind := &options.CertKindOption{}
 
 	cmd := &cobra.Command{
-		Use:   fmt.Sprintf("%s <url>", strings.ToLower(method)),
-		Short: fmt.Sprintf("HTTP %s request", strings.ToUpper(method)),
-		Args:  cobra.ExactArgs(1),
+		GroupID: verbGroupID,
+		Use:     fmt.Sprintf("%s <url>", strings.ToLower(method)),
+		Short:   fmt.Sprintf("HTTP %s request", strings.ToUpper(method)),
+		Args:    cobra.ExactArgs(1),
 		Run: buildRequestRun(
 			method,
 			cfg,
