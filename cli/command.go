@@ -68,11 +68,10 @@ func build(
 ) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "http",
-		Short: "Starts an interactive session.",
-		Long: `Sends HTTP requests - using either the TUI or CLI.
+		Short: `http - send HTTP requests from your command-line`,
+		Long: `http - send HTTP requests from your command-line
 
 Supported HTTP methods are GET, HEAD, OPTIONS, PUT, POST, PATCH and DELETE.
-URL parameter is always required and must be a valid URL.
 
 Protocol and host of the URL can be implicit if given like [host]:port/path...
 Examples:

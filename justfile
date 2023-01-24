@@ -1,4 +1,4 @@
-default: test check
+default: format build test check
 
 alias fmt := format
 alias t := test
@@ -8,6 +8,9 @@ format:
 
 build: format
 	go build ./...
+
+check:
+    staticcheck ./...
 
 test: build
 	go test ./... | grep -v 'no test files'
@@ -21,9 +24,6 @@ release version:
     git push
     ./build.sh
     gh release create {{version}} bin/*
-
-check:
-    staticcheck ./...
 
 # Get/install dependencies
 deps:
