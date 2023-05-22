@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.254
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	golang.org/x/crypto v0.8.0
 )
 
