@@ -4,6 +4,9 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Changed
+- Text formatter: indent response body if content-type is application/json
+
 ## [0.13.1] - 2023-10-10
 
 ### Fixed

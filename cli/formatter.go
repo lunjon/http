@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/history"
 	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/types"
@@ -82,7 +83,18 @@ func (f *textFormatter) FormatResponse(r *http.Response) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			_, err = buf.Write(b)
+
+			// Is it application/json?
+			//   => try to indent nicely
+			if r.Header.Get(contentTypeHeader) == string(client.MIMETypeJSON) {
+				err = json.Indent(buf, b, "", "  ")
+				if err != nil {
+					_, err = buf.Write(b)
+				}
+			} else {
+				_, err = buf.Write(b)
+			}
+
 			if err != nil {
 				return nil, err
 			}
@@ -131,7 +143,21 @@ func (f *jsonFormatter) FormatResponse(r *http.Response) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			bs := string(b)
+
+			buf := bytes.NewBuffer(nil)
+
+			// Is it application/json?
+			//   => try to indent nicely
+			if r.Header.Get(contentTypeHeader) == string(client.MIMETypeJSON) {
+				err = json.Indent(buf, b, "", "  ")
+				if err != nil {
+					buf.WriteString(string(b))
+				}
+			} else {
+				buf.WriteString(string(b))
+			}
+
+			bs := buf.String()
 			body.Body = &bs
 		default:
 			return nil, fmt.Errorf("invalid format specifier: %s", comp)
