@@ -4,6 +4,8 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+## [0.13.1] - 2023-10-10
+
 ### Fixed
 - Follow redirects had inverted logic
 
@@ -22,7 +24,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 - Renamed `http server` to `http serve`
 
 ### Removed
-- TUI: simply to complex feature to have
+- TUI: unused feature
 - `--body` option, in favor of `--data*` options
 - Configuration file option for `verbose` and `fail`
 
