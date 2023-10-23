@@ -10,7 +10,7 @@ Open [main.go](./main.go) and set the version.
 ## 2. Update the changelog
 Open [CHANGELOG.md](./CHANGELOG.md) and add a new release heading for the version.
 
-## 3. Run justfile target `release`
+## 3. Run justfile recipy `release`
 ```shell
 $ just release "vX.Y.Z"
 ```
