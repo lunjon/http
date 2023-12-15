@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	cmd, err := cli.Build("v0.13.1")
+	cmd, err := cli.Build("v0.13.2")
 	if err != nil {
 		fmt.Println(style.RedB.Render("error:"), err)
 		os.Exit(1)

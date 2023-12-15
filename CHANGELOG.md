@@ -4,6 +4,9 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ## Unreleased
 
+### Fixed
+- Do not read body in `http serve`
+
 ### Changed
 - Text formatter: indent response body if content-type is application/json
 

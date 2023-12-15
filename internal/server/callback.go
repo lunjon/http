@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -29,14 +28,6 @@ func (f defaultCallback) loop(ch chan *http.Request, stop chan bool) {
 				v = fmt.Sprintf("%s %s %s", style.GreenB.Render("["), v, style.GreenB.Render("]"))
 				fmt.Printf("    %s: %s\n", style.Bold.Render(name), v)
 			}
-		}
-
-		b, err := io.ReadAll(r.Body)
-		if err != nil {
-			fmt.Printf("  Body:    %s: %s\n", style.RedB.Render("error"), err)
-		} else if len(b) > 0 {
-			s := fmt.Sprintf("%d bytes", len(b))
-			fmt.Printf("  Body:    %s\n", style.GreenB.Render(s))
 		}
 	}
 }
