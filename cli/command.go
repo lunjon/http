@@ -330,6 +330,7 @@ func buildHistory(cfg cliConfig) *cobra.Command {
 func buildServe(cfg cliConfig) *cobra.Command {
 	port := options.NewPortOption()
 	statusFlagName := "show-status"
+	listFlagName := "list"
 
 	c := &cobra.Command{
 		Use:   "serve",
@@ -338,6 +339,12 @@ func buildServe(cfg cliConfig) *cobra.Command {
 Useful for local testing and debugging.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			flags := cmd.Flags()
+
+			listRoutes, _ := flags.GetBool(listFlagName)
+			if listRoutes {
+				server.ListRoutes()
+				return
+			}
 
 			showStatus, _ := flags.GetBool(statusFlagName)
 
@@ -371,6 +378,7 @@ Useful for local testing and debugging.`,
 
 	c.Flags().VarP(port, "port", "p", "Port to listen on. Must be valid number in the range 1024-65535.")
 	c.Flags().Bool(statusFlagName, false, "Shows current status instead of showing each request.")
+	c.Flags().Bool(listFlagName, false, "List predefined routes.")
 	return c
 }
 

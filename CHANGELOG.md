@@ -10,6 +10,14 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 ### Changed
 - Text formatter: indent response body if content-type is application/json
 
+### Added
+- Predefined routes to `http serve`
+  - Adds routes under `/~/`:
+    - `/~/client-errors/*`: some 4XX responses
+    - `/~/server-errors/*`: some 5XX responses
+    - `/~/success/*`: one endpoint that returns a JSON response
+- Sub-command to list predefined routes: `http serve --list`
+
 ## [0.13.1] - 2023-10-10
 
 ### Fixed
