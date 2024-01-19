@@ -9,4 +9,7 @@ updates:
       day: monday
     ignore:
       - dependency-name: "*/aws-sdk-go"
-
+    groups:
+      dependencies:
+        patterns:
+          - "*"

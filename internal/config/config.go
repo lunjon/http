@@ -54,6 +54,11 @@ func (cfg Config) UseVerbose(b bool) Config {
 	return cfg
 }
 
+func (cfg Config) UseTimeout(t time.Duration) Config {
+	cfg.Timeout = t
+	return cfg
+}
+
 func (cfg Config) UseFail(b bool) Config {
 	cfg.Fail = b
 	return cfg

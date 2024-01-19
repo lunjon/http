@@ -136,9 +136,9 @@ func updateConfig(cmd *cobra.Command, cfg config.Config) config.Config {
 		v, _ := flags.GetBool(options.TLSTraceFlagName)
 		cfg = cfg.UseVerbose(v)
 	}
-	if flags.Changed(options.TLSTraceFlagName) {
-		v, _ := flags.GetBool(options.TLSTraceFlagName)
-		cfg = cfg.UseVerbose(v)
+	if flags.Changed(options.TimeoutFlagName) {
+		v, _ := flags.GetDuration(options.TimeoutFlagName)
+		cfg = cfg.UseTimeout(v)
 	}
 
 	return cfg

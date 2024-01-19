@@ -6,6 +6,7 @@ This changelog adheres to semantic version according to [keepachangelog](https:/
 
 ### Fixed
 - Do not read body in `http serve`
+- Override timeout from config when specified as flag
 
 ### Changed
 - Text formatter: indent response body if content-type is application/json
