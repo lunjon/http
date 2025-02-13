@@ -8,6 +8,7 @@ format:
 
 build:
 	go build ./...
+	nix build
 
 check:
     staticcheck ./...

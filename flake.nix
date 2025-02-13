@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "Flake for building and developing http cli";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
@@ -21,8 +21,7 @@
         packages.default = pkgs.buildGo123Module {
           name = "http";
           src = ./.;
-          # modRoot = "./tfn-go";
-          vendorHash = "sha256-AVu+R0pvH1H6Mp4OyzM03P1LeOIRPW+HHU2sj88KqGo=";
+          vendorHash = "sha256-h27uHmOQMECkGHFsDggGfm+hRohTVYIkvF7zWFdwlTM=";
           doCheck = false;
         };
       }
