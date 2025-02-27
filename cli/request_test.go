@@ -26,7 +26,7 @@ type fixture struct {
 	historyMock history.Handler
 }
 
-func setupRequestTest(t *testing.T, cfgs ...config.Config) *fixture {
+func setupRequestTest(_ *testing.T, cfgs ...config.Config) *fixture {
 	logs := &strings.Builder{}
 	infos := &strings.Builder{}
 	errors := &strings.Builder{}

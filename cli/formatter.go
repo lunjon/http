@@ -12,7 +12,6 @@ import (
 	"github.com/lunjon/http/internal/history"
 	"github.com/lunjon/http/internal/style"
 	"github.com/lunjon/http/internal/types"
-	"github.com/lunjon/http/internal/util"
 )
 
 var ResponseComponents = []string{"status", "headers", "body"}
@@ -34,75 +33,49 @@ type NullFormatter struct{}
 func (f NullFormatter) FormatResponse(*http.Response) ([]byte, error) { return nil, nil }
 func (f NullFormatter) FormatHistory([]history.Entry) ([]byte, error) { return nil, nil }
 
-func FormatterFromString(format Format, comps string) (Formatter, error) {
-	var components []string
-	switch comps {
-	case "", "none":
-		return NullFormatter{}, nil
-	case "all":
-		components = ResponseComponents
-	default:
-		components = strings.Split(strings.ToLower(comps), ",")
-		if len(components) > len(ResponseComponents) {
-			return nil, fmt.Errorf("invalid format specifiers: too many")
-		}
-		components = util.Map(components, strings.TrimSpace)
-	}
-
-	for _, c := range components {
-		if !util.Contains(ResponseComponents, c) {
-			return nil, fmt.Errorf("invalid format specifier: %s", c)
-		}
-	}
-
+func FormatterFromString(format Format) (Formatter, error) {
 	switch format {
 	case TextFormat:
-		return &textFormatter{components}, nil
+		return &textFormatter{}, nil
 	case JSONFormat:
-		return &jsonFormatter{components}, nil
+		return &jsonFormatter{}, nil
 	}
 
 	return nil, fmt.Errorf("unknown format: %s", format)
 }
 
-type textFormatter struct {
-	components []string
-}
+// textFormatter will only output the body, if any.
+type textFormatter struct{}
 
 func (f *textFormatter) FormatResponse(r *http.Response) ([]byte, error) {
-	buf := bytes.NewBuffer(nil)
-	for _, comp := range f.components {
-		switch comp {
-		case "status":
-			fmt.Fprintln(buf, r.Status)
-		case "headers":
-			f.addHeaders(buf, r)
-		case "body":
-			defer r.Body.Close()
-			b, err := io.ReadAll(r.Body)
-			if err != nil {
-				return nil, err
-			}
+	return readBody(r)
+}
 
-			// Is it application/json?
-			//   => try to indent nicely
-			if r.Header.Get(contentTypeHeader) == string(client.MIMETypeJSON) {
-				err = json.Indent(buf, b, "", "  ")
-				if err != nil {
-					_, err = buf.Write(b)
-				}
-			} else {
-				_, err = buf.Write(b)
-			}
-
-			if err != nil {
-				return nil, err
-			}
-		default:
-			return nil, fmt.Errorf("invalid format specifier: %s", comp)
-		}
+func readBody(r *http.Response) ([]byte, error) {
+	if r.StatusCode == 204 && r.Header.Get("Content-Length") == "" {
+		return nil, nil
 	}
-	return buf.Bytes(), nil
+
+	defer r.Body.Close()
+
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.NewBuffer(nil)
+
+	// Is it application/json? Try to indent nicely.
+	if strings.Contains(r.Header.Get(contentTypeHeader), string(client.MIMETypeJSON)) {
+		err = json.Indent(buf, b, "", "  ")
+		if err != nil {
+			_, err = buf.Write(b)
+		}
+	} else {
+		_, err = buf.Write(b)
+	}
+
+	return buf.Bytes(), err
 }
 
 func (f *textFormatter) addHeaders(w io.Writer, r *http.Response) {
@@ -124,47 +97,28 @@ type jsonFormatter struct {
 }
 
 func (f *jsonFormatter) FormatResponse(r *http.Response) ([]byte, error) {
-	type output struct {
-		Status  *string           `json:"status,omitempty"`
-		Headers map[string]string `json:"headers,omitempty"`
-		Body    *string           `json:"body,omitempty"`
+	output := struct {
+		Status     string            `json:"status,omitempty"`
+		StatusCode int               `json:"statusCode,omitempty"`
+		Headers    map[string]string `json:"headers,omitempty"`
+		Body       *string           `json:"body,omitempty"`
+	}{
+		Status:     r.Status,
+		StatusCode: r.StatusCode,
+		Headers:    headerToMap(r.Header),
 	}
 
-	body := new(output)
-	for _, comp := range f.components {
-		switch comp {
-		case "status":
-			body.Status = &r.Status
-		case "headers":
-			body.Headers = headerToMap(r.Header)
-		case "body":
-			defer r.Body.Close()
-			b, err := io.ReadAll(r.Body)
-			if err != nil {
-				return nil, err
-			}
-
-			buf := bytes.NewBuffer(nil)
-
-			// Is it application/json?
-			//   => try to indent nicely
-			if r.Header.Get(contentTypeHeader) == string(client.MIMETypeJSON) {
-				err = json.Indent(buf, b, "", "  ")
-				if err != nil {
-					buf.WriteString(string(b))
-				}
-			} else {
-				buf.WriteString(string(b))
-			}
-
-			bs := buf.String()
-			body.Body = &bs
-		default:
-			return nil, fmt.Errorf("invalid format specifier: %s", comp)
-		}
+	body, err := readBody(r)
+	if err != nil {
+		return nil, err
 	}
 
-	return json.MarshalIndent(body, "", " ")
+	if body != nil {
+		b := string(body)
+		output.Body = &b
+	}
+
+	return json.MarshalIndent(output, "", " ")
 }
 
 func (f *jsonFormatter) FormatHistory([]history.Entry) ([]byte, error) {

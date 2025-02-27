@@ -207,10 +207,8 @@ func buildRequestRun(
 		checkErr(err, cfg.errors)
 
 		// OUTPUT
-		outputFormat, _ := flags.GetString(options.OutputFormatFlagName)
-		outputComponents, _ := flags.GetString(options.OutputFlagName)
-		logger.Printf("Format: %s (%s)", outputFormat, outputComponents)
-		formatter, err := FormatterFromString(Format(outputFormat), outputComponents)
+		outputFormat, _ := flags.GetString(options.FormatFlagName)
+		formatter, err := FormatterFromString(Format(outputFormat))
 		checkErr(err, cfg.errors)
 
 		var signer client.RequestSigner
@@ -449,15 +447,7 @@ in environment variables.
 		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 
-	flags.String(options.OutputFormatFlagName, "text", `Output format of response. Possible values: text, json.`)
-	flags.String(options.OutputFlagName, "body", `Comma (,) separated list of response items to display.
-Possible values:
-  none:       no output
-  all:        all information
-  status:     response status code text
-  headers:    response headers
-  body:       response body
-`)
+	flags.String(options.FormatFlagName, "text", `Output format of response. Possible values: text, json.`)
 	flags.BoolP(options.FailFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	flags.DurationP(options.TimeoutFlagName, "T", defaultTimeout, "Request timeout duration.")
 	flags.StringP(options.OutfileFlagName, "o", "", "Write output to file instead of stdout.")
