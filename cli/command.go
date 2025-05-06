@@ -239,6 +239,11 @@ func buildRequestRun(
 			failFunc = os.Exit
 		}
 
+		header := headerOpt.Header()
+		if bearerToken, _ := flags.GetString(options.BearerFlagName); bearerToken != "" {
+			header.Set("Authorization", fmt.Sprintf("Bearer %s", strings.TrimSpace(bearerToken)))
+		}
+
 		handler := newRequestHandler(
 			cl,
 			formatter,
@@ -246,7 +251,7 @@ func buildRequestRun(
 			history.NewHandler(cfg.historyPath),
 			logger,
 			appConfig,
-			headerOpt.Header(),
+			header,
 			output,
 			outputFile,
 			failFunc,
@@ -447,6 +452,7 @@ in environment variables.
 		defaultAWSRegion,
 		"The AWS region to use in the AWS signature.")
 
+	flags.String(options.BearerFlagName, "", "Set Authorization header as OAuth2 bearer token.")
 	flags.String(options.FormatFlagName, "text", `Output format of response. Possible values: text, json.`)
 	flags.BoolP(options.FailFlagName, "f", false, "Exit with status code > 0 if HTTP status is 400 or greater.")
 	flags.DurationP(options.TimeoutFlagName, "T", defaultTimeout, "Request timeout duration.")

@@ -4,6 +4,7 @@ const (
 	HeaderFlagName                = "header"
 	AWSSigV4FlagName              = "aws-sigv4"
 	AWSRegionFlagName             = "aws-region"
+	BearerFlagName                = "bearer"
 	DataStringFlagName            = "data"
 	DataStdinFlagName             = "data-stdin"
 	DataFileFlagName              = "data-file"
