@@ -10,8 +10,6 @@ import (
 
 	"github.com/lunjon/http/internal/client"
 	"github.com/lunjon/http/internal/history"
-	"github.com/lunjon/http/internal/style"
-	"github.com/lunjon/http/internal/types"
 )
 
 var ResponseComponents = []string{"status", "headers", "body"}
@@ -78,23 +76,11 @@ func readBody(r *http.Response) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-func (f *textFormatter) addHeaders(w io.Writer, r *http.Response) {
-	taber := types.NewTaber("")
-	for name, value := range headerToMap(r.Header) {
-		n := fmt.Sprintf("%s:", name)
-		v := fmt.Sprint(value)
-		taber.WriteLine(style.Bold.Render(n), v)
-	}
-	fmt.Fprint(w, taber.String())
-}
-
 func (f *textFormatter) FormatHistory([]history.Entry) ([]byte, error) {
 	return nil, nil
 }
 
-type jsonFormatter struct {
-	components []string
-}
+type jsonFormatter struct{}
 
 func (f *jsonFormatter) FormatResponse(r *http.Response) ([]byte, error) {
 	output := struct {

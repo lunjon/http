@@ -334,12 +334,15 @@ func buildServe(cfg cliConfig) *cobra.Command {
 	port := options.NewPortOption()
 	statusFlagName := "show-status"
 	listFlagName := "list"
+	staticFlagName := "static"
 
 	c := &cobra.Command{
 		Use:   "serve",
 		Short: "Starts an HTTP server on localhost",
-		Long: `Starts an HTTP server on localhost.
-Useful for local testing and debugging.`,
+		Long: `Starts an HTTP server on localhost. Useful for local testing.
+
+If --static DIR is provided the server hosts the files
+in that directory. Otherwise the default API is started (use --list to see endoints).`,
 		Run: func(cmd *cobra.Command, args []string) {
 			flags := cmd.Flags()
 
@@ -350,10 +353,12 @@ Useful for local testing and debugging.`,
 			}
 
 			showStatus, _ := flags.GetBool(statusFlagName)
+			staticRoot, _ := flags.GetString(staticFlagName)
 
 			opts := server.Options{
 				Port:       port.Value(),
 				ShowStatus: showStatus,
+				StaticRoot: staticRoot,
 			}
 
 			server := server.New(opts)
@@ -380,6 +385,7 @@ Useful for local testing and debugging.`,
 	}
 
 	c.Flags().VarP(port, "port", "p", "Port to listen on. Must be valid number in the range 1024-65535.")
+	c.Flags().String(staticFlagName, "", "Serve static files from this directory.")
 	c.Flags().Bool(statusFlagName, false, "Shows current status instead of showing each request.")
 	c.Flags().Bool(listFlagName, false, "List predefined routes.")
 	return c

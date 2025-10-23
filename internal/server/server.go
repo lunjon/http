@@ -10,6 +10,7 @@ import (
 type Options struct {
 	Port       uint
 	ShowStatus bool
+	StaticRoot string
 }
 
 type Server struct {
@@ -26,9 +27,16 @@ func New(opts Options) *Server {
 
 	handler := newHandler(ch)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/~/with-status/{code}", handler.handleWithCode)
-	mux.HandleFunc("/~/timeout", handler.handleTimeout)
-	mux.HandleFunc("/", handler.handleDefault)
+
+	if opts.StaticRoot != "" {
+		root := http.Dir(opts.StaticRoot)
+		fs := http.FileServer(root)
+		mux.Handle("/", fs)
+	} else {
+		mux.HandleFunc("/~/status/{code}", handler.handleWithCode)
+		mux.HandleFunc("/~/timeout", handler.handleTimeout)
+		mux.HandleFunc("/", handler.handleDefault)
+	}
 
 	s := &http.Server{
 		Addr:    fmt.Sprintf(":%d", opts.Port),
@@ -68,7 +76,8 @@ func (s *Server) Close() error {
 }
 
 func ListRoutes() {
-	fmt.Println("/~/with-status/{code}   Respond with the given code as status.")
-	fmt.Println("/~/timeout              Endpoint that hangs the request (for 5 min).")
-	fmt.Println("/*                      Echo the request with 200 OK status code.")
+	fmt.Println("/~/status/{code}  Respond with the given code as status.")
+	fmt.Println("                  Send 'random' as the path parameter to get a random status.")
+	fmt.Println("/~/timeout        Endpoint that hangs the request (for 5 min).")
+	fmt.Println("/*                Echo the request with 200 OK status code.")
 }

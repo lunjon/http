@@ -24,6 +24,19 @@
           vendorHash = "sha256-h27uHmOQMECkGHFsDggGfm+hRohTVYIkvF7zWFdwlTM=";
           doCheck = false;
         };
+        devShells.default = pkgs.mkShell {
+          name = "http";
+          shellHook = ''
+            exec nu
+          '';
+          packages = builtins.attrValues {
+            inherit (pkgs)
+              go
+              gopls
+              go-tools
+              ;
+          };
+        };
       }
     );
 }
